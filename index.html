@@ -174,9 +174,9 @@ select.sel{font:inherit;font-size:13px;border:1px solid var(--line);border-radiu
 .land.neg .big{color:var(--bad)}
 .copyrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .copyrow small{color:var(--muted);font-size:12px}
-footer.assume{margin-top:16px;font-size:12px;color:var(--muted);max-width:120ch;display:flex;flex-direction:column;gap:6px}
-footer.assume b{color:var(--ink);font-weight:600}
-footer.assume a{color:var(--ink)}
+.assume{margin-top:16px;font-size:12px;color:var(--muted);max-width:120ch;display:flex;flex-direction:column;gap:6px}
+.assume b{color:var(--ink);font-weight:600}
+.assume a{color:var(--ink)}
 .vmini{display:flex;gap:10px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:8px;padding:10px 12px;text-decoration:none;color:var(--ink)}
 .vmini b{font-size:14px}
 .vmini span{font-size:12px;color:var(--muted)}
@@ -269,7 +269,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .pill.ok{background:var(--good-bg)}.pill.warn{background:var(--warn-bg)}.pill.bad{background:var(--bad-bg)}
 .vd-rec a{color:var(--accent-ink)}
 .fac td{border-top-color:var(--line)}
-footer.assume a{color:var(--accent-ink)}
+.assume a{color:var(--accent-ink)}
 #geomap.lowzoom .alab,#geomap.lowzoom .blbl{display:none}
 .alab{display:inline-block;transform:translate(-50%,-50%);font:600 12px/1.2 var(--body);color:#1D2939;background:rgba(255,255,255,.92);border-radius:6px;padding:3px 7px;white-space:nowrap;box-shadow:0 1px 3px rgba(16,24,40,.18);pointer-events:none}
 .blbl{display:inline-block;font:600 11px/1 var(--body);color:#2B3A55;white-space:nowrap;pointer-events:none}
@@ -340,31 +340,69 @@ footer.assume a{color:var(--accent-ink)}
 #p-map{gap:8px}
 .vmini.example b{color:var(--accent-ink)!important}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* ---- layout: parameters | plan | results, each scrolls on its own; the answer bar never leaves the screen ---- */
+header.top{display:flex;align-items:center;gap:8px 18px;flex-wrap:wrap;padding:10px 16px;margin-bottom:10px}
+.brand{align-items:center;gap:10px}
+header.top #ans-title{margin:0;font-size:14.5px;font-weight:600;flex:1;min-width:220px}
+header.top #ans-title span{color:var(--accent-ink)}
+.answer{padding:10px;margin-bottom:10px}
+.ans{font:inherit;text-align:left;border:0;cursor:pointer;padding:8px 11px}
+.ans:hover{background:var(--accent-soft)}
+.ans b{font-size:16px}
+.delta{display:inline-block;margin-left:6px;font-style:normal;font-size:11px;font-weight:600;padding:0 6px;border-radius:999px;animation:dfade 7s forwards}
+.delta.up{color:var(--good);background:var(--good-bg)}.delta.down{color:var(--bad);background:var(--bad-bg)}
+@keyframes dfade{0%,75%{opacity:1}100%{opacity:0}}
+.side-right{padding-top:0;gap:16px}
+.tabs{position:sticky;top:0;z-index:5;background:var(--surface);padding:12px 0 8px;display:flex;gap:3px}
+.tabs button{flex:1;font:inherit;font-size:12.5px;font-weight:500;padding:7px 2px;border:0;border-radius:8px;background:var(--chip);color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{background:var(--accent);color:#fff;font-weight:600}
+.pane{display:flex;flex-direction:column;gap:20px}
+.vdbox{display:flex;flex-direction:column;gap:8px}
+.vdbox .vd-badge{align-self:flex-start;font-size:14px;padding:8px 12px}
+.vdbox .vd-sub{margin:0;font-size:12.5px}
+.vdbox .vd-rec{font-size:13px}
+#fac,#fac tbody{display:block}
+#fac tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 8px;padding:9px 0;border-top:1px solid var(--line)}
+#fac td{padding:0;border:0}
+#fac td.f-name{width:auto}
+#fac td:nth-child(3){grid-column:1/-1;white-space:normal!important;color:var(--ink)}
+#fac td.f-note{grid-column:1/-1;font-size:12.5px}
+#fac td.f-src{display:none}
+.optbox{background:transparent;padding:0}
+@media (min-width:1000px){
+  body{overflow:hidden}
+  .wrap{height:100vh;height:100dvh;max-width:none;display:grid;grid-template-rows:auto auto minmax(0,1fr);padding:10px 12px 12px}
+  .app{min-height:0;grid-template-columns:290px minmax(0,1fr) 380px!important;align-items:stretch}
+  .app>.panel{overflow:auto;min-height:0;overscroll-behavior:contain}
+  .app>.stage{grid-column:auto!important;order:0!important;min-height:0;display:flex;flex-direction:column}
+  .map{flex:1;height:auto;min-height:260px}
+  .subpanel{max-height:45%;overflow:auto;flex:none}
+}
+@media (min-width:1000px) and (max-width:1300px){.app{grid-template-columns:255px minmax(0,1fr) 330px!important}.ans-grid{grid-template-columns:repeat(6,minmax(0,1fr))}.ans small{display:none}}
+@media (max-width:999px){
+  .answer{position:sticky;top:0;z-index:700}
+  .ans-grid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory}
+  .ans{min-width:150px;flex:none;scroll-snap-align:start}
+  .app{display:flex;flex-direction:column}
+  .app>.stage{order:-1}
+  .map{height:62vh}
+}
 </style>
 </head>
 <body>
 
 <div class="wrap">
   <header class="top">
-    <div class="brand">
-      <h1>Yer<span>Plan</span></h1>
-      <p>Выберите участок на карте или загрузите документ. Получите план застройки, сравнение вариантов и экономику проекта.</p>
-    </div>
-    <span class="demo-tag">Бета · расчёт ориентировочный</span>
-  </header>
-
-  <section class="answer" aria-label="Главный ответ">
-    <div class="ans-head"><h2 id="ans-title">Ответ по участку</h2>
-      <div class="ans-ctl">
+    <div class="brand"><h1>Yer<span>Plan</span></h1><span class="demo-tag">Бета</span></div>
+    <h2 id="ans-title">Ответ по участку</h2>
+    <div class="ans-ctl">
         <span class="ans-lbl">Земля:</span>
         <div class="seg two" role="group" aria-label="Земля в расчёте"><button type="button" data-land="own">не учитывать</button><button type="button" data-land="buy">учитывать</button></div>
         <div class="num ans-price" id="ans-price" hidden><input type="number" inputmode="decimal" id="ans-land-price" min="0" step="10000" aria-label="Рыночная стоимость земли"><span>$ за участок</span></div>
         <button class="btn primary" type="button" id="ans-opt">Найти максимум прибыли</button>
       </div>
-    </div>
-    <div class="ans-grid" id="ans"></div>
-  </section>
-
+  </header>
+  <section class="answer" aria-label="Главный ответ"><div class="ans-grid" id="ans"></div></section>
   <main class="app">
     <aside class="panel" aria-label="Параметры">
       <div class="group">
@@ -421,6 +459,10 @@ footer.assume a{color:var(--accent-ink)}
       <details class="more">
         <summary>Планировка и нормы<small>размеры, улицы, разрывы, соцобъекты</small></summary>
         <div class="group" id="plan-params"></div>
+      </details>
+      <details class="more">
+        <summary>Как считаем и откуда цифры<small>нормы, допущения, источники</small></summary>
+        <div class="assume" id="assume"></div>
       </details>
     </aside>
 
@@ -534,14 +576,16 @@ footer.assume a{color:var(--accent-ink)}
       <div class="legend" id="legend"></div>
     </section>
 
-    <aside class="panel" aria-label="Результаты">
-      <div class="optbox">
-        <button class="btn primary optbtn" type="button" id="opt-run">Найти максимум прибыли</button>
-        <div class="seg" role="group" aria-label="Что важнее" id="crit-seg"><button type="button" data-crit="npv" aria-pressed="true">С учётом времени</button><button type="button" data-crit="irr" aria-pressed="false">Быстрые деньги</button><button type="button" data-crit="profit" aria-pressed="false">Больше прибыли</button></div>
-        <p class="note" id="opt-status">Переберу типы застройки, классы жилья, этажность и двор без машин — с учётом норм, качества и реального темпа продаж.</p>
-        <div class="optlist" id="opt"></div>
+    <aside class="panel side-right" aria-label="Результаты">
+      <div class="tabs" role="tablist" aria-label="Результаты">
+        <button type="button" role="tab" data-tab="sum" aria-selected="true">Итог</button>
+        <button type="button" role="tab" data-tab="money" aria-selected="false">Деньги</button>
+        <button type="button" role="tab" data-tab="plan" aria-selected="false">Проект</button>
+        <button type="button" role="tab" data-tab="risk" aria-selected="false">Проверка</button>
+        <button type="button" role="tab" data-tab="opt" aria-selected="false">Подбор</button>
       </div>
-      <a class="vmini" id="vmini" href="#verdict-sec"></a>
+      <div class="pane" data-pane="sum">
+        <div class="vdbox"><div class="vd-badge" id="vd-badge"></div><p class="vd-sub" id="vd-sub"></p><p class="vd-rec" id="vd-rec"></p></div>
       <div class="group">
         <h2>Качество проекта</h2>
         <div class="qscore" id="qscore"></div>
@@ -559,12 +603,8 @@ footer.assume a{color:var(--accent-ink)}
         <h2 id="vars-title">Варианты планировки</h2>
         <div class="vars" id="vars"></div>
       </div>
-      <div class="group">
-        <h2 id="tep-title">Показатели</h2>
-        <dl class="tep" id="tep"></dl>
-        <div class="usebar" id="usebar"></div>
-        <div class="uselegend" id="uselegend"></div>
       </div>
+      <div class="pane" data-pane="money" hidden>
       <div class="group">
         <h2>Экономика проекта</h2>
         <div class="kpis" id="kpis"></div>
@@ -577,30 +617,37 @@ footer.assume a{color:var(--accent-ink)}
         <button class="btn primary" type="button" id="copy">Скопировать сводку</button>
         <small id="copy-status" aria-live="polite"></small>
       </div>
+      </div>
+      <div class="pane" data-pane="plan" hidden>
+      <div class="group">
+        <h2 id="tep-title">Показатели</h2>
+        <dl class="tep" id="tep"></dl>
+        <div class="usebar" id="usebar"></div>
+        <div class="uselegend" id="uselegend"></div>
+      </div>
+      </div>
+      <div class="pane" data-pane="risk" hidden>
+        <div class="group"><h2>Что проверено</h2>
+        <div class="tablewrap"><table class="fac" id="fac"></table></div>
+        </div>
+        <div class="group"><h2>Проверьте по документам</h2>
+        <div id="checklist"></div>
+        <p class="note">Этих данных нет на карте. Ответ «Нет» по назначению земли, правам или градплану означает, что строить в таком виде нельзя.</p>
+        </div>
+      </div>
+      <div class="pane" data-pane="opt" hidden>
+      <div class="optbox">
+        <button class="btn primary optbtn" type="button" id="opt-run">Найти максимум прибыли</button>
+        <div class="seg" role="group" aria-label="Что важнее" id="crit-seg"><button type="button" data-crit="npv" aria-pressed="true">С учётом времени</button><button type="button" data-crit="irr" aria-pressed="false">Быстрые деньги</button><button type="button" data-crit="profit" aria-pressed="false">Больше прибыли</button></div>
+        <p class="note" id="opt-status">Переберу типы застройки, классы жилья, этажность и двор без машин — с учётом норм, качества и реального темпа продаж.</p>
+        <div class="optlist" id="opt"></div>
+      </div>
+      </div>
+      <a class="vmini" id="vmini" hidden></a>
     </aside>
   </main>
 
-  <section class="verdict" id="verdict-sec" aria-label="Стоит ли строить">
-    <div class="vd-head">
-      <div><h2 class="vd-title">Стоит ли строить</h2><p class="vd-sub" id="vd-sub"></p></div>
-      <div class="vd-badge" id="vd-badge"></div>
-    </div>
-    <div class="vd-grid">
-      <div class="vd-col">
-        <h3>Рекомендация</h3>
-        <p class="vd-rec" id="vd-rec"></p>
-        <h3>Факторы</h3>
-        <div class="tablewrap"><table class="fac" id="fac"></table></div>
-      </div>
-      <div class="vd-col">
-        <h3>Проверьте по документам</h3>
-        <div id="checklist"></div>
-        <p class="note">Этих данных нет на карте. Ответ «Нет» по назначению земли, правам или градплану означает, что строить в таком виде нельзя.</p>
-      </div>
-    </div>
-  </section>
 
-  <footer class="assume" id="assume"></footer>
 </div>
 
 <script>
@@ -1635,19 +1682,32 @@ function renderAnswer(){
   const what=`${TYPE_SHORT[t]}${isRes(t)?', '+cls().name.toLowerCase():''}${isTall(t)||t==='retail'?`, ${(state.p[t]||{}).floors||''} эт.`:''}`;
   const vol=isRes(t)?`${nf.format(st.units)} ${plural(st.units,UNIT_W[t])}`:`${nf.format(st.gla)} м²`;
   const sub=t==='mixed'?`+ офисы, отель, торговля`:isTall(t)?`${nf.format(st.gba)} м² общей`:isRes(t)?`${nf.format(st.sale)} м² жилья`:'аренда '+money(f.noi)+'/год';
-  const tile=(lbl,val,sm,cl,href)=>`<a class="ans${cl?' '+cl:''}" href="${href||'#'}"><span>${lbl}</span><b>${val}</b><small>${sm}</small></a>`;
+  // what changed since the last pause: compare with the result shown before the current round of edits
+  const A=state.ansHist||(state.ansHist={}),now=Date.now();
+  const cur={eq:c.eq,profit:c.profit,pay:c.pay==null?999:c.pay,land:state.land.own?f.land:c.profit,q};
+  if(A.area&&Math.abs(state.area-A.area)/A.area>0.05)A.cur=null;
+  if(!A.cur)A.base=null;else if(!A.base||now-A.last>1500)A.base=A.cur;
+  A.last=now;A.cur=cur;A.area=state.area;
+  const fm={eq:x=>money(x),profit:x=>money(x),pay:x=>`${Math.round(x)} мес.`,land:x=>money(x),q:x=>`${Math.round(x)}`};
+  const dl=(k,goodUp)=>{if(!A.base||!k)return'';const d=cur[k]-A.base[k];if(!isFinite(d)||cur[k]===999||A.base[k]===999)return'';
+    if(Math.abs(d)<(k==='pay'||k==='q'?1:Math.max(5000,Math.abs(A.base[k])*0.005)))return'';
+    return ` <i class="delta ${(goodUp?d>0:d<0)?'up':'down'}">${d>0?'+':'−'}${fm[k](Math.abs(d))}</i>`};
+  const tile=(lbl,val,sm,cl,tab,dk,up)=>`<button type="button" class="ans${cl?' '+cl:''}" data-goto="${tab}"><span>${lbl}${dl(dk,up)}</span><b>${val}</b><small>${sm}</small></button>`;
   $('#ans-title').innerHTML=`Ответ по участку <span>${nf2.format(state.area/1e4)} га</span>${state.source==='Пример'?' — это пример, выберите свой участок':''}`;
   $('#ans').innerHTML=[
-    tile('Что строить',what,vol+' · '+sub,'','#vars'),
-    tile('Своих денег нужно',money(c.eq),`всего на пике ${money(c.peak)}, остальное — кредит`,'','#kpis'),
-    tile('Чистая прибыль',money(c.profit),`после налога и процентов · IRR ${irrTxt(c.irr)}`,c.profit>0?'ok':'bad','#kpis'),
-    tile('Деньги вернутся',c.pay==null?'не вернутся':`через ${c.pay} мес.`,`проект ${c.months} мес.${c.auto?' · по темпу рынка':''}`,c.pay==null?'bad':'','#cashchart'),
-    state.land.own?tile('Ваша земля стоит до',f.land>0?money(f.land):'—',f.land>0?`${money(f.perSotka)} за сотку при застройке`:'застройка не окупает землю',f.land>0?'':'bad','#land')
-      :tile('Строить или продать землю',c.profit>0?'Строить':'Продать землю',c.profit>0?`застройка даст на ${money(c.profit)} больше продажи`:`продажа за ${money(c.landCost)} выгоднее`,c.profit>0?'ok':'bad','#kpis'),
-    tile('Стоит ли строить',vd.short||'—',`качество ${q} из 100`,vd.cls,'#verdict-sec')
+    tile('Что строить',what,vol+' · '+sub,'','plan'),
+    tile('Своих денег нужно',money(c.eq),`всего на пике ${money(c.peak)}, остальное — кредит`,'','money','eq',false),
+    tile('Чистая прибыль',money(c.profit),`после налога и процентов · IRR ${irrTxt(c.irr)}`,c.profit>0?'ok':'bad','money','profit',true),
+    tile('Деньги вернутся',c.pay==null?'не вернутся':`через ${c.pay} мес.`,`проект ${c.months} мес.${c.auto?' · по темпу рынка':''}`,c.pay==null?'bad':'','money','pay',false),
+    state.land.own?tile('Ваша земля стоит до',f.land>0?money(f.land):'—',f.land>0?`${money(f.perSotka)} за сотку при застройке`:'застройка не окупает землю',f.land>0?'':'bad','money','land',true)
+      :tile('Строить или продать землю',c.profit>0?'Строить':'Продать землю',c.profit>0?`застройка даст на ${money(c.profit)} больше продажи`:`продажа за ${money(c.landCost)} выгоднее`,c.profit>0?'ok':'bad','money','land',true),
+    tile('Стоит ли строить',vd.short||'—',`качество ${q} из 100`,vd.cls,'risk','q',true)
   ].join('');
 }
-$('#ans-opt').addEventListener('click',()=>{$('#opt-run').click();$('.optbox').scrollIntoView({behavior:'smooth',block:'start'})});
+function setTab(k){document.querySelectorAll('.tabs [data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===k));document.querySelectorAll('[data-pane]').forEach(p=>p.hidden=p.dataset.pane!==k);const r=$('.side-right');if(r)r.scrollTop=0}
+$('.tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)setTab(b.dataset.tab)});
+$('#ans').addEventListener('click',e=>{const b=e.target.closest('[data-goto]');if(!b)return;setTab(b.dataset.goto);if(innerWidth<1000)$('.side-right').scrollIntoView({behavior:'smooth',block:'start'})});
+$('#ans-opt').addEventListener('click',()=>{setTab('opt');$('#opt-run').click()});
 function renderQuality(){
   const v=state.variants[state.sel],q=quality(v,state.type);
   state.qs=q.score;
@@ -1671,7 +1731,7 @@ $('#cls-seg').addEventListener('click',e=>{const b=e.target.closest('[data-cls]'
 /* search over types, classes, heights and car-free courtyards for the highest profit that still sells */
 let optRunning=false;
 async function runOptimizer(){
-  if(optRunning||state.poly.length<3)return;optRunning=true;
+  if(optRunning||state.poly.length<3)return;optRunning=true;setTab('opt');
   const btn=$('#opt-run'),st=$('#opt-status');btn.disabled=true;
   const save={form:state.form,floorsAuto:state.floorsAuto,cls:state.cls,carfree:state.carfree,type:state.type,p:JSON.parse(JSON.stringify(state.p)),sel:state.sel,manual:state.manual};
   const P=state.poly,area=Math.abs(polyArea(P)),a0=longestAngle(P),lp=locProfile();
@@ -2158,7 +2218,7 @@ function renderLand(){
 }
 for(const id of ['#land-price','#ans-land-price'])$(id).addEventListener('input',e=>{const v=parseFloat(e.target.value);if(!isNaN(v)){state.land.price=v;renderLand();update()}});
 document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',async()=>{if(b.dataset.view==='3d'){try{b.textContent='3D…';await ensure3d();b.textContent='3D'}catch(e){b.textContent='3D недоступно';b.disabled=true;return}}state.view=b.dataset.view;if(state.view==='schema')fit();if(state.view==='geo')await ensureMap();update()}));
-window.addEventListener('resize',()=>{if(state.vb&&state.view==='schema')drawSchema();if(state.view==='3d')size3d()});
+window.addEventListener('resize',()=>{if(state.vb&&state.view==='schema')drawSchema();if(state.view==='3d')size3d();if(state.view==='geo'&&lmap)lmap.invalidateSize()});
 
 async function openSrc(k,toggle){
   const b=document.querySelector(`[data-src="${k}"]`),open=!toggle||state.src!==k;closeSrc();
