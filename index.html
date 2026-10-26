@@ -299,6 +299,25 @@ footer.assume a{color:var(--accent-ink)}
 .loc .rec{background:var(--soft);border-radius:10px;padding:10px 12px}
 .loc ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
 .loc .btn{align-self:flex-start}
+.more{border-top:1px solid var(--line);padding-top:12px}
+.more summary{cursor:pointer;list-style:none;font-size:13.5px;font-weight:600;display:flex;flex-direction:column;gap:2px;position:relative;padding-right:24px}
+.more summary::-webkit-details-marker{display:none}
+.more summary::after{content:"";position:absolute;right:4px;top:5px;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s}
+.more[open] summary::after{transform:rotate(-135deg);top:9px}
+.more summary small{font-weight:400;color:var(--muted);font-size:12px}
+.more>.group{margin-top:14px}
+.answer{background:var(--surface);border-radius:14px;box-shadow:var(--card-shadow);padding:14px 16px;margin-bottom:14px;display:flex;flex-direction:column;gap:12px}
+.ans-head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between}
+.ans-head h2{margin:0;font-size:15px;font-weight:600}
+.ans-head h2 span{color:var(--accent-ink)}
+.ans-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+@media (max-width:1100px){.ans-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:560px){.ans-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ans{background:var(--soft);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:3px;min-width:0;text-decoration:none;color:var(--ink)}
+.ans span{font-size:11.5px;color:var(--muted)}
+.ans b{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ans small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ans.ok b{color:var(--good)}.ans.warn b{color:var(--warn)}.ans.bad b{color:var(--bad)}
 .steps{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:600;display:flex;gap:4px;background:var(--surface);border-radius:999px;padding:4px;box-shadow:0 2px 10px rgba(16,24,40,.14);max-width:calc(100% - 24px);overflow-x:auto}
 .steps span{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:12.5px;color:var(--muted);white-space:nowrap}
 .steps span i{font-style:normal;width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;background:var(--chip);font-size:11.5px;font-weight:600;color:var(--muted)}
@@ -325,34 +344,35 @@ footer.assume a{color:var(--accent-ink)}
     <span class="demo-tag">Бета · расчёт ориентировочный</span>
   </header>
 
+  <section class="answer" aria-label="Главный ответ">
+    <div class="ans-head"><h2 id="ans-title">Ответ по участку</h2><button class="btn primary" type="button" id="ans-opt">Найти максимум прибыли</button></div>
+    <div class="ans-grid" id="ans"></div>
+  </section>
+
   <main class="app">
     <aside class="panel" aria-label="Параметры">
       <div class="group">
-        <h2>Регион</h2>
-        <select class="sel" id="region" aria-label="Регион"></select>
-        <small class="note">Подставляет ориентиры цен продажи и стройки. Их можно поправить ниже.</small>
-      </div>
-      <div class="group">
-        <h2>Класс жилья</h2>
-        <div class="seg four" role="group" aria-label="Класс жилья" id="cls-seg"></div>
-        <small class="note" id="cls-who"></small>
-      </div>
-      <div class="group">
-        <h2>Тип проекта</h2>
-        <div class="seg" role="group" aria-label="Тип проекта">
+        <h2>1. Что строим</h2>
+        <div class="seg" role="group" aria-label="Жильё">
           <button type="button" id="t-cottage" data-type="cottage">Коттеджи</button>
           <button type="button" id="t-town" data-type="town">Таунхаусы</button>
           <button type="button" id="t-multi" data-type="multi">Многоэтажки</button>
         </div>
-        <div class="seg two" role="group" aria-label="Нежилое">
+        <div class="seg" role="group" aria-label="Комплекс и нежилое">
+          <button type="button" id="t-mixed" data-type="mixed">Комплекс</button>
           <button type="button" id="t-retail" data-type="retail">Коммерция</button>
           <button type="button" id="t-logistics" data-type="logistics">Склады</button>
         </div>
+        <small class="note" id="type-note"></small>
       </div>
-      <div class="group" id="plan-params"><h2>Планировка</h2></div>
-      <div class="group" id="fin-params"><h2>Продажи и затраты</h2></div>
+      <div class="group" id="cls-group">
+        <h2>2. Для кого — класс</h2>
+        <div class="seg four" role="group" aria-label="Класс жилья" id="cls-seg"></div>
+        <small class="note" id="cls-who"></small>
+      </div>
+      <div class="group" id="key-params"><h2>3. Главные параметры</h2></div>
       <div class="group">
-        <h2>Земля</h2>
+        <h2>4. Земля</h2>
         <div class="seg two" role="group" aria-label="Земля">
           <button type="button" id="land-own" data-land="own">Участок мой</button>
           <button type="button" id="land-buy" data-land="buy">Покупаю</button>
@@ -363,17 +383,27 @@ footer.assume a{color:var(--accent-ink)}
           <small id="land-price-x"></small>
         </div>
       </div>
-      <div class="group">
-        <h2>Сроки</h2>
-        <div class="fields3" id="timeline"></div>
-      </div>
-      <div class="group">
-        <h2>Целевая маржа</h2>
-        <div class="field">
-          <div class="row"><label for="margin">Маржа к выручке</label><output id="margin-out">20%</output></div>
-          <input type="range" id="margin" min="5" max="40" step="1" value="20">
+      <details class="more">
+        <summary>Цены и затраты<small>регион, цены продажи, стройка</small></summary>
+        <div class="group">
+          <div class="field"><label for="region">Регион</label><select class="sel" id="region" aria-label="Регион"></select><small>Определяется по карте и подставляет цены. Их можно поправить.</small></div>
+          <div class="group" id="fin-params"></div>
         </div>
-      </div>
+      </details>
+      <details class="more">
+        <summary>Сроки и маржа<small>стройка, продажи, целевая маржа</small></summary>
+        <div class="group">
+          <div class="fields3" id="timeline"></div>
+          <div class="field">
+            <div class="row"><label for="margin">Целевая маржа к выручке</label><output id="margin-out">20%</output></div>
+            <input type="range" id="margin" min="5" max="40" step="1" value="20">
+          </div>
+        </div>
+      </details>
+      <details class="more">
+        <summary>Планировка и нормы<small>размеры, улицы, разрывы, соцобъекты</small></summary>
+        <div class="group" id="plan-params"></div>
+      </details>
     </aside>
 
     <section class="stage" aria-label="План участка">
@@ -589,7 +619,7 @@ const REGIONS=[
 /* regional centres: [region id, lat, lng] */
 const CENTRES=[['tash',41.3111,69.2797],['tashobl',41.0450,69.3580],['sam',39.6542,66.9597],['buh',39.7747,64.4286],['nav',40.0844,65.3792],['and',40.7821,72.3442],['nam',40.9983,71.6726],['fer',40.3864,71.7864],['kash',38.8606,65.7891],['surx',37.2242,67.2783],['jiz',40.1158,67.8422],['sir',40.4897,68.7842],['xor',41.5500,60.6333],['kk',42.4531,59.6103]];
 /* realistic sales pace, units per month (assumption): [Tashkent city, elsewhere] */
-const PACE={cottage:[6,3],town:[10,5],multi:[40,15]};
+const PACE={cottage:[6,3],town:[10,5],multi:[40,15],mixed:[40,15]};
 const CHECKS=[
   ['zone','Назначение земли допускает жилую застройку','Категория и вид разрешённого использования в кадастровом паспорте. Сельхозземлю нужно переводить, это долго и не всегда возможно.','bad'],
   ['title','Права на землю чистые','Собственность или долгосрочная аренда оформлены, нет ареста, залога и споров.','bad'],
@@ -621,20 +651,22 @@ const CLS_ORDER=['econ','comfort','business','premium'];
 const cls=()=>CLS[state.cls||'comfort'];
 const CARFREE_PREMIUM=0.05;
 function greenNeed(){const lawBig=state.region==='tash'&&state.type==='multi'&&state.area>=5e4?0.30:0.25;return Math.max(lawBig,cls().green)}
-const PRICE_K={cottage:0.95,town:0.85,multi:1}, COST_BASE={cottage:450,town:430,multi:420}, INFRA_BASE={cottage:18,town:20,multi:30};
+const PRICE_K={cottage:0.95,town:0.85,multi:1,mixed:1.05}, COST_BASE={cottage:450,town:430,multi:420,mixed:470}, INFRA_BASE={cottage:18,town:20,multi:30,mixed:40};
 const DEF={
   cottage:{lotW:18,lotD:33,road:9,perBlock:10,house:180,price:0,cost:0,infra:0},
   town:{lotW:8,lotD:26,road:8,perBlock:12,house:140,price:0,cost:0,infra:0},
   multi:{floors:12,secLen:60,insol:1.0,price:0,cost:0,infra:0,eff:0.78,parkCost:0,parkPrice:0},
+  mixed:{floors:25,secLen:60,insol:1.0,price:0,cost:0,infra:0,eff:0.75,parkCost:0,parkPrice:0,offRent:0,offCost:0,retRent:0,retCost:0,adr:0,occ:0.62,roomCost:0,cap:0.12},
   retail:{floors:2,len:60,depth:40,rent:0,cost:0,infra:0,occ:0.85,cap:0.13,eff:0.85},
   logistics:{floors:1,len:150,depth:72,rent:0,cost:0,infra:0,occ:0.9,cap:0.13,eff:0.95}
 };
-const TL={cottage:{build:18,start:9,sales:24},town:{build:18,start:9,sales:24},multi:{build:30,start:12,sales:36},retail:{build:18,start:18,sales:12},logistics:{build:12,start:12,sales:12}};
+const TL={cottage:{build:18,start:9,sales:24},town:{build:18,start:9,sales:24},multi:{build:30,start:12,sales:36},mixed:{build:36,start:12,sales:48},retail:{build:18,start:18,sales:12},logistics:{build:12,start:12,sales:12}};
 const APT=65, PARK=0.7, SOFT=0.10, FAR_MAX=2.5;
 const PLAN={
   cottage:[['lotW','Ширина участка',12,30,1,'м'],['lotD','Глубина участка',20,50,1,'м'],['road','Ширина улицы',6,14,0.5,'м'],['perBlock','Участков в квартале',4,20,1,'']],
   town:[['lotW','Ширина участка',6,12,0.5,'м'],['lotD','Глубина участка',18,35,1,'м'],['road','Ширина улицы',6,12,0.5,'м'],['perBlock','Домов в ряду',6,24,1,'']],
-  multi:[['floors','Этажность',5,25,1,'эт.'],['secLen','Длина дома',30,120,5,'м'],['insol','Разрыв не меньше',0.5,2,0.1,'× высоты']],
+  multi:[['floors','Этажность',5,40,1,'эт.'],['secLen','Длина дома',30,120,5,'м'],['insol','Разрыв не меньше',0.5,2,0.1,'× высоты']],
+  mixed:[['floors','Этажность башен',12,45,1,'эт.'],['insol','Разрыв не меньше',0.5,2,0.1,'× высоты']],
   retail:[['floors','Этажность',1,5,1,'эт.'],['len','Длина здания',30,150,5,'м'],['depth','Глубина здания',20,60,2,'м']],
   logistics:[['len','Длина склада',60,300,10,'м'],['depth','Ширина склада',36,120,6,'м']]
 };
@@ -642,6 +674,7 @@ const FIN={
   cottage:[['house','Площадь дома','м²'],['price','Цена продажи','$/м²'],['cost','Стоимость стройки','$/м²'],['infra','Сети и дороги','$/м² участка']],
   town:[['house','Площадь дома','м²'],['price','Цена продажи','$/м²'],['cost','Стоимость стройки','$/м²'],['infra','Сети и дороги','$/м² участка']],
   multi:[['price','Цена продажи','$/м²'],['cost','Стоимость стройки','$/м² общей'],['infra','Сети и благоустройство','$/м² участка'],['eff','Доля продаваемой площади','0–1'],['parkCost','Подземный паркинг: стройка','$ за место'],['parkPrice','Подземный паркинг: продажа','$ за место']],
+  mixed:[['price','Квартиры: цена','$/м²'],['cost','Квартиры: стройка','$/м² общей'],['offRent','Офисы: аренда','$/м² в мес.'],['retRent','Торговля: аренда','$/м² в мес.'],['adr','Гостиница: цена номера','$ за ночь'],['occ','Гостиница: загрузка','0–1'],['roomCost','Гостиница: стройка','$ за номер'],['cap','Ставка капитализации','0–1'],['infra','Сети и благоустройство','$/м² участка'],['parkCost','Подземный паркинг: стройка','$ за место'],['parkPrice','Подземный паркинг: продажа','$ за место']],
   retail:[['rent','Аренда','$/м² в мес.'],['cost','Стоимость стройки','$/м² общей'],['infra','Сети и благоустройство','$/м² участка'],['occ','Заполняемость','0–1'],['cap','Ставка капитализации','0–1']],
   logistics:[['rent','Аренда','$/м² в мес.'],['cost','Стоимость стройки','$/м²'],['infra','Сети, площадки, дороги','$/м² участка'],['occ','Заполняемость','0–1'],['cap','Ставка капитализации','0–1']]
 };
@@ -649,18 +682,19 @@ const VARS={
   lots:[{id:'А',label:'Вдоль длинной стороны',da:0},{id:'Б',label:'Поперёк участка',da:90},{id:'В',label:'Длинные кварталы',da:0,blockMul:1.6},{id:'Г',label:'Под углом 45°',da:45}],
   multi:[{id:'А',label:'Вдоль длинной стороны',da:0},{id:'Б',label:'Поперёк участка',da:90},{id:'В',label:'Короткие дома',da:0,lenMul:0.6},{id:'Г',label:'Под углом 45°',da:45}]
 };
-const RES=['cottage','town','multi'],NONRES=['retail','logistics'],TYPES=RES.concat(NONRES);
+const RES=['cottage','town','multi','mixed'],NONRES=['retail','logistics'],TYPES=RES.concat(NONRES);
+const isTall=t=>t==='multi'||t==='mixed';
 const isRes=t=>RES.includes(t);
-const TYPE_NAME={cottage:'Коттеджный посёлок',town:'Таунхаусы',multi:'Многоэтажный ЖК',retail:'Торгово-офисный центр',logistics:'Склад и логистика'};
-const TYPE_LOW={cottage:'коттеджный посёлок',town:'таунхаусы',multi:'многоэтажный ЖК',retail:'торгово-офисный центр',logistics:'склад и логистика'};
-const TYPE_SHORT={cottage:'Коттеджи',town:'Таунхаусы',multi:'Многоэтажки',retail:'Коммерция',logistics:'Склады'};
-const UNIT_W={cottage:['дом','дома','домов'],town:['дом','дома','домов'],multi:['квартира','квартиры','квартир'],retail:['м² аренды','м² аренды','м² аренды'],logistics:['м² склада','м² склада','м² склада']};
-const UNIT_S={cottage:'д.',town:'д.',multi:'кв.',retail:'м²',logistics:'м²'};
+const TYPE_NAME={cottage:'Коттеджный посёлок',town:'Таунхаусы',multi:'Многоэтажный ЖК',mixed:'Многофункциональный комплекс',retail:'Торгово-офисный центр',logistics:'Склад и логистика'};
+const TYPE_LOW={cottage:'коттеджный посёлок',town:'таунхаусы',multi:'многоэтажный ЖК',mixed:'многофункциональный комплекс',retail:'торгово-офисный центр',logistics:'склад и логистика'};
+const TYPE_SHORT={cottage:'Коттеджи',town:'Таунхаусы',multi:'Многоэтажки',mixed:'Комплекс',retail:'Коммерция',logistics:'Склады'};
+const UNIT_W={cottage:['дом','дома','домов'],town:['дом','дома','домов'],multi:['квартира','квартиры','квартир'],mixed:['квартира','квартиры','квартир'],retail:['м² аренды','м² аренды','м² аренды'],logistics:['м² склада','м² склада','м² склада']};
+const UNIT_S={cottage:'д.',town:'д.',multi:'кв.',mixed:'кв.',retail:'м²',logistics:'м²'};
 
 const state={cls:'comfort',carfree:false,type:'cottage',region:'tash',poly:PRESETS.trap.map(p=>p.slice()),p:JSON.parse(JSON.stringify(DEF)),tl:JSON.parse(JSON.stringify(TL)),
   margin:20,land:{own:true,price:1500000},sel:null,manual:false,vb:null,variants:[],compare:{},
   mode:'edit',trace:[],gtrace:[],under:null,calib:false,calibSide:0,needScale:false,source:'Пример',
-  geo:null,view:'schema',dragging:false,src:null,
+  form:'auto',floorsAuto:true,geo:null,view:'schema',dragging:false,src:null,
   social:'auto',checks:{zone:'?',title:'?',red:'?',utils:'?',soil:'?'},site:{status:'nogeo',key:null,d:null,elev:null}};
 
 function applyRegion(id){
@@ -670,8 +704,13 @@ function applyRegion(id){
    R.rent=[24,14,10][tier];R.cost=Math.round(520*r[3]/5)*5;R.infra=Math.round(25*r[3]);
    W.rent=[6.5,5.5,4][tier];W.cost=Math.round(320*r[3]/5)*5;W.infra=Math.round(12*r[3]);}
   state.p.multi.parkCost=Math.round(8000*r[3]/100)*100;state.p.multi.parkPrice=r[0]==='tash'?12000:r[0]==='tashobl'?7000:5000;
+  {const X=state.p.mixed,tier=r[0]==='tash'?0:r[0]==='tashobl'?1:2;X.parkCost=state.p.multi.parkCost;X.parkPrice=state.p.multi.parkPrice;
+   X.offRent=[22,12,9][tier];X.offCost=Math.round(560*r[3]/5)*5;X.retRent=[24,14,10][tier];X.retCost=Math.round(520*r[3]/5)*5;
+   X.adr=[110,75,65][tier];X.roomCost=Math.round(110000*r[3]/1000)*1000;
+   if(state.floorsAuto!==false){state.p.multi.floors=[20,14,12][tier];X.floors=[25,18,14][tier]}}
   const c=CLS[state.cls||'comfort'];
   for(const t of RES){const p=state.p[t];p.price=Math.round(p.price*c.pk/10)*10;p.cost=Math.round(p.cost*c.ck/5)*5}
+  state.p.mixed.eff=Math.max(0.7,c.eff-0.03);state.p.mixed.parkPrice=state.p.multi.parkPrice;state.p.mixed.parkCost=state.p.multi.parkCost;
   state.p.multi.eff=c.eff;state.p.multi.parkPrice=Math.round(state.p.multi.parkPrice*c.pk/100)*100;state.p.multi.parkCost=Math.round(state.p.multi.parkCost*c.ck/100)*100;
   state.p.cottage.house=c.house.cottage;[state.p.cottage.lotW,state.p.cottage.lotD]=c.lot.cottage;
   state.p.town.house=c.house.town;[state.p.town.lotW,state.p.town.lotD]=c.lot.town;
@@ -825,8 +864,10 @@ function layoutLots(P,th,p,town){
 }
 function layoutBlocks(P,th,p){
   const F=frame(P,th),T=F.toXY;
-  const D=16,L=p.secLen,H=p.floors*cls().h,Gn=normGap(p.floors),Gs=state.seis?2*H:0,G=Math.max(Gn,Gs,H*p.insol),Gu=20,per=7,set=per+7;
-  const gWhy=G===Gs&&Gs>0?'сейсмика: 2 высоты':G===Gn?'норма по этажности':'ваш минимум';
+  const tower=p.mixed||p.form==='tower'||(p.form!=='slab'&&p.floors>=18);
+  const H=p.floors*cls().h,per=7,set=per+7;let D,L,G,Gu,gWhy;
+  if(tower){D=28;L=28;G=Math.max(30,H*(state.seis?0.8:0.6),H*p.insol*0.6);Gu=G;gWhy=`башни: ${state.seis?'0,8':'0,6'} высоты (допущение)`}
+  else{D=16;L=p.secLen;const Gn=normGap(p.floors),Gs=state.seis?2*H:0;G=Math.max(Gn,Gs,H*p.insol);Gu=20;gWhy=G===Gs&&Gs>0?'сейсмика: 2 высоты':G===Gn?'норма по этажности':'ваш минимум'}
   const PP=D+G;
   const fits=(u0,v0)=>{const pts=[T(u0,v0),T(u0+L,v0),T(u0+L,v0+D),T(u0,v0+D)];const mids=[T(u0+L/2,v0),T(u0+L/2,v0+D),T(u0,v0+D/2),T(u0+L,v0+D/2)];return pts.every(q=>ok(q,P,set))&&mids.every(q=>ok(q,P,set))?pts:null};
   // fill one row greedily along its length: place a house at the first spot that fits, then skip the end gap
@@ -861,11 +902,36 @@ function layoutBlocks(P,th,p){
     const pw=state.carfree?Math.min(L*0.85,50):Math.min(L*0.7,40),pd=Math.min(gapFree-10,state.carfree?32:24);
     if(pd>=8){const u=b.u0+(L-pw)/2,v=b.v0+D+5;const r=[T(u,v),T(u+pw,v),T(u+pw,v+pd),T(u,v+pd)];if(r.every(q=>pip(q[0],q[1],P))){plays.push(r);playA+=pw*pd}}
   }
-  const nSec=Math.max(1,Math.round(L/18));
-  const blds=best.map(b=>({pts:b.pts,ct:T(b.u0+L/2,b.v0+D/2),secs:Array.from({length:nSec-1},(_,i)=>[T(b.u0+L*(i+1)/nSec,b.v0),T(b.u0+L*(i+1)/nSec,b.v0+D)])}));
+  const nSec=tower?1:Math.max(1,Math.round(L/18));
+  const blds=best.map(b=>({u0:b.u0,v0:b.v0,pts:b.pts,ct:T(b.u0+L/2,b.v0+D/2),secs:Array.from({length:nSec-1},(_,i)=>[T(b.u0+L*(i+1)/nSec,b.v0),T(b.u0+L*(i+1)/nSec,b.v0+D)])}));
   const sh=Math.min(H*0.3,12);
   const shadows=blds.map(bd=>bd.pts.map(q=>[q[0]+sh*0.35,q[1]-sh]));
-  return{kind:'multi',blds,shadows,per,L,D,H,G,gWhy,th,amen,parkStrips,plays,surf,playA};
+  const out={kind:'multi',blds,shadows,per,L,D,H,G,gWhy,th,amen,parkStrips,plays,surf,playA,tower,floors:p.floors};
+  if(p.mixed)mixFunctions(out,P,T,p);
+  return out;
+}
+/* mixed-use: towers nearest the main side become offices and a hotel, a retail podium joins them; the rest is housing */
+function mixDemand(){
+  const d=state.site&&state.site.d,tier=state.region==='tash'?0:state.region==='tashobl'?1:2,lp=locProfile(),dist=lp.dist;
+  let office=[12000,4000,2000][tier],rooms=[160,60,0][tier];
+  if(state.region==='sam'||state.region==='buh')rooms=120;
+  if(dist!=null){if(dist>12){office*=0.3;rooms=Math.round(rooms*0.3)}else if(dist<=5){office*=1.5;rooms=Math.round(rooms*1.3)}}
+  if(d&&d.metro<=800)office*=1.3;
+  const retail=nonresDemand('retail').cap;
+  return{office:Math.round(office),rooms,retail};
+}
+function mixFunctions(Lo,P,T,p){
+  const dm=mixDemand(),foot=Lo.L*Lo.D,fl=p.floors,E=entranceOf(P);
+  const ord=Lo.blds.slice().sort((a,b)=>Math.hypot(a.ct[0]-E[0],a.ct[1]-E[1])-Math.hypot(b.ct[0]-E[0],b.ct[1]-E[1]));
+  ord.forEach(b=>{b.fn='res';b.fl=fl});
+  let i=0;
+  const nOff=Math.min(Math.floor(ord.length/3),Math.round(dm.office/(foot*fl*0.85)));
+  for(let k=0;k<nOff&&i<ord.length;k++,i++)ord[i].fn='office';
+  if(dm.rooms>=60&&i<ord.length-1){const b=ord[i++];b.fn='hotel';b.fl=Math.min(fl,Math.max(8,Math.ceil(dm.rooms*55/foot)))}
+  // podium: 2-storey retail ring around the towers nearest the main side, sized to demand
+  const ring=12,podA=(Lo.L+2*ring)*(Lo.D+2*ring)-foot,nPod=Math.min(ord.length,Math.max(1,Math.ceil(dm.retail/(podA*2*0.85*0.9))));
+  Lo.podiums=ord.slice(0,nPod).map(b=>[T(b.u0-ring,b.v0-ring),T(b.u0+Lo.L+ring,b.v0-ring),T(b.u0+Lo.L+ring,b.v0+Lo.D+ring),T(b.u0-ring,b.v0+Lo.D+ring)]);
+  Lo.podA=nPod*podA;Lo.mixed=true;Lo.dm=dm;
 }
 
 /* retail / office blocks and warehouses: rows of boxes with parking or truck yards in front */
@@ -891,6 +957,14 @@ function layoutBoxes(P,th,p,t){
 
 /* ---------- stats, finance, cash flow ---------- */
 function stats(t,Lo,p,area){
+  if(t==='mixed'&&Lo.mixed){
+    const foot=Lo.L*Lo.D,g=fn=>Lo.blds.filter(b=>b.fn===fn).reduce((a,b)=>a+foot*b.fl,0);
+    const resG=g('res'),offG=g('office'),hotG=g('hotel'),podG=Lo.podA*2,gba=resG+offG+hotG+podG;
+    const sale=resG*p.eff,apts=Math.round(sale/cls().apt),rooms=Math.round(hotG/55);
+    const park=Math.round(apts*cls().park+offG/60+podG/40+rooms*0.3);
+    const n=Lo.blds.length,fp=n*foot+Lo.podA;
+    return{units:apts,bldgs:n,foot:fp,gba,sale,resG,offG,hotG,podG,rooms,built:fp,far:gba/area,cover:fp/area,park,parkSurf:0,parkUnder:park,resPark:Math.round(apts*cls().park)};
+  }
   if(Lo.kind==='boxes'){const n=Lo.blds.length,foot=n*Lo.L*Lo.D,gba=foot*Lo.floors,gla=Math.round(gba*p.eff);
     return{units:gla,gla,bldgs:n,foot,gba,sale:gla,built:foot,far:gba/area,cover:foot/area,park:t==='retail'?Math.round(gla/40):0,yardA:(Lo.yards||[]).length*Lo.L*(Lo.G-9)}}
   if(Lo.kind==='lots'){const n=Lo.lots.length;return{units:n,sale:n*p.house,built:n*Lo.lotArea,dens:n/(area/1e4)}}
@@ -909,6 +983,17 @@ function nonresDemand(t){
   return{cap:Math.round(cap),how:'оценка спроса на склады по региону (допущение)'};
 }
 function finance(t,st,p,area,m){
+  if(t==='mixed'&&st.resG!=null){
+    const dm=mixDemand(),cap=p.cap||0.12;
+    const offL=Math.min(st.offG*0.85*0.85,dm.office),offV=offL*p.offRent*12*0.9/cap;
+    const retL=Math.min(st.podG*0.85*0.9,dm.retail),retV=retL*p.retRent*12*0.9/cap;
+    const hotNoi=st.rooms*p.adr*p.occ*365*0.33,hotV=hotNoi/(cap+0.01);
+    const resRev=st.sale*p.price*(state.cls!=='econ'?1+CARFREE_PREMIUM:1),parkRev=(st.resPark||0)*(p.parkPrice||0);
+    const revenue=resRev+offV+retV+hotV+parkRev;
+    const build=st.resG*p.cost+st.offG*p.offCost+st.podG*p.retCost+st.rooms*p.roomCost+st.parkUnder*(p.parkCost||0);
+    const infra=area*p.infra,soft=SOFT*(build+infra),total=build+infra+soft,land=revenue*(1-m)-total;
+    return{revenue,resRev,offV,retV,hotV,parkRev,offL,retL,hotNoi,build,infra,soft,total,land,perSotka:land/(area/100),perHa:land/(area/1e4)};
+  }
   if(!isRes(t)){
     const dm=nonresDemand(t),leased=Math.min(st.gla*p.occ,dm.cap);
     const noi=leased*p.rent*12*0.9,value=p.cap>0?noi/p.cap:0;
@@ -943,10 +1028,10 @@ function cashflow(t,f,units){
   return{cf,cum:cumA,profit,roi,irr,npv20,peak:-minC,peakM:minM,pay,months:n-1,landCost,salesM:SN,buildM:B,auto,need};
 }
 function evalType(t,P,area,a0){
-  const p=state.p[t],list=t==='multi'||!isRes(t)?VARS.multi:VARS.lots;
+  const p=state.p[t],list=isTall(t)||!isRes(t)?VARS.multi:VARS.lots;
   const vs=list.map(v=>{
     const th=a0+v.da*Math.PI/180;
-    const L=!isRes(t)?layoutBoxes(P,th,{...p,len:Math.max(30,Math.round(p.len*(v.lenMul||1)/5)*5)},t):t==='multi'?layoutBlocks(P,th,{...p,secLen:Math.max(30,Math.round(p.secLen*(v.lenMul||1)/5)*5)}):layoutLots(P,th,{...p,perBlock:Math.round(p.perBlock*(v.blockMul||1))},t==='town');
+    const L=!isRes(t)?layoutBoxes(P,th,{...p,len:Math.max(30,Math.round(p.len*(v.lenMul||1)/5)*5)},t):isTall(t)?layoutBlocks(P,th,{...p,mixed:t==='mixed',form:t==='mixed'?'tower':state.form,secLen:Math.max(30,Math.round(p.secLen*(v.lenMul||1)/5)*5)}):layoutLots(P,th,{...p,perBlock:Math.round(p.perBlock*(v.blockMul||1))},t==='town');
     const st=stats(t,L,p,area);const f=finance(t,st,p,area,state.margin/100);
     return{...v,L,st,f};
   });
@@ -984,6 +1069,7 @@ function landuse(Lo,P,area){
 }
 
 /* ---------- schematic view ---------- */
+const FNC={res:{f:'#F4F6FA',s:'#2B3A55',l:'Жильё'},office:{f:'#DCE5FF',s:'#2E4BC9',l:'Офисы'},hotel:{f:'#FBE1EC',s:'#B4235C',l:'Отель'}};
 const BX={retail:{f:'#FDE7C7',s:'#A15C07',y:'#D0D5DD',lab:'ТЦ'},logistics:{f:'#E9ECF2',s:'#344054',y:'#C4C9D2',lab:'Склад'}};
 const svg=$('#map'),bgG=$('#bg'),layer=$('#layer'),underEl=$('#under');
 function bbox(P){let a=[1e9,1e9,-1e9,-1e9];for(const [x,y] of P){a[0]=Math.min(a[0],x);a[1]=Math.min(a[1],y);a[2]=Math.max(a[2],x);a[3]=Math.max(a[3],y)}return a}
@@ -1049,9 +1135,10 @@ function drawSchema(){
   }else{
     for(const s of Lo.shadows)o.push(`<polygon points="${pts(s)}" fill="var(--shadow)"/>`);
     const deg=Lo.th*180/Math.PI;let dg=((deg%180)+180)%180;if(dg>90)dg-=180;
-    for(const b of Lo.blds){o.push(`<polygon points="${pts(b.pts)}" fill="var(--bldg)" stroke="var(--bldgtop)" stroke-width="1.4" vector-effect="non-scaling-stroke"/>`);
+    for(const pd of Lo.podiums||[])o.push(`<polygon points="${pts(pd)}" fill="${BX.retail.f}" stroke="${BX.retail.s}" stroke-width="1" vector-effect="non-scaling-stroke"/>`);
+    for(const b of Lo.blds){const Fc=FNC[b.fn||'res'];o.push(`<polygon points="${pts(b.pts)}" fill="${Fc.f}" stroke="${Fc.s}" stroke-width="1.4" vector-effect="non-scaling-stroke"/>`);
       for(const l of b.secs)o.push(`<line x1="${l[0][0].toFixed(1)}" y1="${l[0][1].toFixed(1)}" x2="${l[1][0].toFixed(1)}" y2="${l[1][1].toFixed(1)}" stroke="var(--bldgtop)" stroke-width=".8" opacity=".45" vector-effect="non-scaling-stroke"/>`);
-      if(k<2.2)o.push(`<text x="${b.ct[0].toFixed(1)}" y="${b.ct[1].toFixed(1)}" transform="rotate(${dg.toFixed(1)} ${b.ct[0].toFixed(1)} ${b.ct[1].toFixed(1)})" font-size="${Math.min(7,10*k)}" font-weight="600" font-family="Golos Text, sans-serif" fill="var(--bldgtop)" text-anchor="middle" dominant-baseline="central">${state.p.multi.floors} эт.</text>`)}
+      if(k<2.2)o.push(`<text x="${b.ct[0].toFixed(1)}" y="${b.ct[1].toFixed(1)}" transform="rotate(${dg.toFixed(1)} ${b.ct[0].toFixed(1)} ${b.ct[1].toFixed(1)})" font-size="${Math.min(7,10*k,Lo.L/(((Lo.mixed?FNC[b.fn].l+' ':'')+(b.fl||Lo.floors)+' эт.').length*0.62))}" font-weight="600" font-family="Golos Text, sans-serif" fill="${FNC[b.fn||'res'].s}" text-anchor="middle" dominant-baseline="central">${Lo.mixed?FNC[b.fn].l+' ':''}${b.fl||Lo.floors} эт.</text>`)}
   }
   if(Lo.kind==='multi'){
     for(const r of Lo.parkStrips||[]){o.push(`<polygon points="${pts(r)}" fill="${AM.parking.c}"/>`)}
@@ -1162,9 +1249,10 @@ function drawGeo(){
   }else{
     for(const s of Lo.shadows)poly(s,{fillColor:'#101828',fillOpacity:.18});
     const deg=Lo.th*180/Math.PI;let dg=((deg%180)+180)%180;if(dg>90)dg-=180;
-    for(const b of Lo.blds){poly(b.pts,{fillColor:'#F4F6FA',stroke:true,color:'#2B3A55',weight:1.6});
+    for(const pd of Lo.podiums||[])poly(pd,{fillColor:BX.retail.f,stroke:true,color:BX.retail.s,weight:1});
+    for(const b of Lo.blds){const Fc=FNC[b.fn||'res'];poly(b.pts,{fillColor:Fc.f,stroke:true,color:Fc.s,weight:1.6});
       for(const l of b.secs)L.polyline(l.map(toLL),{renderer:R,interactive:false,color:'#2B3A55',weight:1,opacity:.45}).addTo(planLayer);
-      L.marker(toLL(b.ct),{interactive:false,icon:L.divIcon({className:'',html:`<span class="blbl" style="transform:translate(-50%,-50%) rotate(${dg.toFixed(1)}deg)">${state.p.multi.floors} эт.</span>`,iconSize:[0,0]})}).addTo(planLayer)}
+      L.marker(toLL(b.ct),{interactive:false,icon:L.divIcon({className:'',html:`<span class="blbl" style="transform:translate(-50%,-50%) rotate(${dg.toFixed(1)}deg);color:${FNC[b.fn||'res'].s}">${Lo.mixed?FNC[b.fn].l+' ':''}${b.fl||Lo.floors} эт.</span>`,iconSize:[0,0]})}).addTo(planLayer)}
   }
   if(MP){for(const r of MP.roads)poly(r,{fillColor:'#C9CFD8'});
     for(const z of MP.zones){poly(z.poly,{fillColor:z.kind==='park'?'#CFE6C0':z.kind==='school'?'#FFF0C2':'#FDE3E3',stroke:true,color:z.kind==='park'?'#8DBB78':z.kind==='school'?'#D9A93A':'#E29A9A',weight:1.5});
@@ -1232,6 +1320,10 @@ function showView(){
   if(geo&&lmap)lmap.invalidateSize();
 }
 
+/* height caps announced for projects in Tashkent districts (Cabinet resolution 28.02.2026 via Kun.uz) — confirm for each plot in its urban-planning permit */
+const DIST_H=[[/серг|sergel|sergeli/i,30,'Сергели'],[/чилан|chilon|chilan/i,32,'Чиланзар'],[/мирзо|mirzo/i,27,'Мирзо-Улугбек'],[/мираб|mirob|mirab/i,40,'Мирабад'],[/бектем|bektem/i,30,'Бектемир'],[/учтеп|uchtep/i,33,'Учтепа'],[/янгих|yangih/i,28,'Янгихаёт'],[/шайх|shayx|shaykh|shaikh/i,29,'Шайхантахур'],[/алмаз|olmaz|almaz/i,18,'Алмазар']];
+function districtCap(addr){if(!addr||state.region!=='tash')return null;const txt=Object.values(addr).join(' ');for(const [re,mx,nm] of DIST_H)if(re.test(txt))return{name:nm,max:mx};return null}
+
 /* ---------- site analysis ---------- */
 let anaTimer=0;
 function polyKey(){return state.geo?state.poly.map(p=>p.join(',')).join(';')+'|'+state.geo.lat0.toFixed(5)+','+state.geo.lng0.toFixed(5):null}
@@ -1278,9 +1370,10 @@ nwr["office"]${a(1000)};out count;`;
   for(let i=0;i<n;i++)for(let j=0;j<n;j++){const x=c[0]+(c[2]-c[0])*(i+.5)/n,y=c[1]+(c[3]-c[1])*(j+.5)/n;if(pip(x,y,P))elevPts.push([x,y])}
   if(elevPts.length<3)elevPts.push([cx,cy]);
   const ell=elevPts.map(p=>llOf(p[0],p[1]));
-  const [ov,el]=await Promise.allSettled([
+  const [ov,el,rv]=await Promise.allSettled([
     fetchJSON('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}}),
-    fetchJSON('https://api.open-meteo.com/v1/elevation?latitude='+ell.map(p=>p[0].toFixed(5)).join(',')+'&longitude='+ell.map(p=>p[1].toFixed(5)).join(','),null,15000)
+    fetchJSON('https://api.open-meteo.com/v1/elevation?latitude='+ell.map(p=>p[0].toFixed(5)).join(',')+'&longitude='+ell.map(p=>p[1].toFixed(5)).join(','),null,15000),
+    fetchJSON(`https://nominatim.openstreetmap.org/reverse?format=json&zoom=14&accept-language=ru&lat=${la.toFixed(6)}&lon=${lo.toFixed(6)}`,null,10000)
   ]);
   if(state.site.key!==key)return;
   let d=null,elev=null;
@@ -1291,8 +1384,9 @@ nwr["office"]${a(1000)};out count;`;
     for(let i=0;i<elevPts.length;i++)for(let j=i+1;j<elevPts.length;j++){const dd=Math.hypot(elevPts[i][0]-elevPts[j][0],elevPts[i][1]-elevPts[j][1]);if(dd>40&&dd<Math.max(250,R))maxS=Math.max(maxS,Math.abs(h[i]-h[j])/dd)}
     elev={min:Math.min(...h),max:Math.max(...h),slope:maxS};
   }
-  state.site={status:(d||elev)?'ok':'error',key,d,elev};
-  if(state.social==='auto'&&d)update();else{renderVerdict();renderQuality()}
+  const dc=rv.status==='fulfilled'?districtCap(rv.value.address):null;
+  state.site={status:(d||elev)?'ok':'error',key,d,elev,dc};
+  if(state.social==='auto'&&d)update();else{renderVerdict();renderQuality();renderAnswer()}
 }
 function summarizeOSM(els){
   const s={road:Infinity,major:Infinity,schools:0,kinder:0,clinic:Infinity,shops:0,stop:Infinity,metro:Infinity,power:Infinity,rail:Infinity,industrial:Infinity,cemetery:Infinity,water:Infinity,airport:Infinity,buildings:0};
@@ -1335,7 +1429,7 @@ function factors(){
   if(v&&v.st.units&&isRes(t)){const lim=Math.round(PACE[t][isT?0:1]*cls().pace),need=salesNeed(t,v.st.units),yrs=need/12;
     F.push({n:'Темп продаж',st:need>120?'bad':need>state.tl[t].sales?'warn':'ok',v:`${nf.format(v.st.units)} за ${yrs>=2?nf1.format(yrs)+' г.':need+' мес.'}`,note:need>120?`Рынок поглощает около ${lim} в месяц — продажи займут ${nf1.format(yrs)} лет. Для одного проекта это слишком много: делите на очереди, берите часть участка или другой тип застройки.`:need>state.tl[t].sales?`При темпе около ${lim} в месяц продажи займут ${need} мес. — срок и IRR в расчёте уже скорректированы.`:`В пределах реалистичного темпа (до ${lim} в месяц).`,src:'Расчёт',crit:need>120})}
   if(state.mp&&state.mp.streets)F.push({n:'Генплан',st:'ok',v:`${state.mp.streets} ул.`,note:'Большой участок поделён на кварталы главными улицами шириной 22 м; школы, детсады, парк и центр размещены по числу жителей.',src:'Расчёт'});
-  if(t==='multi'&&v&&v.st.units&&state.lu){const res=v.st.sale/M2_PER_PERSON,need=greenNeed()*state.area+res*PLAY_PER_PERSON,have=state.lu.green;
+  if(isTall(t)&&v&&v.st.units&&state.lu){const res=v.st.sale/M2_PER_PERSON,need=greenNeed()*state.area+res*PLAY_PER_PERSON,have=state.lu.green;
     F.push({n:'Двор, озеленение, площадки',st:have>=need?'ok':'warn',v:`${nf.format(have/100)} из ${nf.format(need/100)} сот.`,note:have>=need?'По нормам двора и площадок вариант проходит.':'Свободной территории меньше нормы (озеленение по классу и закону + площадки 3,1 м² на жителя). Уменьшите этажность или число домов.',src:'Нормы'})}
   // site
   const S=state.site;
@@ -1398,6 +1492,7 @@ function renderVerdict(){
   else if(warn.length+unk.length===0){cls='ok';txt='Можно строить';sub='Критичных проблем не найдено. Финальное решение — после проверки архитектором и юристом.'}
   else{cls='warn';const n=warn.length+unk.length;txt=`Можно, но сначала проверьте ${n} ${plural(n,['пункт','пункта','пунктов'])}`;sub=(warn.length?'Внимание: '+warn.map(f=>f.n.toLowerCase()).join(', ')+'. ':'')+(unk.length?'Нет данных: '+unk.map(f=>f.n.toLowerCase()).join(', ')+'.':'')}
   $('#vd-badge').className='vd-badge '+cls;$('#vd-badge').textContent=txt;$('#vd-sub').textContent=sub;
+  state.vd={cls,txt,short:cls==='ok'?'Да':cls==='bad'?'Нет':'Да, после проверок'};
   if(state.source==='Пример'){$('#vmini').className='vmini example';$('#vmini').innerHTML=`<div><span>Сейчас показан пример расчёта</span><br><b>Обведите свой участок — всё пересчитается</b></div><span>↖</span>`;$('#vmini').setAttribute('href','#mapwrap')}
   else{$('#vmini').className='vmini';$('#vmini').setAttribute('href','#verdict-sec');$('#vmini').innerHTML=`<div><span>Стоит ли строить</span><br><b style="color:var(--${cls==='ok'?'good':cls==='bad'?'bad':'warn'})">${txt}</b></div><span>подробнее ↓</span>`}
   $('#vd-rec').innerHTML=recText(bestT,F);
@@ -1415,7 +1510,7 @@ function locProfile(){
   const bad=d&&(d.industrial<=300||d.rail<=100||d.cemetery<=300||d.power<=30);
   if(bad)rec=rec.filter(c=>c!=='premium'&&c!=='business');if(!rec.length)rec=['comfort','econ'];
   const far=dist!=null&&dist>15,noTransit=d&&Math.min(d.stop,d.metro)>500;
-  const types=far||noTransit?['cottage','town']:dist!=null&&dist<=8?['multi']:['multi','town'];
+  const types=far||noTransit?['cottage','town']:dist!=null&&dist<=8?['multi','mixed']:['multi','town'];
   const gaps=[];
   if(d){
     if(d.schools+d.kinder<2)gaps.push('В районе мало школ и садов — свой детсад или школа станет сильным аргументом продаж для семей.');
@@ -1471,34 +1566,55 @@ function quality(v,t){
   }
   else add('Парковка у дома',10,10,'');
   const am=amenSummary(v.L);
-  let soc;const res=t==='multi'?v.st.sale/M2_PER_PERSON:v.st.units*HH;
+  let soc;const res=isTall(t)?v.st.sale/M2_PER_PERSON:v.st.units*HH;
   if(am.kinder||am.school)soc=15;else if(d)soc=Math.min(15,(d.schools+d.kinder)*5);else soc=res<1500?12:7;
   add('Сады и школы рядом',soc,15,soc>=15?'':d?'Рядом мало школ и садов: включите «Школы и детсады на участке» — это продаёт семьям.':'Проверьте школы и сады рядом: выберите участок на карте.');
-  const playNeed=res*PLAY_PER_PERSON,playHave=t==='multi'?(v.L.playA||0):(am.park?am.park.area:0);
+  const playNeed=res*PLAY_PER_PERSON,playHave=isTall(t)?(v.L.playA||0):(am.park?am.park.area:0);
   add('Парк и площадки',10*Math.min(1,playNeed?playHave/playNeed:1),10,playHave>=playNeed?'':`Площадок ${nf.format(playHave)} м² при норме ${nf.format(playNeed)} м²: добавьте дворовые площадки или парк.`);
-  const shopsOk=(am.center&&am.center.n)||(d&&d.shops>=3);
+  const shopsOk=t==='mixed'||(am.center&&am.center.n)||(d&&d.shops>=3);
   add('Магазины и сервисы',shopsOk?10:d?3:6,10,shopsOk?'':'Предусмотрите коммерцию на первых этажах или торговый центр: и удобство жителям, и доход.');
-  if(t==='multi'){const okD=v.st.far<=FAR_MAX&&v.st.cover<=0.35;add('Плотность',okD?10:v.st.far<=FAR_MAX*1.15?5:0,10,okD?'':'Плотность выше предела: снизьте этажность или число домов.')}
+  if(t==='mixed'){const okD=v.st.far<=FAR_MAX*1.6;add('Плотность',okD?10:5,10,okD?'':'Очень высокая плотность: проверьте инсоляцию и нагрузку на сети.')}
+  else if(t==='multi'){const okD=v.st.far<=FAR_MAX&&v.st.cover<=0.35;add('Плотность',okD?10:v.st.far<=FAR_MAX*1.15?5:0,10,okD?'':'Плотность выше предела: снизьте этажность или число домов.')}
   else add('Плотность',10,10,'');
   const need=salesNeed(t,v.st.units),tl=state.tl[t].sales;
   add('Темп продаж',need<=tl?10:need<=60?6:need<=120?3:0,10,need<=tl?'':`Продажи займут ${need} мес.: делите проект на очереди или берите класс с более широким спросом.`);
   const f=lp.fit(state.cls);
   add('Класс под локацию',f==='ok'?15:f==='mid'?8:0,15,f==='ok'?'':`Для этого места лучше подходит класс «${CLS[lp.rec[0]].name}»${lp.known?'':' (точнее — после выбора участка на карте)'}.`);
+  {const dc=state.site&&state.site.dc,fl=t==='multi'||t==='mixed'?state.p[t].floors:0;if(dc&&fl)add('Этажность по генплану',fl<=dc.max?5:0,5,fl<=dc.max?'':`В районе ${dc.name} проекты — до ${dc.max} этажей, а у вас ${fl}. Снизьте этажность или проверьте градплан участка.`)}
   if(lp.known)add('Тип застройки под место',lp.types.includes(t)?10:0,10,lp.types.includes(t)?'':`Здесь лучше подходят ${lp.types.map(k=>TYPE_SHORT[k].toLowerCase()).join(' или ')}: ${t==='multi'?'за городом квартиры продаются медленно':'в городе земля слишком дорогая для малоэтажки'}.`);
   const z=d?['power','water','rail','industrial','cemetery'].filter(k=>d[k]<=(k==='power'?30:k==='water'?50:k==='rail'?100:300)).length:null;
   add('Соседство',z==null?3:z?2:5,5,z?'Рядом вредные или шумные объекты — заложите зелёный буфер со стороны источника.':'');
   const sum=L.reduce((a,x)=>a+x.pts,0),mx=L.reduce((a,x)=>a+x.max,0),score=Math.round(100*sum/mx);
   return{score,items:L};
 }
+function renderAnswer(){
+  const v=state.variants[state.sel];if(!v||!v.cash)return;
+  const t=state.type,st=v.st,f=v.f,c=v.cash,q=state.qs||0,vd=state.vd||{cls:'warn',txt:''};
+  const what=`${TYPE_SHORT[t]}${isRes(t)?', '+cls().name.toLowerCase():''}${isTall(t)||t==='retail'?`, ${(state.p[t]||{}).floors||''} эт.`:''}`;
+  const vol=isRes(t)?`${nf.format(st.units)} ${plural(st.units,UNIT_W[t])}`:`${nf.format(st.gla)} м²`;
+  const sub=t==='mixed'?`+ офисы, отель, торговля`:isTall(t)?`${nf.format(st.gba)} м² общей`:isRes(t)?`${nf.format(st.sale)} м² жилья`:'аренда '+money(f.noi)+'/год';
+  const tile=(lbl,val,sm,cl,href)=>`<a class="ans${cl?' '+cl:''}" href="${href||'#'}"><span>${lbl}</span><b>${val}</b><small>${sm}</small></a>`;
+  $('#ans-title').innerHTML=`Ответ по участку <span>${nf2.format(state.area/1e4)} га</span>${state.source==='Пример'?' — это пример, выберите свой участок':''}`;
+  $('#ans').innerHTML=[
+    tile('Что строить',what,vol+' · '+sub,'','#vars'),
+    tile('Нужно вложить',money(c.peak),`пик к ${c.peakM}-му месяцу`,'','#kpis'),
+    tile('Прибыль',money(c.profit),`маржа ${pct(c.profit/Math.max(1,f.revenue))} · IRR ${irrTxt(c.irr)}`,c.profit>0?'ok':'bad','#kpis'),
+    tile('Деньги вернутся',c.pay==null?'не вернутся':`через ${c.pay} мес.`,`проект ${c.months} мес.${c.auto?' · по темпу рынка':''}`,c.pay==null?'bad':'','#cashchart'),
+    tile('Земля стоит до',f.land>0?money(f.land):'—',f.land>0?`${money(f.perSotka)} за сотку`:'маржа недостижима',f.land>0?'':'bad','#land'),
+    tile('Стоит ли строить',vd.short||'—',`качество ${q} из 100`,vd.cls,'#verdict-sec')
+  ].join('');
+}
+$('#ans-opt').addEventListener('click',()=>{$('#opt-run').click();$('.optbox').scrollIntoView({behavior:'smooth',block:'start'})});
 function renderQuality(){
   const v=state.variants[state.sel],q=quality(v,state.type);
+  state.qs=q.score;
   const col=q.score>=75?'var(--good)':q.score>=55?'var(--warn)':'var(--bad)',lbl=q.score>=75?'сильный проект':q.score>=55?'средний — есть что улучшить':'слабый — покупатели заметят';
   $('#qscore').innerHTML=`<b style="color:${col}">${q.score}</b><div style="flex:1"><div class="qbar"><i style="width:${q.score}%;background:${col}"></i></div><small>из 100 — ${lbl}</small></div>`;
   const miss=q.items.filter(x=>x.pts<x.max).sort((a,b)=>(b.max-b.pts)-(a.max-a.pts));
   $('#qhints').innerHTML=miss.length?miss.slice(0,5).map(x=>`<li><b>−${x.max-x.pts}</b><span><strong>${x.n}.</strong> ${x.hint}</span></li>`).join(''):'<li class="ok"><b>✓</b><span>По всем критериям проект в порядке.</span></li>';
   const lp=locProfile(),c=cls();
-  const recN=lp.rec.map(k=>CLS[k].name).join(' или ');
-  $('#loc').innerHTML=`<div class="rec"><b>Рекомендация: класс ${recN}, ${lp.types.map(k=>TYPE_SHORT[k].toLowerCase()).join(' или ')}.</b><br>${lp.known?(lp.dist!=null?`До центра ${nf1.format(lp.dist)} км. `:''):'Точнее — после выбора участка на карте. '}Покупатели: ${CLS[lp.rec[0]].who}. Им важно: ${CLS[lp.rec[0]].needs}.</div>${lp.gaps.length?`<ul>${lp.gaps.map(g=>`<li>${g}</li>`).join('')}</ul>`:''}${(lp.rec.includes(state.cls)&&lp.types.includes(state.type))?'':`<button class="btn" type="button" id="loc-apply">Применить: ${CLS[lp.rec[0]].name}, ${TYPE_SHORT[lp.types[0]].toLowerCase()}</button>`}`;
+  const recN=lp.rec.map(k=>CLS[k].name).join(' или '),dc=state.site&&state.site.dc;
+  $('#loc').innerHTML=`<div class="rec"><b>Рекомендация: класс ${recN}, ${lp.types.map(k=>TYPE_SHORT[k].toLowerCase()).join(' или ')}.</b><br>${lp.known?(lp.dist!=null?`До центра ${nf1.format(lp.dist)} км. `:''):'Точнее — после выбора участка на карте. '}Покупатели: ${CLS[lp.rec[0]].who}. Им важно: ${CLS[lp.rec[0]].needs}.${dc?`<br><b>Район ${dc.name}:</b> по изменениям генплана (март 2026) проекты здесь — до ${dc.max} этажей. Точную высоту участка даёт градплан.`:''}</div>${lp.gaps.length?`<ul>${lp.gaps.map(g=>`<li>${g}</li>`).join('')}</ul>`:''}${(lp.rec.includes(state.cls)&&lp.types.includes(state.type))?'':`<button class="btn" type="button" id="loc-apply">Применить: ${CLS[lp.rec[0]].name}, ${TYPE_SHORT[lp.types[0]].toLowerCase()}</button>`}`;
   const b=$('#loc-apply');if(b)b.onclick=()=>{setClass(lp.rec[0]);state.type=lp.types[0];resetFlags();buildControls();update()};
 }
 function setClass(k){state.cls=k;state.carfree=CLS[k].carfree;applyRegion(state.region);renderClass()}
@@ -1513,28 +1629,30 @@ let optRunning=false;
 async function runOptimizer(){
   if(optRunning||state.poly.length<3)return;optRunning=true;
   const btn=$('#opt-run'),st=$('#opt-status');btn.disabled=true;
-  const save={cls:state.cls,carfree:state.carfree,type:state.type,p:JSON.parse(JSON.stringify(state.p)),sel:state.sel,manual:state.manual};
+  const save={form:state.form,floorsAuto:state.floorsAuto,cls:state.cls,carfree:state.carfree,type:state.type,p:JSON.parse(JSON.stringify(state.p)),sel:state.sel,manual:state.manual};
   const P=state.poly,area=Math.abs(polyArea(P)),a0=longestAngle(P),lp=locProfile();
   const jobs=[];
   for(const c of CLS_ORDER){
     if(lp.fit(c)==='bad')continue;
     for(const t of ['cottage','town'])jobs.push({c,t});
-    for(const fl of [9,12,16,20,25])for(const cf of (CLS[c].carfree?[true]:c==='econ'?[false]:[false,true]))jobs.push({c,t:'multi',fl,cf});
+    for(const fl of [9,12,16,20,25,30,35])for(const cf of (CLS[c].carfree?[true]:c==='econ'?[false]:[false,true]))jobs.push({c,t:'multi',fl,cf});
+    if(c!=='econ')for(const fl of [20,25,30,35])jobs.push({c,t:'mixed',fl,cf:true});
   }
   for(const fl of [1,2,3])jobs.push({c:save.cls,t:'retail',fl});
   jobs.push({c:save.cls,t:'logistics'});
   const out=[];let i=0;
   for(const j of jobs){
     i++;if(i%3===0){st.textContent=`Считаю варианты: ${i} из ${jobs.length}…`;await new Promise(r=>setTimeout(r,0))}
-    state.cls=j.c;state.carfree=j.t==='multi'?j.cf:false;applyRegion(state.region);if(j.fl)state.p[j.t==='retail'?'retail':'multi'].floors=j.fl;state.type=j.t;
+    state.cls=j.c;state.carfree=j.t==='multi'?j.cf:false;applyRegion(state.region);if(j.fl)state.p[j.t==='multi'||j.t==='mixed'||j.t==='retail'?j.t:'multi'].floors=j.fl;state.form='auto';state.type=j.t;
     const r=evalType(j.t,P,area,a0);if(r.bi<0)continue;
     const v=r.vs[r.bi];v.cash=cashflow(j.t,v.f,v.st.units);
     const q=quality(v,j.t),need=salesNeed(j.t,v.st.units);
     if(need>120||q.score<55||v.cash.profit<=0)continue;
     if(isRes(j.t)&&lp.known&&!lp.types.includes(j.t))continue;
+    {const dc=state.site&&state.site.dc;if(dc&&j.fl&&isTall(j.t)&&j.fl>dc.max)continue}
     out.push({...j,v,q:q.score,profit:v.cash.profit,npv:v.cash.npv20,irr:v.cash.irr,units:v.st.units,months:v.cash.months});
   }
-  Object.assign(state,{cls:save.cls,carfree:save.carfree,type:save.type,sel:save.sel,manual:save.manual});state.p=save.p;
+  Object.assign(state,{form:save.form,floorsAuto:save.floorsAuto,cls:save.cls,carfree:save.carfree,type:save.type,sel:save.sel,manual:save.manual});state.p=save.p;
   out.sort((a,b)=>b.npv-a.npv);
   state.opt=out.slice(0,5);
   btn.disabled=false;optRunning=false;
@@ -1544,7 +1662,7 @@ async function runOptimizer(){
 }
 $('#opt-run').addEventListener('click',runOptimizer);
 $('#opt').addEventListener('click',e=>{const b=e.target.closest('[data-opt]');if(!b)return;const o=state.opt[+b.dataset.opt];
-  state.cls=o.c;state.carfree=o.t==='multi'?o.cf:false;applyRegion(state.region);if(o.fl)state.p[o.t==='retail'?'retail':'multi'].floors=o.fl;state.type=o.t;renderClass();resetFlags();buildControls();update();
+  state.cls=o.c;state.carfree=o.t==='multi'?o.cf:false;applyRegion(state.region);if(o.fl){state.p[o.t==='multi'||o.t==='mixed'||o.t==='retail'?o.t:'multi'].floors=o.fl;state.floorsAuto=false}state.form='auto';state.type=o.t;renderClass();resetFlags();buildControls();update();
   $('.stage').scrollIntoView({behavior:'smooth',block:'start'})});
 
 function renderChecklist(){
@@ -1561,24 +1679,31 @@ const fmtVal=(v,step)=>step<1?String(v).replace('.',','):nf.format(v);
 function buildControls(){
   const t=state.type,p=state.p[t],tl=state.tl[t];
   document.querySelectorAll('[data-type]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.type===t));
-  $('#cls-seg').closest('.group').hidden=!isRes(t);
+  $('#cls-group').hidden=!isRes(t);
   $('#fin-params').dataset.nonres=isRes(t)?'':'1';
-  $('#plan-params').innerHTML='<h2>Планировка</h2>'+PLAN[t].map(([k,l,mi,ma,st,u])=>field(`p-${t}-${k}`,l,mi,ma,st,u,p[k],t!=='multi'&&k==='lotD')).join('');
-  $('#fin-params').innerHTML='<h2>'+(isRes(t)?'Продажи и затраты':'Аренда и затраты')+'</h2>'+FIN[t].map(([k,l,u])=>`<div class="field"><label for="f-${t}-${k}">${l}</label><div class="num"><input type="number" inputmode="decimal" id="f-${t}-${k}" value="${p[k]}" step="${k==='eff'||k==='occ'||k==='cap'?0.01:k==='rent'?0.5:1}" min="0"><span>${u}</span></div></div>`).join('');
+  const KEY={cottage:['lotW','lotD'],town:['lotW','lotD'],multi:['floors'],mixed:['floors'],retail:['floors'],logistics:['len','depth']}[t];
+  const fld=([k,l,mi,ma,st,u])=>field(`p-${t}-${k}`,l,mi,ma,st,u,p[k],(t==='cottage'||t==='town')&&k==='lotD');
+  $('#key-params').innerHTML='<h2>3. Главные параметры</h2>'+PLAN[t].filter(x=>KEY.includes(x[0])).map(fld).join('');
+  const rest=PLAN[t].filter(x=>!KEY.includes(x[0]));
+  $('#plan-params').innerHTML=rest.length?rest.map(fld).join(''):'';
+  $('#type-note').textContent={cottage:'Отдельные дома на своих участках, внутренние улицы, парк и центр.',town:'Блокированные дома рядами, свой вход и небольшой участок у каждого.',multi:'Жилые дома 5–40 этажей: секции или башни, дворы, паркинг.',mixed:'Башни на стилобате: квартиры, офисы, гостиница и торговля в одном проекте.',retail:'Торговые и офисные здания с парковкой — под аренду или продажу инвестору.',logistics:'Складские корпуса с площадками для фур — под аренду.'}[t];
+  $('#fin-params').innerHTML=''+FIN[t].map(([k,l,u])=>`<div class="field"><label for="f-${t}-${k}">${l}</label><div class="num"><input type="number" inputmode="decimal" id="f-${t}-${k}" value="${p[k]}" step="${k==='eff'||k==='occ'||k==='cap'?0.01:k==='rent'?0.5:1}" min="0"><span>${u}</span></div></div>`).join('');
   $('#timeline').innerHTML=[['build','Стройка длится'],['start','Продажи начинаются с'],['sales','Продажи длятся']].map(([k,l])=>`<div><label for="tl-${t}-${k}">${l}</label><div class="num"><input type="number" inputmode="numeric" id="tl-${t}-${k}" min="${k==='start'?0:1}" max="120" value="${tl[k]}"><span>мес.</span></div></div>`).join('');
   if(isRes(t)){$('#plan-params').insertAdjacentHTML('beforeend',`<div class="field"><label>Школы и детсады</label><div class="seg" role="group" aria-label="Школы и детсады">${[['auto','Авто'],['on','Строим'],['off','Не нужны']].map(([k,l])=>`<button type="button" data-social="${k}" aria-pressed="${state.social===k}">${l}</button>`).join('')}</div><small>«Авто»: не строим, если по карте рядом уже 2+ школы или 3+ детсада. «Не нужны» — если их строит город.</small></div>`);
   document.querySelectorAll('[data-social]').forEach(b=>b.addEventListener('click',()=>{state.social=b.dataset.social;buildControls();update()}))}
-  if(t==='multi'){$('#plan-params').insertAdjacentHTML('beforeend',`<div class="field"><label>Машины во дворе</label><div class="seg two" role="group" aria-label="Машины во дворе"><button type="button" data-carfree="1" aria-pressed="${state.carfree}">Двор без машин</button><button type="button" data-carfree="0" aria-pressed="${!state.carfree}">Парковка во дворе</button></div><small>Без машин: вся парковка под землёй, во дворе площадки и зелень, +5% к цене (допущение).</small></div>`);
+  if(t==='multi'){$('#key-params').insertAdjacentHTML('beforeend',`<div class="field"><label>Форма домов</label><div class="seg" role="group" aria-label="Форма домов">${[['auto','Авто'],['slab','Секции'],['tower','Башни']].map(([k,l])=>`<button type="button" data-form="${k}" aria-pressed="${state.form===k}">${l}</button>`).join('')}</div><small>«Авто»: с 18 этажей — башни. Протяжённые секции на 20+ этажах при сейсмике 8+ требуют разрыва в 2 высоты дома.</small></div>`);
+    document.querySelectorAll('[data-form]').forEach(b=>b.addEventListener('click',()=>{state.form=b.dataset.form;buildControls();update()}))}
+  if(t==='multi'){$('#key-params').insertAdjacentHTML('beforeend',`<div class="field"><label>Машины во дворе</label><div class="seg two" role="group" aria-label="Машины во дворе"><button type="button" data-carfree="1" aria-pressed="${state.carfree}">Двор без машин</button><button type="button" data-carfree="0" aria-pressed="${!state.carfree}">Парковка во дворе</button></div><small>Без машин: вся парковка под землёй, во дворе площадки и зелень, +5% к цене (допущение).</small></div>`);
     document.querySelectorAll('[data-carfree]').forEach(b=>b.addEventListener('click',()=>{state.carfree=b.dataset.carfree==='1';buildControls();update()}))}
-  if(t==='multi'){$('#plan-params').insertAdjacentHTML('beforeend',`<div class="seg two" role="group" aria-label="Сейсмичность площадки"><button type="button" data-seis="1" aria-pressed="${state.seis}">8+ баллов</button><button type="button" data-seis="0" aria-pressed="${!state.seis}">до 7 баллов</button></div><small class="note">Сейсмичность площадки. При 8+ баллах разрыв между длинными сторонами — не меньше 2 высот дома (ШНК 2.07.01-03*, п. 21.1). По умолчанию задана по региону — уточните по карте сейсмического районирования.</small>`);
+  if(isTall(t)){$('#plan-params').insertAdjacentHTML('beforeend',`<div class="seg two" role="group" aria-label="Сейсмичность площадки"><button type="button" data-seis="1" aria-pressed="${state.seis}">8+ баллов</button><button type="button" data-seis="0" aria-pressed="${!state.seis}">до 7 баллов</button></div><small class="note">Сейсмичность площадки. При 8+ баллах разрыв между длинными сторонами — не меньше 2 высот дома (ШНК 2.07.01-03*, п. 21.1). По умолчанию задана по региону — уточните по карте сейсмического районирования.</small>`);
     document.querySelectorAll('[data-seis]').forEach(b=>b.addEventListener('click',()=>{state.seis=b.dataset.seis==='1';buildControls();update()}))}
-  PLAN[t].forEach(([k,,,,st,u])=>{const el=$(`#p-${t}-${k}`);el.addEventListener('input',()=>{p[k]=parseFloat(el.value);$(`#p-${t}-${k}-out`).textContent=fmtVal(p[k],st)+' '+u;update()})});
+  PLAN[t].forEach(([k,,,,st,u])=>{const el=$(`#p-${t}-${k}`);el.addEventListener('input',()=>{p[k]=parseFloat(el.value);if(k==='floors')state.floorsAuto=false;$(`#p-${t}-${k}-out`).textContent=fmtVal(p[k],st)+' '+u;update()})});
   FIN[t].forEach(([k])=>{const el=$(`#f-${t}-${k}`);el.addEventListener('input',()=>{const v=parseFloat(el.value);if(!isNaN(v)){p[k]=v;update()}})});
   ['build','start','sales'].forEach(k=>{const el=$(`#tl-${t}-${k}`);el.addEventListener('input',()=>{const v=parseFloat(el.value);if(!isNaN(v)&&v>=0){tl[k]=v;update()}})});
-  const lg=!isRes(t)?[[BX[t].f+';border:1.5px solid '+BX[t].s,t==='retail'?'Здания':'Склады'],[BX[t].y,t==='retail'?'Парковка':'Площадки для фур'],['var(--road)','Проезды'],['var(--green)','Озеленение']]:t==='multi'
+  const lg=t==='mixed'?[[FNC.res.f+';border:1.5px solid '+FNC.res.s,'Жильё'],[FNC.office.f+';border:1.5px solid '+FNC.office.s,'Офисы'],[FNC.hotel.f+';border:1.5px solid '+FNC.hotel.s,'Гостиница'],[BX.retail.f+';border:1.5px solid '+BX.retail.s,'Торговля (стилобат)'],['var(--green)','Двор и озеленение']]:!isRes(t)?[[BX[t].f+';border:1.5px solid '+BX[t].s,t==='retail'?'Здания':'Склады'],[BX[t].y,t==='retail'?'Парковка':'Площадки для фур'],['var(--road)','Проезды'],['var(--green)','Озеленение']]:t==='multi'
     ?[['var(--bldg);border:1.5px solid var(--bldgtop)','Жилые дома'],['var(--shadow)','Тень (инсоляция)'],['var(--road)','Проезды'],['var(--green)','Двор и озеленение']]
     :[['var(--lot1)','Участки'],['var(--house)','Дома'],['var(--road)','Улицы'],['var(--green)','Озеленение']];
-  const lg2=!isRes(t)?[]:t==='multi'?[[AM.parking.c,'Парковка'],[AM.play.c,'Площадки'],[AM.kinder.c,'Детсад'],[AM.school.c,'Школа']]:[[AM.park.c,'Парк и площадки'],[AM.center.c,'Магазины и парковка'],[AM.kinder.c,'Детсад'],[AM.school.c,'Школа']];
+  const lg2=!isRes(t)?[]:t==='mixed'?[[AM.play.c,'Площадки'],[AM.kinder.c,'Детсад'],[AM.school.c,'Школа']]:t==='multi'?[[AM.parking.c,'Парковка'],[AM.play.c,'Площадки'],[AM.kinder.c,'Детсад'],[AM.school.c,'Школа']]:[[AM.park.c,'Парк и площадки'],[AM.center.c,'Магазины и парковка'],[AM.kinder.c,'Детсад'],[AM.school.c,'Школа']];
   $('#legend').innerHTML=lg.concat(lg2).map(([c,n])=>`<span><i style="background:${c}"></i>${n}</span>`).join('')+`<span><i style="background:transparent;border:2px solid var(--cad)"></i>Граница участка</span>`;
   renderAssume();
 }
@@ -1632,6 +1757,9 @@ function renderResults(){
   let rows=[];
   if(!isRes(t)){
     rows=[['Зданий',nf.format(st.bldgs)],['Площадь застройки',nf.format(st.foot)+' м² ('+nf.format(st.cover*100)+'%)'],['Общая площадь',nf.format(st.gba)+' м²'],['Арендуемая площадь',nf.format(st.gla)+' м²'],[t==='retail'?'Парковка':'Площадки для фур',t==='retail'?nf.format(st.park)+' мест':nf.format(st.yardA)+' м²'],['Спрос в этом месте',`${nf.format(f.demand)} м² <span class="chip ${f.leased<st.gla*state.p[t].occ?'bad':'ok'}">${f.leased<st.gla*state.p[t].occ?'часть будет пустовать':'площадь заполнится'}</span>`],['Сдано в аренду',nf.format(f.leased)+' м²'],...(v.L.spare>0?[['Свободная земля',`${nf1.format(v.L.spare/1e4)} га <span class="chip warn">резерв: под жильё или следующую очередь</span>`]]:[]),['Арендный доход в год',money(f.noi)],['Стоимость объекта',money(f.revenue)+` <span class="chip warn">ставка ${nf.format(state.p[t].cap*100)}%</span>`]];
+  }else if(t==='mixed'){
+    const farChip=st.far>FAR_MAX*1.6?`<span class="chip warn">высокая плотность</span>`:`<span class="chip ok">в норме</span>`;
+    rows=[['Башен',`${nf.format(st.bldgs)} по ${v.L.floors} эт.`],['Квартиры',`${nf.format(st.units)} (${nf.format(st.sale)} м²) — ${money(f.resRev)}`],['Офисы',st.offG?`${nf.format(st.offG)} м², сдано ${nf.format(f.offL)} м² — ${money(f.offV)}`:'нет спроса в этом месте'],['Гостиница',st.rooms?`${nf.format(st.rooms)} номеров — ${money(f.hotV)}`:'нет спроса в этом месте'],['Торговля в стилобате',`${nf.format(st.podG)} м², сдано ${nf.format(f.retL)} м² — ${money(f.retV)}`],['Паркинг под землёй',nf.format(st.park)+' мест'],['Общая площадь',nf.format(st.gba)+' м²'],['Плотность (КИТ)',nf2.format(st.far)+farChip],['Разрыв между башнями',`${nf.format(v.L.G)} м <span class="chip warn">${v.L.gWhy}</span>`]];
   }else if(t==='multi'){
     const farChip=st.far>FAR_MAX?`<span class="chip bad">выше ${nf1.format(FAR_MAX)}</span>`:st.far>FAR_MAX*0.85?`<span class="chip warn">близко к пределу</span>`:`<span class="chip ok">в норме</span>`;
     const res=Math.round(st.sale/M2_PER_PERSON);
@@ -1645,8 +1773,8 @@ function renderResults(){
   $('#tep').innerHTML=rows.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('');
   if(!state.dragging){
     const lu=state.lu||landuse(v.L,state.poly,area);const pc=x=>area?x/area*100:0;
-    const bn=t==='multi'||!isRes(t)?'Застройка':'Участки';const rn=t==='multi'||!isRes(t)?'Проезды':'Улицы';
-    const segs=[[lu.built,!isRes(t)?BX[t].s:t==='multi'?'var(--bldgtop)':'var(--lot1)',bn],[lu.road,'var(--road)',rn],[lu.green,'var(--green)','Озеленение']];
+    const bn=isTall(t)||!isRes(t)?'Застройка':'Участки';const rn=isTall(t)||!isRes(t)?'Проезды':'Улицы';
+    const segs=[[lu.built,!isRes(t)?BX[t].s:isTall(t)?'var(--bldgtop)':'var(--lot1)',bn],[lu.road,'var(--road)',rn],[lu.green,'var(--green)','Озеленение']];
     $('#usebar').innerHTML=segs.map(([a,c])=>`<i style="width:${pc(a).toFixed(1)}%;background:${c}"></i>`).join('');
     $('#uselegend').innerHTML=segs.map(([a,c,n])=>`<span><em style="background:${c}"></em>${n} ${nf.format(pc(a))}%</span>`).join('');
   }
@@ -1695,7 +1823,7 @@ function update(){
   compute();
   if(state.view==='geo')drawGeo();else drawSchema();
   renderResults();renderModes();
-  if(!state.dragging){maybeAnalyze();renderVerdict();renderQuality()}
+  if(!state.dragging){maybeAnalyze();renderVerdict();renderQuality();renderAnswer()}
 }
 
 /* ---------- import: parsers ---------- */
@@ -1950,6 +2078,7 @@ function summary(){
   for(const k of TYPES){const x=state.compare[k];L.push(x?`• ${TYPE_SHORT[k]}: ${nf.format(x.v.st.units)} ${plural(x.v.st.units,UNIT_W[k])}, прибыль ${money(x.cash.profit)}, IRR ${irrTxt(x.cash.irr)}`:`• ${TYPE_SHORT[k]}: не помещается`)}
   L.push(`Выбран: ${TYPE_NAME[t]}, вариант ${v.id} (${v.label})`);
   if(!isRes(t))L.push(`${nf.format(st.bldgs)} зданий, арендуемая площадь ${nf.format(st.gla)} м², аренда ${money(f.noi)} в год, стоимость объекта ${money(f.revenue)}`);
+  else if(t==='mixed')L.push(`${st.bldgs} башен по ${v.L.floors} эт.: квартир ${nf.format(st.units)}, офисы ${nf.format(st.offG)} м², гостиница ${nf.format(st.rooms)} номеров, торговля ${nf.format(st.podG)} м²`);
   else if(t==='multi')L.push(`Домов ${st.bldgs}, ${state.p.multi.floors} эт., общая площадь ${nf.format(st.gba)} м², квартир ${nf.format(st.units)}, КИТ ${nf2.format(st.far)}`);
   else L.push(`${nf.format(st.units)} ${plural(st.units,UNIT_W[t])} на участках по ${nf1.format(v.L.lotArea/100)} сот.`);
   L.push(`Выручка ${money(f.revenue)}, затраты ${money(f.total+c.landCost)}${state.land.own?' (без земли)':' (с землёй)'}`);
