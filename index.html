@@ -318,6 +318,15 @@ footer.assume a{color:var(--accent-ink)}
 .ans b{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .ans small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ans.ok b{color:var(--good)}.ans.warn b{color:var(--warn)}.ans.bad b{color:var(--bad)}
+.ans-ctl{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.ans-lbl{font-size:12.5px;color:var(--muted)}
+.ans-ctl .seg{min-width:230px}
+.ans-price{width:190px}
+#crit-seg button{font-size:12px;padding:7px 2px}
+.viewtog{grid-auto-flow:column;grid-template-columns:none}
+#view3d{position:absolute;inset:0;background:#EDF1F5}
+#view3d canvas{width:100%;height:100%;display:block;touch-action:none}
+.hint3d{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.92);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--muted);pointer-events:none;box-shadow:var(--card-shadow)}
 .steps{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:600;display:flex;gap:4px;background:var(--surface);border-radius:999px;padding:4px;box-shadow:0 2px 10px rgba(16,24,40,.14);max-width:calc(100% - 24px);overflow-x:auto}
 .steps span{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:12.5px;color:var(--muted);white-space:nowrap}
 .steps span i{font-style:normal;width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;background:var(--chip);font-size:11.5px;font-weight:600;color:var(--muted)}
@@ -345,7 +354,14 @@ footer.assume a{color:var(--accent-ink)}
   </header>
 
   <section class="answer" aria-label="Главный ответ">
-    <div class="ans-head"><h2 id="ans-title">Ответ по участку</h2><button class="btn primary" type="button" id="ans-opt">Найти максимум прибыли</button></div>
+    <div class="ans-head"><h2 id="ans-title">Ответ по участку</h2>
+      <div class="ans-ctl">
+        <span class="ans-lbl">Земля:</span>
+        <div class="seg two" role="group" aria-label="Земля в расчёте"><button type="button" data-land="own">не учитывать</button><button type="button" data-land="buy">учитывать</button></div>
+        <div class="num ans-price" id="ans-price" hidden><input type="number" inputmode="decimal" id="ans-land-price" min="0" step="10000" aria-label="Рыночная стоимость земли"><span>$ за участок</span></div>
+        <button class="btn primary" type="button" id="ans-opt">Найти максимум прибыли</button>
+      </div>
+    </div>
     <div class="ans-grid" id="ans"></div>
   </section>
 
@@ -372,13 +388,14 @@ footer.assume a{color:var(--accent-ink)}
       </div>
       <div class="group" id="key-params"><h2>3. Главные параметры</h2></div>
       <div class="group">
-        <h2>4. Земля</h2>
-        <div class="seg two" role="group" aria-label="Земля">
-          <button type="button" id="land-own" data-land="own">Участок мой</button>
-          <button type="button" id="land-buy" data-land="buy">Покупаю</button>
+        <h2>4. Земля в расчёте</h2>
+        <div class="seg two" role="group" aria-label="Земля в расчёте">
+          <button type="button" id="land-own" data-land="own">Не учитывать</button>
+          <button type="button" id="land-buy" data-land="buy">Учитывать</button>
         </div>
+        <small class="note" id="land-note"></small>
         <div class="field" id="land-price-f" hidden>
-          <label for="land-price">Цена участка</label>
+          <label for="land-price">Рыночная стоимость земли</label>
           <div class="num"><input type="number" inputmode="decimal" id="land-price" min="0" step="1000" value="1500000"><span>$ всего</span></div>
           <small id="land-price-x"></small>
         </div>
@@ -391,9 +408,10 @@ footer.assume a{color:var(--accent-ink)}
         </div>
       </details>
       <details class="more">
-        <summary>Сроки и маржа<small>стройка, продажи, целевая маржа</small></summary>
+        <summary>Сроки, деньги и маржа<small>стройка, продажи, кредит, налог, целевая маржа</small></summary>
         <div class="group">
           <div class="fields3" id="timeline"></div>
+          <div class="fields3" id="finset"></div>
           <div class="field">
             <div class="row"><label for="margin">Целевая маржа к выручке</label><output id="margin-out">20%</output></div>
             <input type="range" id="margin" min="5" max="40" step="1" value="20">
@@ -408,7 +426,7 @@ footer.assume a{color:var(--accent-ink)}
 
     <section class="stage" aria-label="План участка">
       <div class="stage-bar">
-        <div class="site-area"><span id="site-area"></span><span class="viewtog" id="viewtog" hidden><button type="button" id="v-geo" data-view="geo">Спутник</button><button type="button" id="v-schema" data-view="schema">Схема</button></span></div>
+        <div class="site-area"><span id="site-area"></span><span class="viewtog" id="viewtog"><button type="button" id="v-geo" data-view="geo" hidden>Спутник</button><button type="button" id="v-schema" data-view="schema">Схема</button><button type="button" id="v-3d" data-view="3d">3D</button></span></div>
         <div class="src-tabs">
           <span class="lbl">Участок:</span>
           <button class="btn" type="button" data-src="map" aria-expanded="false" aria-controls="p-map">На карте</button>
@@ -504,6 +522,7 @@ footer.assume a{color:var(--accent-ink)}
           <g id="layer"></g>
         </svg>
         <div id="geomap" hidden></div>
+        <div id="view3d" hidden><div class="hint3d" id="hint3d">Тяните мышью — вращать · колесо — приблизить · правая кнопка — сдвинуть</div></div>
         <div class="steps" id="steps" hidden><span data-step="1"><i>1</i>Найдите участок</span><span data-step="2"><i>2</i>Обведите границу</span><span data-step="3"><i>3</i>Смотрите план и расчёт</span></div>
         <div class="geonote" id="geonote" hidden></div>
         <div class="hint" id="hint">Это пример. Выберите свой участок кнопками <b>«На карте»</b>, <b>«Из документа»</b> или <b>«Ввести размеры»</b>. Красные точки можно тянуть.</div>
@@ -518,6 +537,7 @@ footer.assume a{color:var(--accent-ink)}
     <aside class="panel" aria-label="Результаты">
       <div class="optbox">
         <button class="btn primary optbtn" type="button" id="opt-run">Найти максимум прибыли</button>
+        <div class="seg" role="group" aria-label="Что важнее" id="crit-seg"><button type="button" data-crit="npv" aria-pressed="true">С учётом времени</button><button type="button" data-crit="irr" aria-pressed="false">Быстрые деньги</button><button type="button" data-crit="profit" aria-pressed="false">Больше прибыли</button></div>
         <p class="note" id="opt-status">Переберу типы застройки, классы жилья, этажность и двор без машин — с учётом норм, качества и реального темпа продаж.</p>
         <div class="optlist" id="opt"></div>
       </div>
@@ -638,18 +658,20 @@ const AM={school:{label:'Школа',c:'#F2C46D'},kinder:{label:'Детсад',c
 const PLAY_PER_PERSON=0.7+0.1+2.0+0.3, M2_PER_PERSON=20, GREEN_MIN=0.25;
 /* housing classes (assumptions — calibrate with local developers) */
 const CLS={
-  econ:{name:'Эконом',pk:0.85,ck:0.86,apt:52,park:0.5,eff:0.80,h:3.0,green:0.25,pace:1.3,house:{cottage:140,town:110},lot:{cottage:[15,30],town:[7,24]},carfree:false,
+  econ:{name:'Эконом',pk:0.80,ck:0.88,apt:52,park:0.5,eff:0.80,h:3.0,green:0.25,pace:1.5,mkt:0.03,start:-6,inst:[0.5,18],house:{cottage:140,town:110},lot:{cottage:[15,30],town:[7,24]},carfree:false,
     who:'молодые семьи и первая квартира, часто в ипотеку или рассрочку',needs:'цена за м² и рассрочка, школа и сад рядом, транспорт'},
-  comfort:{name:'Комфорт',pk:1,ck:1,apt:65,park:0.8,eff:0.78,h:3.0,green:0.30,pace:1,house:{cottage:180,town:140},lot:{cottage:[18,33],town:[8,26]},carfree:false,
+  comfort:{name:'Комфорт',pk:1,ck:1,apt:65,park:0.8,eff:0.78,h:3.0,green:0.30,pace:1,mkt:0.04,start:0,inst:[0.4,12],house:{cottage:180,town:140},lot:{cottage:[18,33],town:[8,26]},carfree:false,
     who:'семьи с детьми, средний класс',needs:'безопасный двор и площадки, сад и школа в шаговой доступности, парковка, магазины'},
-  business:{name:'Бизнес',pk:1.35,ck:1.28,apt:85,park:1.2,eff:0.75,h:3.3,green:0.35,pace:0.5,house:{cottage:250,town:180},lot:{cottage:[22,38],town:[10,28]},carfree:true,
+  business:{name:'Бизнес',pk:1.40,ck:1.55,apt:85,park:1.2,eff:0.75,h:3.3,green:0.35,pace:0.35,mkt:0.05,start:6,inst:[0.2,12],house:{cottage:250,town:180},lot:{cottage:[22,38],town:[10,28]},carfree:true,
     who:'предприниматели и руководители',needs:'двор без машин, подземный паркинг, охрана, качественные фасады и лобби, близость к центру'},
-  premium:{name:'Премиум',pk:1.9,ck:1.7,apt:120,park:1.6,eff:0.72,h:3.5,green:0.40,pace:0.25,house:{cottage:350,town:240},lot:{cottage:[28,45],town:[12,30]},carfree:true,
+  premium:{name:'Премиум',pk:1.80,ck:2.20,apt:120,park:1.6,eff:0.72,h:3.5,green:0.40,pace:0.12,mkt:0.06,start:12,inst:[0,0],house:{cottage:350,town:240},lot:{cottage:[28,45],town:[12,30]},carfree:true,
     who:'состоятельные покупатели',needs:'престижная локация и вид, приватность, сервис и консьерж, большие планировки, 1,5+ места на квартиру'}
 };
 const CLS_ORDER=['econ','comfort','business','premium'];
 const cls=()=>CLS[state.cls||'comfort'];
 const CARFREE_PREMIUM=0.05;
+/* sales take longer than the market absorbs in 3 years -> the price has to come down to move the stock (assumption: −6% per extra year, max −30%) */
+function oversupplyDisc(t,units){if(!isRes(t))return 0;const y=salesNeed(t,units)/12;return Math.min(0.3,0.06*Math.max(0,y-3))}
 function greenNeed(){const lawBig=state.region==='tash'&&state.type==='multi'&&state.area>=5e4?0.30:0.25;return Math.max(lawBig,cls().green)}
 const PRICE_K={cottage:0.95,town:0.85,multi:1,mixed:1.05}, COST_BASE={cottage:450,town:430,multi:420,mixed:470}, INFRA_BASE={cottage:18,town:20,multi:30,mixed:40};
 const DEF={
@@ -691,12 +713,18 @@ const TYPE_SHORT={cottage:'Коттеджи',town:'Таунхаусы',multi:'М
 const UNIT_W={cottage:['дом','дома','домов'],town:['дом','дома','домов'],multi:['квартира','квартиры','квартир'],mixed:['квартира','квартиры','квартир'],retail:['м² аренды','м² аренды','м² аренды'],logistics:['м² склада','м² склада','м² склада']};
 const UNIT_S={cottage:'д.',town:'д.',multi:'кв.',mixed:'кв.',retail:'м²',logistics:'м²'};
 
-const state={cls:'comfort',carfree:false,type:'cottage',region:'tash',poly:PRESETS.trap.map(p=>p.slice()),p:JSON.parse(JSON.stringify(DEF)),tl:JSON.parse(JSON.stringify(TL)),
+const state={fin:{rate:0.16,eq:0.30,tax:0.15},cls:'comfort',carfree:false,type:'cottage',region:'tash',poly:PRESETS.trap.map(p=>p.slice()),p:JSON.parse(JSON.stringify(DEF)),tl:JSON.parse(JSON.stringify(TL)),
   margin:20,land:{own:true,price:1500000},sel:null,manual:false,vb:null,variants:[],compare:{},
   mode:'edit',trace:[],gtrace:[],under:null,calib:false,calibSide:0,needScale:false,source:'Пример',
   form:'auto',floorsAuto:true,geo:null,view:'schema',dragging:false,src:null,
   social:'auto',checks:{zone:'?',title:'?',red:'?',utils:'?',soil:'?'},site:{status:'nogeo',key:null,d:null,elev:null}};
 
+/* location drives price: the same flat costs more near the centre; a class premium is paid only where that class belongs */
+function locPriceK(reg){
+  if(!state.geo)return 1;const d=nearestCentre(state.geo.lat0,state.geo.lng0).d/1000;
+  if(reg==='tash'||reg==='tashobl')return d<=3?1.35:d<=6?1.15:d<=12?1:d<=20?0.85:0.72;
+  return d<=3?1.15:d<=8?1:0.8;
+}
 function applyRegion(id){
   const r=REGIONS.find(x=>x[0]===id)||REGIONS[0];state.region=r[0];state.seis=SEIS8.includes(r[0]);
   for(const t of RES){const p=state.p[t];p.price=Math.round(r[2]*PRICE_K[t]/10)*10;p.cost=Math.round(COST_BASE[t]*r[3]/5)*5;p.infra=Math.round(INFRA_BASE[t]*r[3])}
@@ -708,10 +736,11 @@ function applyRegion(id){
    X.offRent=[22,12,9][tier];X.offCost=Math.round(560*r[3]/5)*5;X.retRent=[24,14,10][tier];X.retCost=Math.round(520*r[3]/5)*5;
    X.adr=[110,75,65][tier];X.roomCost=Math.round(110000*r[3]/1000)*1000;
    if(state.floorsAuto!==false){state.p.multi.floors=[20,14,12][tier];X.floors=[25,18,14][tier]}}
-  const c=CLS[state.cls||'comfort'];
-  for(const t of RES){const p=state.p[t];p.price=Math.round(p.price*c.pk/10)*10;p.cost=Math.round(p.cost*c.ck/5)*5}
+  const c=CLS[state.cls||'comfort'],lk=locPriceK(r[0]),fit=locProfile().fit(state.cls||'comfort'),fk=c.pk>1?{ok:1,mid:0.55,bad:0.25}[fit]:1,pk=1+(c.pk-1)*fk;
+  state.priceK={lk,pk,fit,cls:state.cls||'comfort'};state.priceGeo=state.geo?state.geo.lat0+','+state.geo.lng0:null;
+  for(const t of RES){const p=state.p[t];p.price=Math.round(p.price*pk*lk/10)*10;p.cost=Math.round(p.cost*c.ck/5)*5}
   state.p.mixed.eff=Math.max(0.7,c.eff-0.03);state.p.mixed.parkPrice=state.p.multi.parkPrice;state.p.mixed.parkCost=state.p.multi.parkCost;
-  state.p.multi.eff=c.eff;state.p.multi.parkPrice=Math.round(state.p.multi.parkPrice*c.pk/100)*100;state.p.multi.parkCost=Math.round(state.p.multi.parkCost*c.ck/100)*100;
+  state.p.multi.eff=c.eff;state.p.multi.parkPrice=Math.round(state.p.multi.parkPrice*pk*lk/100)*100;state.p.multi.parkCost=Math.round(state.p.multi.parkCost*c.ck/100)*100;
   state.p.cottage.house=c.house.cottage;[state.p.cottage.lotW,state.p.cottage.lotD]=c.lot.cottage;
   state.p.town.house=c.house.town;[state.p.town.lotW,state.p.town.lotD]=c.lot.town;
 }
@@ -988,44 +1017,55 @@ function finance(t,st,p,area,m){
     const offL=Math.min(st.offG*0.85*0.85,dm.office),offV=offL*p.offRent*12*0.9/cap;
     const retL=Math.min(st.podG*0.85*0.9,dm.retail),retV=retL*p.retRent*12*0.9/cap;
     const hotNoi=st.rooms*p.adr*p.occ*365*0.33,hotV=hotNoi/(cap+0.01);
-    const resRev=st.sale*p.price*(state.cls!=='econ'?1+CARFREE_PREMIUM:1),parkRev=(st.resPark||0)*(p.parkPrice||0);
+    const disc=oversupplyDisc(t,st.units),resList=st.sale*p.price*(state.cls!=='econ'?1+CARFREE_PREMIUM:1),resRev=resList*(1-disc),parkRev=(st.resPark||0)*(p.parkPrice||0);
     const revenue=resRev+offV+retV+hotV+parkRev;
     const build=st.resG*p.cost+st.offG*p.offCost+st.podG*p.retCost+st.rooms*p.roomCost+st.parkUnder*(p.parkCost||0);
-    const infra=area*p.infra,soft=SOFT*(build+infra),total=build+infra+soft,land=revenue*(1-m)-total;
-    return{revenue,resRev,offV,retV,hotV,parkRev,offL,retL,hotNoi,build,infra,soft,total,land,perSotka:land/(area/100),perHa:land/(area/1e4)};
+    const infra=area*p.infra,mkt=(resRev+parkRev)*cls().mkt+(offV+retV+hotV)*0.02,soft=SOFT*(build+infra)+mkt,total=build+infra+soft,land=revenue*(1-m)-total;
+    return{revenue,discA:resList*disc,disc,mkt,resRev,offV,retV,hotV,parkRev,offL,retL,hotNoi,build,infra,soft,total,land,perSotka:land/(area/100),perHa:land/(area/1e4)};
   }
   if(!isRes(t)){
     const dm=nonresDemand(t),leased=Math.min(st.gla*p.occ,dm.cap);
     const noi=leased*p.rent*12*0.9,value=p.cap>0?noi/p.cap:0;
     const build=st.gba*p.cost,infra=area*p.infra,soft=SOFT*(build+infra),total=build+infra+soft,land=value*(1-m)-total;
-    return{revenue:value,noi,leased,demand:dm.cap,demandHow:dm.how,build,infra,soft,total,land,perSotka:land/(area/100),perHa:land/(area/1e4)};
+    return{revenue:value,mkt:value*0.02,noi,leased,demand:dm.cap,demandHow:dm.how,build,infra,soft:soft+value*0.02,total:total+value*0.02,land,perSotka:land/(area/100),perHa:land/(area/1e4)};
   }
-  const pu=t==='multi'?(st.parkUnder||0):0;
-  const revenue=st.sale*p.price*(t==='multi'&&state.carfree&&state.cls!=='econ'?1+CARFREE_PREMIUM:1)+pu*(p.parkPrice||0);
+  const pu=t==='multi'?(st.parkUnder||0):0,disc=oversupplyDisc(t,st.units);
+  const list=st.sale*p.price*(t==='multi'&&state.carfree&&state.cls!=='econ'?1+CARFREE_PREMIUM:1);
+  const revenue=list*(1-disc)+pu*(p.parkPrice||0);
   const build=(t==='multi'?st.gba:st.sale)*p.cost+pu*(p.parkCost||0);
-  const infra=area*p.infra;const soft=SOFT*(build+infra);const total=build+infra+soft;
+  const infra=area*p.infra,mkt=revenue*cls().mkt,soft=SOFT*(build+infra)+mkt,total=build+infra+soft;
   const land=revenue*(1-m)-total;
-  return{revenue,build,infra,soft,total,land,perSotka:land/(area/100),perHa:land/(area/1e4)};
+  return{revenue,discA:list*disc,disc,mkt,build,infra,soft,total,land,perSotka:land/(area/100),perHa:land/(area/1e4)};
 }
 function salesNeed(t,units){if(!isRes(t))return Math.round(state.tl[t].sales);const pace=Math.max(1,PACE[t][state.region==='tash'?0:1]*cls().pace);return units>0?Math.ceil(units/pace):0}
 function cashflow(t,f,units){
-  const tl=state.tl[t],S0=Math.max(0,Math.round(tl.start)),need=salesNeed(t,units),SN=Math.min(600,Math.max(1,Math.round(tl.sales),need)),auto=need>Math.round(tl.sales);
+  const tl=state.tl[t],c=isRes(t)?cls():null,FIN=state.fin;
+  const need=salesNeed(t,units),SN=Math.min(180,Math.max(1,Math.round(tl.sales),need)),auto=need>Math.round(tl.sales);
   const B=Math.max(1,Math.round(tl.build),auto?Math.round(SN*0.8):0);
-  const n=Math.max(B,S0+SN)+1,cf=new Array(n).fill(0);
+  const S0=Math.max(isRes(t)?2:0,Math.round(tl.start)+(c?c.start:0));
+  const [iSh,iM]=c?c.inst:[0,0],down=0.3;
+  const n=Math.max(B,S0+SN+iM)+1,base=new Array(n).fill(0);
   const landCost=state.land.own?0:Math.max(0,state.land.price||0);
-  cf[0]-=landCost;
-  const im=Math.max(1,Math.round(B*0.4));for(let m=0;m<im;m++)cf[m]-=f.infra/im;
-  for(let m=1;m<=B;m++)cf[m]-=(f.build+f.soft)/B;
-  for(let m=S0;m<S0+SN;m++)cf[m]+=f.revenue/SN;
+  base[0]-=landCost;
+  const im=Math.max(1,Math.round(B*0.4));for(let m=0;m<im;m++)base[m]-=f.infra/im;
+  for(let m=1;m<=B;m++)base[m]-=(f.build+f.soft-(f.mkt||0))/B;
+  const r=f.revenue/SN,mk=(f.mkt||0)/SN;
+  for(let m=S0;m<S0+SN;m++){base[m]+=r*(1-iSh)+r*iSh*down-mk;if(iSh)for(let k=1;k<=iM;k++)base[m+k]+=r*iSh*(1-down)/iM}
+  // pass 1: equity need without interest; pass 2: interest on the part of the gap above own equity
+  let cum0=0,min0=0;for(const v of base){cum0+=v;min0=Math.min(min0,cum0)}
+  const eq=-min0*FIN.eq,rm=Math.pow(1+FIN.rate,1/12)-1,cf=base.slice();let bal=0,interest=0;
+  for(let m=0;m<n;m++){bal+=cf[m];const loan=Math.max(0,-bal-eq);if(loan>0){const x=loan*rm;interest+=x;cf[m]-=x;bal-=x}}
+  const pre=cf.reduce((a,v)=>a+v,0),tax=Math.max(0,pre)*FIN.tax,posS=cf.reduce((a,v)=>a+Math.max(0,v),0);
+  if(tax>0&&posS>0)for(let m=0;m<n;m++)if(cf[m]>0)cf[m]-=tax*cf[m]/posS; // tax paid as profit is earned
   let cum=0,minC=0,minM=0;const cumA=cf.map((v,i)=>{cum+=v;if(cum<minC){minC=cum;minM=i}return cum});
   let pay=null;for(let i=minM;i<n;i++){if(cumA[i]>=0){pay=i;break}}
-  const profit=cum,cost=f.total+landCost,roi=cost>0?profit/cost:0;
-  const npv=r=>cf.reduce((s,v,i)=>s+v/Math.pow(1+r,i),0);
+  const profit=cum,cost=f.total+landCost+interest+tax,roi=cost>0?profit/cost:0;
+  const npv=x=>cf.reduce((s,v,i)=>s+v/Math.pow(1+x,i),0);
   let irr=null;
   if(cf.some(v=>v<0)&&cf.some(v=>v>0)){let lo=-0.3,hi=1,a=npv(lo),b=npv(hi);
     if(a*b<0){for(let k=0;k<80;k++){const mid=(lo+hi)/2,v=npv(mid);if(v*a>0){lo=mid;a=v}else hi=mid}irr=Math.pow(1+(lo+hi)/2,12)-1}}
-  const npv20=npv(Math.pow(1.2,1/12)-1);
-  return{cf,cum:cumA,profit,roi,irr,npv20,peak:-minC,peakM:minM,pay,months:n-1,landCost,salesM:SN,buildM:B,auto,need};
+  const npv20=npv(Math.pow(1.2,1/12)-1),own=Math.max(eq,1),roe=profit/own,perYear=profit/Math.max(1,(n-1)/12);
+  return{cf,cum:cumA,profit,pre,interest,tax,eq,roe,perYear,roi,irr,npv20,peak:-minC,peakM:minM,pay,months:n-1,landCost,salesM:SN,salesStart:S0,buildM:B,auto,need};
 }
 function evalType(t,P,area,a0){
   const p=state.p[t],list=isTall(t)||!isRes(t)?VARS.multi:VARS.lots;
@@ -1039,6 +1079,7 @@ function evalType(t,P,area,a0){
   return{vs,bi};
 }
 function compute(){
+  {const g=state.geo?state.geo.lat0+','+state.geo.lng0:null;if(g!==state.priceGeo&&!optRunning){applyRegion(state.region);setTimeout(()=>{renderClass();buildControls()},0)}}
   const P=state.poly;if(P.length<3)return;
   const area=Math.abs(polyArea(P)),a0=longestAngle(P);state.area=area;
   MP=masterplan(P,a0);state.mp=MP;
@@ -1216,7 +1257,7 @@ function setGeo(lls,label){
   state.poly=raw.map(([x,y])=>[Math.round((x-ox)*10)/10,Math.round((y-oy)*10)/10]);
   state.under=null;state.calib=false;state.needScale=false;state.mode='edit';state.gtrace=[];state.source=label;state.view='geo';
   const rg=regionFor(lat0,lng0);
-  if(rg&&rg!==state.region){applyRegion(rg);$('#region').value=rg;buildControls();state.regionAuto=true}
+  if(rg){applyRegion(rg);$('#region').value=rg;buildControls();state.regionAuto=true}
   resetFlags();
 }
 function hav(a1,o1,a2,o2){const R=6371000,r=Math.PI/180,da=(a2-a1)*r,dO=(o2-o1)*r;const h=Math.sin(da/2)**2+Math.cos(a1*r)*Math.cos(a2*r)*Math.sin(dO/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
@@ -1307,10 +1348,11 @@ function finishGeoTrace(){
   status($('#geo-status'),`Участок обведён: ${nf2.format(state.area/1e4)} га, регион: ${REGIONS.find(x=>x[0]===state.region)[1]}. Вершины можно двигать. Проверка окружения — внизу, в блоке «Стоит ли строить».`,'ok');
 }
 function showView(){
-  const geo=state.view==='geo';
-  $('#geomap').hidden=!geo;svg.style.visibility=geo?'hidden':'visible';
-  $('#scalebar').hidden=geo||state.mode==='trace';$('#north').hidden=geo;
-  $('#viewtog').hidden=!state.geo;
+  const geo=state.view==='geo',d3=state.view==='3d';
+  $('#geomap').hidden=!geo;$('#view3d').hidden=!d3;svg.style.visibility=geo||d3?'hidden':'visible';
+  $('#scalebar').hidden=geo||d3||state.mode==='trace';$('#north').hidden=geo||d3;
+  $('#viewtog').hidden=state.mode==='trace'||state.mode==='geotrace';$('#v-geo').hidden=!state.geo;
+  if(d3&&T3){size3d();if(!T3.raf)T3.raf=requestAnimationFrame(loop3d)}
   document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===state.view));
   $('#geomap').classList.toggle('drawing',state.mode==='geotrace');
   if(!geo)$('#geonote').hidden=true;
@@ -1597,10 +1639,11 @@ function renderAnswer(){
   $('#ans-title').innerHTML=`Ответ по участку <span>${nf2.format(state.area/1e4)} га</span>${state.source==='Пример'?' — это пример, выберите свой участок':''}`;
   $('#ans').innerHTML=[
     tile('Что строить',what,vol+' · '+sub,'','#vars'),
-    tile('Нужно вложить',money(c.peak),`пик к ${c.peakM}-му месяцу`,'','#kpis'),
-    tile('Прибыль',money(c.profit),`маржа ${pct(c.profit/Math.max(1,f.revenue))} · IRR ${irrTxt(c.irr)}`,c.profit>0?'ok':'bad','#kpis'),
+    tile('Своих денег нужно',money(c.eq),`всего на пике ${money(c.peak)}, остальное — кредит`,'','#kpis'),
+    tile('Чистая прибыль',money(c.profit),`после налога и процентов · IRR ${irrTxt(c.irr)}`,c.profit>0?'ok':'bad','#kpis'),
     tile('Деньги вернутся',c.pay==null?'не вернутся':`через ${c.pay} мес.`,`проект ${c.months} мес.${c.auto?' · по темпу рынка':''}`,c.pay==null?'bad':'','#cashchart'),
-    tile('Земля стоит до',f.land>0?money(f.land):'—',f.land>0?`${money(f.perSotka)} за сотку`:'маржа недостижима',f.land>0?'':'bad','#land'),
+    state.land.own?tile('Ваша земля стоит до',f.land>0?money(f.land):'—',f.land>0?`${money(f.perSotka)} за сотку при застройке`:'застройка не окупает землю',f.land>0?'':'bad','#land')
+      :tile('Строить или продать землю',c.profit>0?'Строить':'Продать землю',c.profit>0?`застройка даст на ${money(c.profit)} больше продажи`:`продажа за ${money(c.landCost)} выгоднее`,c.profit>0?'ok':'bad','#kpis'),
     tile('Стоит ли строить',vd.short||'—',`качество ${q} из 100`,vd.cls,'#verdict-sec')
   ].join('');
 }
@@ -1620,7 +1663,8 @@ function renderQuality(){
 function setClass(k){state.cls=k;state.carfree=CLS[k].carfree;applyRegion(state.region);renderClass()}
 function renderClass(){
   $('#cls-seg').innerHTML=CLS_ORDER.map(k=>`<button type="button" data-cls="${k}" aria-pressed="${state.cls===k}">${CLS[k].name}</button>`).join('');
-  $('#cls-who').textContent=`Для кого: ${cls().who}. Важно: ${cls().needs}.`;
+  const K=state.priceK||{lk:1,pk:cls().pk,fit:'ok'};
+  $('#cls-who').innerHTML=`Для кого: ${cls().who}. Важно: ${cls().needs}.<br><b>Цена:</b> класс ×${nf2.format(K.pk)}${state.geo?`, локация ×${nf2.format(K.lk)}`:''}.${cls().pk>1&&K.fit!=='ok'?' <span style="color:var(--warn)">Место не для этого класса — покупатели не доплатят полную надбавку.</span>':''}`;
 }
 $('#cls-seg').addEventListener('click',e=>{const b=e.target.closest('[data-cls]');if(!b)return;setClass(b.dataset.cls);resetFlags();buildControls();update()});
 
@@ -1653,13 +1697,19 @@ async function runOptimizer(){
     out.push({...j,v,q:q.score,profit:v.cash.profit,npv:v.cash.npv20,irr:v.cash.irr,units:v.st.units,months:v.cash.months});
   }
   Object.assign(state,{form:save.form,floorsAuto:save.floorsAuto,cls:save.cls,carfree:save.carfree,type:save.type,sel:save.sel,manual:save.manual});state.p=save.p;
-  out.sort((a,b)=>b.npv-a.npv);
-  state.opt=out.slice(0,5);
+  state.optAll=out;state.optN=jobs.length;
   btn.disabled=false;optRunning=false;
+  renderOpt();
+}
+function renderOpt(){
+  if(!state.optAll)return;
+  const out=state.optAll.slice(),st=$('#opt-status'),key={npv:o=>o.npv,irr:o=>o.irr==null?-9:o.irr,profit:o=>o.profit}[state.crit||'npv'];
+  out.sort((a,b)=>key(b)-key(a));state.opt=out.slice(0,5);
   if(!out.length){st.textContent='Не нашёл варианта, который и прибылен, и продаётся за 10 лет, и проходит по качеству. Попробуйте другие цены или часть участка.';$('#opt').innerHTML='';return}
-  st.textContent=`Проверил ${jobs.length} вариантов. Сверху — самые выгодные с учётом времени продаж (ставка 20% в год), среди тех, что подходят месту, проходят по качеству и продаются за 10 лет.`;
+  st.textContent=`Проверил ${state.optN} вариантов. `+{npv:'Сверху — больше всего прибыли с учётом времени: деньги через 7 лет стоят меньше, чем через 3 (ставка 20% в год).',irr:'Сверху — самые быстрые деньги: максимальная доходность на вложенный доллар в год (IRR). Так работают массовые застройщики: быстро построить, быстро продать, вложить снова.',profit:'Сверху — максимум прибыли в деньгах, без учёта того, сколько лет её ждать.'}[state.crit||'npv']+' В списке только варианты, которые подходят месту, проходят по качеству и продаются не дольше 10 лет.';
   $('#opt').innerHTML=state.opt.map((o,k)=>`<div class="optcard${k===0?' top':''}"><div class="oh"><b>${k===0?'Лучший: ':''}${TYPE_SHORT[o.t]}${isRes(o.t)?', '+CLS[o.c].name.toLowerCase():''}${o.fl?`, ${o.fl} эт.`:''}</b><button type="button" data-opt="${k}">Применить</button></div><span class="om">${o.t==='multi'?(o.cf?'двор без машин · ':'парковка во дворе · '):''}${nf.format(o.units)} ${plural(o.units,UNIT_W[o.t])} · проект ${o.months} мес.</span><span class="ov">Прибыль <b>${money(o.profit)}</b> · IRR <b>${irrTxt(o.irr)}</b> · качество <b>${o.q}</b></span></div>`).join('');
 }
+$('#crit-seg').addEventListener('click',e=>{const b=e.target.closest('[data-crit]');if(!b)return;state.crit=b.dataset.crit;document.querySelectorAll('[data-crit]').forEach(x=>x.setAttribute('aria-pressed',x===b));renderOpt()});
 $('#opt-run').addEventListener('click',runOptimizer);
 $('#opt').addEventListener('click',e=>{const b=e.target.closest('[data-opt]');if(!b)return;const o=state.opt[+b.dataset.opt];
   state.cls=o.c;state.carfree=o.t==='multi'?o.cf:false;applyRegion(state.region);if(o.fl){state.p[o.t==='multi'||o.t==='mixed'||o.t==='retail'?o.t:'multi'].floors=o.fl;state.floorsAuto=false}state.form='auto';state.type=o.t;renderClass();resetFlags();buildControls();update();
@@ -1670,6 +1720,106 @@ function renderChecklist(){
 }
 $('#checklist').addEventListener('click',e=>{const b=e.target.closest('[data-chk]');if(!b)return;state.checks[b.dataset.chk]=b.dataset.val;renderChecklist();renderVerdict()});
 $('#vd-rec').addEventListener('click',e=>{const a=e.target.closest('[data-pick]');if(!a)return;e.preventDefault();state.type=a.dataset.pick;resetFlags();buildControls();update();$('.stage').scrollIntoView({behavior:'smooth'})});
+
+/* ---------- 3D view: the same plan, extruded to real heights ---------- */
+const LIB3={three:'https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js',orbit:'https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js'};
+let T3=null;
+async function ensure3d(){
+  if(T3)return T3;
+  await loadScript(LIB3.three);await loadScript(LIB3.orbit);
+  const el=$('#view3d'),renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+  renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));el.prepend(renderer.domElement);
+  const scene=new THREE.Scene();scene.background=new THREE.Color('#EDF1F5');
+  const cam=new THREE.PerspectiveCamera(36,1,1,60000);
+  const ctl=new THREE.OrbitControls(cam,renderer.domElement);
+  Object.assign(ctl,{enableDamping:true,dampingFactor:0.08,maxPolarAngle:Math.PI*0.47,autoRotate:true,autoRotateSpeed:0.45,screenSpacePanning:true});
+  ctl.addEventListener('start',()=>{ctl.autoRotate=false});
+  scene.add(new THREE.HemisphereLight(0xffffff,0x8d99a6,0.55));
+  const sun=new THREE.DirectionalLight(0xffffff,0.5);sun.position.set(-0.35,1,0.6);scene.add(sun);
+  const grp=new THREE.Group();scene.add(grp);
+  T3={renderer,scene,cam,ctl,grp,el,raf:0,fitKey:null};
+  if(matchMedia('(pointer:coarse)').matches)$('#hint3d').textContent='Одним пальцем — вращать · двумя — приблизить и сдвинуть';
+  return T3;
+}
+function size3d(){if(!T3)return;const r=T3.el.getBoundingClientRect();if(!r.width||!r.height)return;T3.renderer.setSize(r.width,r.height,false);T3.cam.aspect=r.width/r.height;T3.cam.updateProjectionMatrix()}
+function loop3d(){if(!T3||state.view!=='3d'){if(T3)T3.raf=0;return}T3.ctl.update();T3.renderer.render(T3.scene,T3.cam);T3.raf=requestAnimationFrame(loop3d)}
+const rgb3=h=>{const c=new THREE.Color(h);return[c.r,c.g,c.b]};
+function tri3(g,a,b,c,col,dir){
+  const ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2],vx=c[0]-a[0],vy=c[1]-a[1],vz=c[2]-a[2];
+  if((uy*vz-uz*vy)*dir[0]+(uz*vx-ux*vz)*dir[1]+(ux*vy-uy*vx)*dir[2]<0){const t=b;b=c;c=t}
+  g.p.push(a[0],a[1],a[2],b[0],b[1],b[2],c[0],c[1],c[2]);g.c.push(...col,...col,...col);
+}
+/* plan point (x,y) at height h becomes scene point (x,h,y): x to the east, y to the south, h up */
+function prism3(g,pts,h0,h1,top,side,convex=true){
+  const n=pts.length;if(n<3)return;
+  const tris=convex?Array.from({length:n-2},(_,i)=>[0,i+1,i+2]):THREE.ShapeUtils.triangulateShape(pts.map(q=>new THREE.Vector2(q[0],q[1])),[]);
+  for(const [i,j,k] of tris)tri3(g,[pts[i][0],h1,pts[i][1]],[pts[j][0],h1,pts[j][1]],[pts[k][0],h1,pts[k][1]],top,[0,1,0]);
+  if(!side||h1-h0<0.01)return;
+  for(let i=0;i<n;i++){const a=pts[i],b=pts[(i+1)%n];let ex=b[1]-a[1],ey=a[0]-b[0];const L=Math.hypot(ex,ey)||1;ex/=L;ey/=L;
+    if(pip((a[0]+b[0])/2+ex*0.05,(a[1]+b[1])/2+ey*0.05,pts)){ex=-ex;ey=-ey}
+    const d=[ex,0,ey],A0=[a[0],h0,a[1]],B0=[b[0],h0,b[1]],B1=[b[0],h1,b[1]],A1=[a[0],h1,a[1]];
+    tri3(g,A0,B0,B1,side,d);tri3(g,A0,B1,A1,side,d)}
+}
+function ring3(arr,pts,h){for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];arr.push(a[0],h,a[1],b[0],h,b[1])}}
+function square3(ct,size,th){const c=Math.cos(th),s=Math.sin(th),h=size/2;return[[-h,-h],[h,-h],[h,h],[-h,h]].map(([u,v])=>[ct[0]+u*c-v*s,ct[1]+u*s+v*c])}
+function inAny(q,polys){for(const p of polys)if(pip(q[0],q[1],p))return true;return false}
+function draw3d(){
+  if(!T3)return;const v=state.variants[state.sel];if(!v)return;
+  const Lo=v.L,P=state.poly,t=state.type;
+  for(const ch of T3.grp.children.slice()){T3.grp.remove(ch);if(ch.geometry)ch.geometry.dispose();if(ch.material)ch.material.dispose()}
+  const g={p:[],c:[]},ln=[],C=rgb3,bb=bbox(P),cx=(bb[0]+bb[2])/2,cy=(bb[1]+bb[3])/2,R=Math.max(bb[2]-bb[0],bb[3]-bb[1],60);
+  prism3(g,[[cx-R*3,cy-R*3],[cx+R*3,cy-R*3],[cx+R*3,cy+R*3],[cx-R*3,cy+R*3]],-0.6,-0.5,C('#DCE2E9'),null);
+  prism3(g,P,-0.5,0,C('#C9CFD7'),C('#AEB6C0'),false);
+  const inner=inset(P,Lo.per),innerOk=Math.abs(polyArea(inner))>20;
+  if(innerOk)prism3(g,inner,0,0.12,C('#CFE5BF'),null,false);
+  const blockers=[],treeZones=[];let maxH=10;
+  if(MP)for(const r of MP.roads){prism3(g,r,0.12,0.2,C('#BEC5CE'),null);blockers.push(r)}
+  if(Lo.kind==='lots'){
+    for(const r of Lo.roads){const c=clipConvex(P,r);if(c.length>2){prism3(g,c,0.12,0.22,C('#C3C9D1'),null);blockers.push(c)}}
+    for(const l of Lo.lots){prism3(g,l.pts,0.22,0.3,C(l.par?'#B9DDA9':'#C8E6B9'),null);blockers.push(l.pts)}
+    const hh=t==='town'?9:7;
+    for(const hs of Lo.houses){prism3(g,hs,0.3,hh,C(t==='town'?'#9A5B45':'#B4573F'),C('#F2EDE4'));ring3(ln,hs,hh)}
+    maxH=hh;
+  }else if(Lo.kind==='boxes'){
+    const X=BX[Lo.sub],H=Lo.sub==='logistics'?12:Lo.floors*4.5;
+    for(const y of Lo.yards){prism3(g,y,0.12,0.22,C('#C4C9D2'),null);blockers.push(y)}
+    for(const b of Lo.blds){prism3(g,b.pts,0,H,C(X.f),C(Lo.sub==='logistics'?'#D5DAE2':'#F2D3A6'));ring3(ln,b.pts,H);blockers.push(b.pts)}
+    maxH=H;
+  }else{
+    const fh=Lo.H/Math.max(1,Lo.floors);
+    for(const r of Lo.parkStrips||[]){prism3(g,r,0.12,0.22,C('#C4C9D2'),null);blockers.push(r)}
+    for(const r of Lo.plays||[]){prism3(g,r,0.12,0.25,C('#A9D79F'),null);blockers.push(r)}
+    for(const pd of Lo.podiums||[]){prism3(g,pd,0,8,C('#F7E2C2'),C('#EDCB98'));ring3(ln,pd,8);blockers.push(pd)}
+    const FC={res:['#FFFFFF','#F1F4F8'],office:['#DCE6FF','#B8CAF6'],hotel:['#FCE4EE','#F1C3D6']};
+    const lines=Lo.blds.reduce((a,b)=>a+(b.fl||Lo.floors),0),every=lines>6000?3:lines>2500?2:1;
+    for(const b of Lo.blds){const fl=b.fl||Lo.floors,H=fl*fh,col=FC[b.fn||'res'];
+      prism3(g,b.pts,0,H,C(col[0]),C(col[1]));blockers.push(b.pts);maxH=Math.max(maxH,H);
+      for(let f=every;f<fl;f+=every)ring3(ln,b.pts,f*fh);ring3(ln,b.pts,H);
+      for(const q of b.pts)ln.push(q[0],0,q[1],q[0],H,q[1])}
+  }
+  for(const a of Lo.amen||[]){
+    const col={school:'#F6D58E',kinder:'#F7B9C9',park:'#9FD18F',center:'#B7CBF5'}[a.key]||'#D0D5DD';
+    for(const c0 of a.cells){const c=Lo.kind==='lots'?c0:clipConvex(P,c0);if(c.length>2){prism3(g,c,0.12,0.3,C(col),null);if(a.key==='park')treeZones.push(c);else blockers.push(c)}}
+    const bh={school:12,kinder:7,center:6}[a.key];
+    if(bh){const sz=Math.max(16,Math.min(70,Math.sqrt(a.area)*0.42)),sq=square3(a.ct,sz,Lo.th||0);
+      prism3(g,sq,0.3,bh,C(a.key==='school'?'#FCEBC4':a.key==='kinder'?'#FBDCE5':'#DCE6FF'),C(a.key==='school'?'#E9C77E':a.key==='kinder'?'#E9AFC0':'#AFC3F2'));ring3(ln,sq,bh)}
+  }
+  // trees: in parks for low-rise, across the free green for blocks and towers
+  const trees=[],area=Math.abs(polyArea(P));
+  if(Lo.kind==='lots'){for(const z of treeZones){const b=bbox(z);for(let x=b[0]+5;x<b[2];x+=9)for(let y=b[1]+5;y<b[3];y+=9){const q=[x+((x*7+y*3)%4)-2,y+((x*3+y*5)%4)-2];if(pip(q[0],q[1],z))trees.push(q)}}}
+  else if(innerOk){const st=Math.max(11,Math.sqrt(area/1400)),pad=blockers.map(p=>{const c=centroidOf(p);return p.map(q=>[c[0]+(q[0]-c[0])*1.12+(q[0]>c[0]?3:-3),c[1]+(q[1]-c[1])*1.12+(q[1]>c[1]?3:-3)])});
+    for(let x=bb[0]+st/2;x<bb[2];x+=st)for(let y=bb[1]+st/2;y<bb[3];y+=st){const q=[x+((Math.round(x)*13+Math.round(y)*7)%7)-3,y+((Math.round(x)*5+Math.round(y)*11)%7)-3];if(pip(q[0],q[1],inner)&&!inAny(q,pad))trees.push(q)}}
+  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(g.p,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(g.c,3));geo.computeVertexNormals();
+  T3.grp.add(new THREE.Mesh(geo,new THREE.MeshLambertMaterial({vertexColors:true})));
+  if(ln.length){const lg=new THREE.BufferGeometry();lg.setAttribute('position',new THREE.Float32BufferAttribute(ln,3));T3.grp.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:0x7D8899,transparent:true,opacity:0.45})))}
+  const nT=Math.min(trees.length,2500);
+  if(nT){const tg=new THREE.ConeGeometry(2.4,7,7),tm=new THREE.MeshLambertMaterial({color:0x5F9E58}),im=new THREE.InstancedMesh(tg,tm,nT),M=new THREE.Matrix4();
+    for(let i=0;i<nT;i++){const q=trees[Math.floor(i*trees.length/nT)],s=0.8+((i*37)%10)/25;M.makeScale(s,s,s);M.setPosition(q[0],3.5*s+0.2,q[1]);im.setMatrixAt(i,M)}
+    T3.grp.add(im)}
+  const key=P.map(q=>q.join(',')).join(';');
+  if(T3.fitKey!==key){T3.fitKey=key;const D=R*1.4+maxH*0.6;T3.ctl.target.set(cx,Math.min(maxH*0.25,30),cy);T3.cam.position.set(cx-D*0.55,D*0.62+maxH*0.6,cy+D*0.95);T3.cam.near=Math.max(0.5,R/2000);T3.cam.far=R*30+2000;T3.cam.updateProjectionMatrix();T3.ctl.autoRotate=true}
+  size3d();
+}
 
 /* ---------- panels ---------- */
 function field(id,label,min,max,step,unit,val,extra){
@@ -1713,6 +1863,7 @@ function renderAssume(){
     ?`глубина секции 16 м, высота этажа 3,3 м, разрыв между домами по торцам 20 м, отступ от границы 14 м, средняя квартира ${APT} м², парковка ${nf1.format(PARK)} места на квартиру, предельный КИТ ${nf1.format(FAR_MAX)}.`
     :`улицы в красных линиях без тротуаров, внешний проезд по периметру, дом стоит с отступом от улицы.`} Прочие затраты (проект, согласования, продажи) — ${SOFT*100}% от стройки и сетей. Сети и дороги оплачиваются в первые 40% срока стройки, стройка — равномерно, выручка — равномерно в период продаж. Нормы ШНК в бете упрощены: перед покупкой участка вариант проверяет архитектор.</span>
   <span><b>Нормы в расчёте</b> (ШНК 2.07.01-03* с изменениями 2020 г.; с 24.06.2024 действует ШНК 2.07.01-23 — значения нужно сверить с новой редакцией): разрыв между длинными сторонами — 15 м для 2–3 этажей, до 30 м для 4–5, до 45 м для 9+; при сейсмичности 8+ баллов — не меньше 2 высот дома; торцы с окнами — 20 м; инсоляция жилых комнат — 2,5 ч в день; противопожарный проезд — 5–8 м от стены; озеленение двора — не меньше 25%; площадки — 3,1 м² на жителя при норме 20 м² жилья на человека; у частного дома — 3 м от стены до границы участка. Норматив парковок в открытых источниках не найден, 0,7 места на квартиру — допущение; недостающие места уходят в подземный паркинг (стройка около $8 тыс. за место, продажа по региону — ориентир Urbo.uz). Соцобъекты — допущения до сверки с ШНК 2.07.01-23: детсад на 0,5 га на каждые 2 000 жителей, школа на 2 га на каждые 7 000, в поселке 4,5 человека на дом, парк и площадки 3 м² на жителя плюс 4% территории, общественный центр 1 м² на жителя плюс гостевая парковка на каждый пятый дом. Затраты на строительство школ и детсадов в расчёт не включены. Классы жилья (допущения): эконом — цена ×0,85, квартира 52 м², 0,5 места; комфорт — базовые цены, 65 м², 0,8 места; бизнес — ×1,35, 85 м², 1,2 места, двор без машин; премиум — ×1,9, 120 м², 1,6 места. Темп продаж бизнеса вдвое, премиума вчетверо ниже комфорта. Оценка качества и подбор максимума прибыли — экспертная модель, а не норматив. Двор без машин даёт +5% к цене только для комфорта и выше. Коммерция и склады считаются как объект под продажу инвестору: аренда × заполняемость − 10% расходов, делённая на ставку капитализации 13% (допущение). Аренда по умолчанию: торговля и офисы — $24 за м² в месяц в Ташкенте, $10 в регионах (офисы класса B в Ташкенте — около $30 с НДС и эксплуатацией, <a href="https://www.spot.uz/ru/2026/09/11/real-estate/" target="_blank" rel="noopener">Spot.uz, сентябрь 2026</a>); склады — $6,5 в Ташкенте, $4 в регионах (допущение, открытых данных не нашёл). <a href="https://lex.uz/ru/docs/4444165?ONDATE=28.12.2009" target="_blank" rel="noopener">ШНК 2.07.01-03 на Lex.uz</a>, <a href="https://mc.uz/uploads/mcuz_9972494552682.pdf" target="_blank" rel="noopener">изменение №4 (Минстрой, 2020)</a>.</span>
+  <span><b>Как считаются деньги:</b> всё сверх ${nf.format(state.fin.eq*100)}% своих денег на пике берётся в кредит под ${nf.format(state.fin.rate*100)}% годовых в долларах; налог на прибыль ${nf.format(state.fin.tax*100)}% (<a href="https://buxgalter.uz/ru/publish/doc/text212084_chto_izmenitsya_v_nalogovo-tamojennoy_politike_uzbekistana_v_2026_godu" target="_blank" rel="noopener">Buxgalter.uz, 2026</a>); продажи и реклама — 3% выручки у эконома, 4% у комфорта, 5% у бизнеса, 6% у премиума. Эконом продаёт с котлована на 6 мес. раньше, половина покупателей берёт рассрочку на 18 мес.; у комфорта 40% берут рассрочку на 12 мес.; бизнес начинает продажи на 6 мес. позже, премиум — на 12 мес. позже и без рассрочки. Если продажи идут дольше 3 лет, цену приходится снижать на 6% за каждый лишний год, но не больше чем на 30%; срок продаж в расчёте — не больше 15 лет. Надбавку класса к цене покупатели платят полностью только там, где этот класс покупают; цена также зависит от расстояния до центра. Все коэффициенты — допущения, их нужно сверить с застройщиками.</span>
   <span><b>Цены по умолчанию (${r[1]}):</b> ${r[4]?'опираются на опубликованные данные о ценах жилья':'оценка по соседним регионам, уточните у местных застройщиков'}. Стоимость стройки — ориентир, замените на свою. Источники: <a href="https://kun.uz/ru/news/2026/04/07/skolko-stoyat-kvartiry-v-tashkente-v-2026-godu" target="_blank" rel="noopener">Kun.uz, новостройки Ташкента 2026</a>, <a href="https://www.spot.uz/ru/2026/03/17/real-estate-feb26/" target="_blank" rel="noopener">Spot.uz, цены жилья по регионам, февраль 2026</a>.</span>
   <span>Темп продаж для проверки (допущение, в месяц): коттеджи 6 в Ташкенте и 3 в регионах, таунхаусы 10 и 5, квартиры 40 и 15. Загруженные файлы обрабатываются в браузере и никуда не отправляются. Спутниковые снимки © Esri; окружение участка © участники OpenStreetMap (данные могут быть неполными); высоты — Open-Meteo.</span>`;
 }
@@ -1779,8 +1930,12 @@ function renderResults(){
     $('#uselegend').innerHTML=segs.map(([a,c,n])=>`<span><em style="background:${c}"></em>${n} ${nf.format(pc(a))}%</span>`).join('');
   }
   const neg=c.profit<0;
-  $('#kpis').innerHTML=`<div class="kpi${neg?' neg':''}"><span>Прибыль</span><b>${money(c.profit)}</b></div><div class="kpi${c.irr!=null&&c.irr<0?' neg':''}"><span>IRR годовых</span><b>${irrTxt(c.irr)}</b></div><div class="kpi${neg?' neg':''}"><span>Рентабельность</span><b>${pct(c.roi)}</b></div>`;
-  const finRows=[isRes(t)?['Выручка от продаж',money(f.revenue)]:['Стоимость объекта (продажа инвестору)',money(f.revenue)],['Стройка',money(f.build)],['Сети и дороги',money(f.infra)],['Проект, согласования, продажи',money(f.soft)]];
+  $('#kpis').innerHTML=`<div class="kpi${neg?' neg':''}"><span>Чистая прибыль</span><b>${money(c.profit)}</b></div><div class="kpi${c.irr!=null&&c.irr<0?' neg':''}"><span>IRR годовых</span><b>${irrTxt(c.irr)}</b></div><div class="kpi${neg?' neg':''}"><span>На свои деньги</span><b>${c.roe>9.99?'>×10':'×'+nf1.format(c.roe)}</b></div>`;
+  const finRows=[isRes(t)?['Выручка от продаж',money(f.revenue)]:['Стоимость объекта (продажа инвестору)',money(f.revenue)],['Стройка',money(f.build)],['Сети и дороги',money(f.infra)],['Проект и согласования',money(f.soft-(f.mkt||0))],['Продажи и реклама',money(f.mkt||0)]];
+  if(f.disc>0)finRows.splice(1,0,['Скидка, чтобы распродать',`−${money(f.discA)} <span class="chip warn">−${nf.format(f.disc*100)}% к цене</span>`]);
+  finRows.push(['Проценты по кредиту',money(c.interest)+` <span class="chip warn">${nf.format(state.fin.rate*100)}% год.</span>`]);
+  finRows.push(['Налог на прибыль',money(c.tax)]);
+  finRows.push(['Прибыль в год',money(c.perYear)]);
   if(!state.land.own)finRows.push(['Покупка участка',money(c.landCost)]);
   finRows.push(['Пик вложений',money(c.peak)+` <span class="chip warn">мес. ${c.peakM}</span>`]);
   finRows.push(['Окупаемость',c.pay==null?'не окупается':`${c.pay} мес.`]);
@@ -1788,7 +1943,7 @@ function renderResults(){
   finRows.push(['Срок проекта',`${c.months} мес.${c.months>=60?' ('+nf1.format(c.months/12)+' г.)':''}`]);
   $('#fin').innerHTML=finRows.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('');
   $('#cashchart').innerHTML=cashChart(c);
-  $('#cashcap').textContent=`Накопленные деньги проекта по месяцам. Больше всего вложений нужно к ${c.peakM}-му месяцу: ${money(c.peak)} собственных денег или кредита.${state.land.own?' Земля уже ваша, её стоимость не учтена.':''}`;
+  $('#cashcap').textContent=`Накопленные деньги проекта по месяцам, с процентами и налогом. Больше всего денег нужно к ${c.peakM}-му месяцу: ${money(c.peak)}, из них своих ${money(c.eq)} (${nf.format(state.fin.eq*100)}%), остальное — кредит. Продажи начинаются на ${c.salesStart}-м месяце${isRes(t)&&cls().inst[0]?`, ${nf.format(cls().inst[0]*100)}% покупателей берут рассрочку на ${cls().inst[1]} мес.`:''}.${state.land.own?' Земля уже ваша, её стоимость не учтена.':''}`;
   const land=$('#land');land.classList.toggle('neg',f.land<=0||!st.units);
   land.innerHTML=!st.units?`<span class="lbl">Сколько можно заплатить за землю</span><span class="big">—</span><span class="sub"><span>Вариант не помещается на участок.</span></span>`
     :f.land>0?`<span class="lbl">Сколько можно заплатить за землю</span><span class="big">${money(f.land)}</span><span class="sub">${money(f.perSotka)} <span>за сотку при марже ${state.margin}%</span></span>`
@@ -1802,9 +1957,9 @@ function renderResults(){
 function renderModes(){
   const tr=state.mode==='trace'||state.mode==='geotrace';
   $('#tracebar').hidden=!tr;
-  $('#calibbar').hidden=tr||!state.calib||state.view==='geo';
-  $('#hint').hidden=tr||state.calib||state.view==='geo'||state.source!=='Пример';
-  $('#scalebar').hidden=tr||state.view==='geo';
+  $('#calibbar').hidden=tr||!state.calib||state.view!=='schema';
+  $('#hint').hidden=tr||state.calib||state.view!=='schema'||state.source!=='Пример';
+  $('#scalebar').hidden=tr||state.view!=='schema';
   svg.classList.toggle('tracing',state.mode==='trace');
   if(!tr&&state.calib){
     const P=state.poly,sel=$('#calib-side');if(state.calibSide>=P.length)state.calibSide=0;
@@ -1821,7 +1976,7 @@ function update(){
   if(state.mode==='trace'){drawSchema();renderModes();return}
   if(state.mode==='geotrace'){renderModes();return}
   compute();
-  if(state.view==='geo')drawGeo();else drawSchema();
+  if(state.view==='geo')drawGeo();else if(state.view==='3d')draw3d();else drawSchema();
   renderResults();renderModes();
   if(!state.dragging){maybeAnalyze();renderVerdict();renderQuality();renderAnswer()}
 }
@@ -1958,7 +2113,7 @@ let drag=null,raf=0;
 function svgPt(e,raw){const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const r=pt.matrixTransform(svg.getScreenCTM().inverse());return raw?[r.x,r.y]:[Math.round(r.x*10)/10,Math.round(r.y*10)/10]}
 function schedule(){if(raf)return;raf=requestAnimationFrame(()=>{raf=0;update()})}
 svg.addEventListener('pointerdown',e=>{
-  if(state.view==='geo')return;
+  if(state.view!=='schema')return;
   if(state.mode==='trace'){
     if(e.button)return;e.preventDefault();
     const p=svgPt(e,true),T=state.trace,k=1/scale();
@@ -1990,10 +2145,20 @@ $('#margin').addEventListener('input',e=>{state.margin=+e.target.value;$('#margi
 const regSel=$('#region');regSel.innerHTML=REGIONS.map(r=>`<option value="${r[0]}">${r[1]}</option>`).join('');regSel.value=state.region;
 regSel.addEventListener('change',()=>{applyRegion(regSel.value);buildControls();update()});
 document.querySelectorAll('[data-land]').forEach(b=>b.addEventListener('click',()=>{state.land.own=b.dataset.land==='own';renderLand();update()}));
-function renderLand(){document.querySelectorAll('[data-land]').forEach(b=>b.setAttribute('aria-pressed',(b.dataset.land==='own')===state.land.own));$('#land-price-f').hidden=state.land.own}
-$('#land-price').addEventListener('input',e=>{const v=parseFloat(e.target.value);if(!isNaN(v)){state.land.price=v;update()}});
-document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',async()=>{state.view=b.dataset.view;if(state.view==='schema')fit();if(state.view==='geo')await ensureMap();update()}));
-window.addEventListener('resize',()=>{if(state.vb&&state.view==='schema')drawSchema()});
+function renderFinSet(){
+  const F=state.fin;
+  $('#finset').innerHTML=[['rate','Ставка кредита',100,'% год.'],['eq','Свои деньги в проекте',100,'% пика'],['tax','Налог на прибыль',100,'%']].map(([k,l,mul,u])=>`<div><label for="fs-${k}">${l}</label><div class="num"><input type="number" inputmode="decimal" id="fs-${k}" min="0" max="100" step="1" value="${Math.round(F[k]*mul)}"><span>${u}</span></div></div>`).join('');
+  ['rate','eq','tax'].forEach(k=>$('#fs-'+k).addEventListener('input',e=>{const v=parseFloat(e.target.value);if(!isNaN(v)&&v>=0){state.fin[k]=v/100;update()}}));
+}
+function renderLand(){
+  document.querySelectorAll('[data-land]').forEach(b=>b.setAttribute('aria-pressed',(b.dataset.land==='own')===state.land.own));
+  $('#land-price-f').hidden=state.land.own;$('#ans-price').hidden=state.land.own;
+  for(const id of ['#land-price','#ans-land-price']){const el=$(id);if(document.activeElement!==el)el.value=state.land.price}
+  $('#land-note').textContent=state.land.own?'Земля уже ваша и в затраты не входит. Расчёт покажет, сколько она приносит при застройке и сколько стоит при лучшем использовании.':'Стоимость земли входит в затраты с первого месяца. Прибыль показывает, насколько застройка выгоднее, чем продать участок по этой цене.';
+}
+for(const id of ['#land-price','#ans-land-price'])$(id).addEventListener('input',e=>{const v=parseFloat(e.target.value);if(!isNaN(v)){state.land.price=v;renderLand();update()}});
+document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',async()=>{if(b.dataset.view==='3d'){try{b.textContent='3D…';await ensure3d();b.textContent='3D'}catch(e){b.textContent='3D недоступно';b.disabled=true;return}}state.view=b.dataset.view;if(state.view==='schema')fit();if(state.view==='geo')await ensureMap();update()}));
+window.addEventListener('resize',()=>{if(state.vb&&state.view==='schema')drawSchema();if(state.view==='3d')size3d()});
 
 async function openSrc(k,toggle){
   const b=document.querySelector(`[data-src="${k}"]`),open=!toggle||state.src!==k;closeSrc();
@@ -2093,7 +2258,7 @@ $('#copy').addEventListener('click',()=>{const txt=summary(),s=$('#copy-status')
   setTimeout(()=>{s.textContent=''},2500);
 });
 
-renderLand();renderChecklist();renderClass();buildControls();fit();update();
+renderLand();renderFinSet();renderChecklist();renderClass();buildControls();fit();update();
 requestAnimationFrame(()=>{update();openSrc('map')});
 })();
 </script>
