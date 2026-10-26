@@ -1,0 +1,1529 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="YerPlan — найдите свой участок на карте: план застройки, экономика и ответ, стоит ли строить.">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
+<title>YerPlan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>.leaflet-pane, .leaflet-tile, .leaflet-marker-icon, .leaflet-marker-shadow, .leaflet-tile-container, .leaflet-pane > svg, .leaflet-pane > canvas, .leaflet-zoom-box, .leaflet-image-layer, .leaflet-layer { position: absolute; left: 0; top: 0; } .leaflet-container { overflow: hidden; } .leaflet-tile, .leaflet-marker-icon, .leaflet-marker-shadow { -webkit-user-select: none; -moz-user-select: none; user-select: none; -webkit-user-drag: none; } .leaflet-tile::selection { background: transparent; } .leaflet-safari .leaflet-tile { image-rendering: -webkit-optimize-contrast; } .leaflet-safari .leaflet-tile-container { width: 1600px; height: 1600px; -webkit-transform-origin: 0 0; } .leaflet-marker-icon, .leaflet-marker-shadow { display: block; } .leaflet-container .leaflet-overlay-pane svg { max-width: none !important; max-height: none !important; } .leaflet-container .leaflet-marker-pane img, .leaflet-container .leaflet-shadow-pane img, .leaflet-container .leaflet-tile-pane img, .leaflet-container img.leaflet-image-layer, .leaflet-container .leaflet-tile { max-width: none !important; max-height: none !important; width: auto; padding: 0; } .leaflet-container img.leaflet-tile { mix-blend-mode: plus-lighter; } .leaflet-container.leaflet-touch-zoom { -ms-touch-action: pan-x pan-y; touch-action: pan-x pan-y; } .leaflet-container.leaflet-touch-drag { -ms-touch-action: pinch-zoom; touch-action: none; touch-action: pinch-zoom; } .leaflet-container.leaflet-touch-drag.leaflet-touch-zoom { -ms-touch-action: none; touch-action: none; } .leaflet-container { -webkit-tap-highlight-color: transparent; } .leaflet-container a { -webkit-tap-highlight-color: rgba(51, 181, 229, 0.4); } .leaflet-tile { filter: inherit; visibility: hidden; } .leaflet-tile-loaded { visibility: inherit; } .leaflet-zoom-box { width: 0; height: 0; -moz-box-sizing: border-box; box-sizing: border-box; z-index: 800; } .leaflet-overlay-pane svg { -moz-user-select: none; } .leaflet-pane { z-index: 400; } .leaflet-tile-pane { z-index: 200; } .leaflet-overlay-pane { z-index: 400; } .leaflet-shadow-pane { z-index: 500; } .leaflet-marker-pane { z-index: 600; } .leaflet-tooltip-pane { z-index: 650; } .leaflet-popup-pane { z-index: 700; } .leaflet-map-pane canvas { z-index: 100; } .leaflet-map-pane svg { z-index: 200; } .leaflet-vml-shape { width: 1px; height: 1px; } .leaflet-control { position: relative; z-index: 800; pointer-events: visiblePainted; pointer-events: auto; } .leaflet-top, .leaflet-bottom { position: absolute; z-index: 1000; pointer-events: none; } .leaflet-top { top: 0; } .leaflet-right { right: 0; } .leaflet-bottom { bottom: 0; } .leaflet-left { left: 0; } .leaflet-control { float: left; clear: both; } .leaflet-right .leaflet-control { float: right; } .leaflet-top .leaflet-control { margin-top: 10px; } .leaflet-bottom .leaflet-control { margin-bottom: 10px; } .leaflet-left .leaflet-control { margin-left: 10px; } .leaflet-right .leaflet-control { margin-right: 10px; } .leaflet-fade-anim .leaflet-popup { opacity: 0; -webkit-transition: opacity 0.2s linear; -moz-transition: opacity 0.2s linear; transition: opacity 0.2s linear; } .leaflet-fade-anim .leaflet-map-pane .leaflet-popup { opacity: 1; } .leaflet-zoom-animated { -webkit-transform-origin: 0 0; -ms-transform-origin: 0 0; transform-origin: 0 0; } svg.leaflet-zoom-animated { will-change: transform; } .leaflet-zoom-anim .leaflet-zoom-animated { -webkit-transition: -webkit-transform 0.25s cubic-bezier(0,0,0.25,1); -moz-transition: -moz-transform 0.25s cubic-bezier(0,0,0.25,1); transition: transform 0.25s cubic-bezier(0,0,0.25,1); } .leaflet-zoom-anim .leaflet-tile, .leaflet-pan-anim .leaflet-tile { -webkit-transition: none; -moz-transition: none; transition: none; } .leaflet-zoom-anim .leaflet-zoom-hide { visibility: hidden; } .leaflet-interactive { cursor: pointer; } .leaflet-grab { cursor: -webkit-grab; cursor: -moz-grab; cursor: grab; } .leaflet-crosshair, .leaflet-crosshair .leaflet-interactive { cursor: crosshair; } .leaflet-popup-pane, .leaflet-control { cursor: auto; } .leaflet-dragging .leaflet-grab, .leaflet-dragging .leaflet-grab .leaflet-interactive, .leaflet-dragging .leaflet-marker-draggable { cursor: move; cursor: -webkit-grabbing; cursor: -moz-grabbing; cursor: grabbing; } .leaflet-marker-icon, .leaflet-marker-shadow, .leaflet-image-layer, .leaflet-pane > svg path, .leaflet-tile-container { pointer-events: none; } .leaflet-marker-icon.leaflet-interactive, .leaflet-image-layer.leaflet-interactive, .leaflet-pane > svg path.leaflet-interactive, svg.leaflet-image-layer.leaflet-interactive path { pointer-events: visiblePainted; pointer-events: auto; } .leaflet-container { background: #ddd; outline-offset: 1px; } .leaflet-container a { color: #0078A8; } .leaflet-zoom-box { border: 2px dotted #38f; background: rgba(255,255,255,0.5); } .leaflet-container { font-family: "Helvetica Neue", Arial, Helvetica, sans-serif; font-size: 12px; font-size: 0.75rem; line-height: 1.5; } .leaflet-bar { box-shadow: 0 1px 5px rgba(0,0,0,0.65); border-radius: 4px; } .leaflet-bar a { background-color: #fff; border-bottom: 1px solid #ccc; width: 26px; height: 26px; line-height: 26px; display: block; text-align: center; text-decoration: none; color: black; } .leaflet-bar a, .leaflet-control-layers-toggle { background-position: 50% 50%; background-repeat: no-repeat; display: block; } .leaflet-bar a:hover, .leaflet-bar a:focus { background-color: #f4f4f4; } .leaflet-bar a:first-child { border-top-left-radius: 4px; border-top-right-radius: 4px; } .leaflet-bar a:last-child { border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; border-bottom: none; } .leaflet-bar a.leaflet-disabled { cursor: default; background-color: #f4f4f4; color: #bbb; } .leaflet-touch .leaflet-bar a { width: 30px; height: 30px; line-height: 30px; } .leaflet-touch .leaflet-bar a:first-child { border-top-left-radius: 2px; border-top-right-radius: 2px; } .leaflet-touch .leaflet-bar a:last-child { border-bottom-left-radius: 2px; border-bottom-right-radius: 2px; } .leaflet-control-zoom-in, .leaflet-control-zoom-out { font: bold 18px 'Lucida Console', Monaco, monospace; text-indent: 1px; } .leaflet-touch .leaflet-control-zoom-in, .leaflet-touch .leaflet-control-zoom-out { font-size: 22px; } .leaflet-control-layers { box-shadow: 0 1px 5px rgba(0,0,0,0.4); background: #fff; border-radius: 5px; } .leaflet-touch .leaflet-control-layers-toggle { width: 44px; height: 44px; } .leaflet-control-layers .leaflet-control-layers-list, .leaflet-control-layers-expanded .leaflet-control-layers-toggle { display: none; } .leaflet-control-layers-expanded .leaflet-control-layers-list { display: block; position: relative; } .leaflet-control-layers-expanded { padding: 6px 10px 6px 6px; color: #333; background: #fff; } .leaflet-control-layers-scrollbar { overflow-y: scroll; overflow-x: hidden; padding-right: 5px; } .leaflet-control-layers-selector { margin-top: 2px; position: relative; top: 1px; } .leaflet-control-layers label { display: block; font-size: 13px; font-size: 1.08333em; } .leaflet-control-layers-separator { height: 0; border-top: 1px solid #ddd; margin: 5px -10px 5px -6px; } .leaflet-container .leaflet-control-attribution { background: #fff; background: rgba(255, 255, 255, 0.8); margin: 0; } .leaflet-control-attribution, .leaflet-control-scale-line { padding: 0 5px; color: #333; line-height: 1.4; } .leaflet-control-attribution a { text-decoration: none; } .leaflet-control-attribution a:hover, .leaflet-control-attribution a:focus { text-decoration: underline; } .leaflet-attribution-flag { display: inline !important; vertical-align: baseline !important; width: 1em; height: 0.6669em; } .leaflet-left .leaflet-control-scale { margin-left: 5px; } .leaflet-bottom .leaflet-control-scale { margin-bottom: 5px; } .leaflet-control-scale-line { border: 2px solid #777; border-top: none; line-height: 1.1; padding: 2px 5px 1px; white-space: nowrap; -moz-box-sizing: border-box; box-sizing: border-box; background: rgba(255, 255, 255, 0.8); text-shadow: 1px 1px #fff; } .leaflet-control-scale-line:not(:first-child) { border-top: 2px solid #777; border-bottom: none; margin-top: -2px; } .leaflet-control-scale-line:not(:first-child):not(:last-child) { border-bottom: 2px solid #777; } .leaflet-touch .leaflet-control-attribution, .leaflet-touch .leaflet-control-layers, .leaflet-touch .leaflet-bar { box-shadow: none; } .leaflet-touch .leaflet-control-layers, .leaflet-touch .leaflet-bar { border: 2px solid rgba(0,0,0,0.2); background-clip: padding-box; } .leaflet-popup { position: absolute; text-align: center; margin-bottom: 20px; } .leaflet-popup-content-wrapper { padding: 1px; text-align: left; border-radius: 12px; } .leaflet-popup-content { margin: 13px 24px 13px 20px; line-height: 1.3; font-size: 13px; font-size: 1.08333em; min-height: 1px; } .leaflet-popup-content p { margin: 17px 0; margin: 1.3em 0; } .leaflet-popup-tip-container { width: 40px; height: 20px; position: absolute; left: 50%; margin-top: -1px; margin-left: -20px; overflow: hidden; pointer-events: none; } .leaflet-popup-tip { width: 17px; height: 17px; padding: 1px; margin: -10px auto 0; pointer-events: auto; -webkit-transform: rotate(45deg); -moz-transform: rotate(45deg); -ms-transform: rotate(45deg); transform: rotate(45deg); } .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: white; color: #333; box-shadow: 0 3px 14px rgba(0,0,0,0.4); } .leaflet-container a.leaflet-popup-close-button { position: absolute; top: 0; right: 0; border: none; text-align: center; width: 24px; height: 24px; font: 16px/24px Tahoma, Verdana, sans-serif; color: #757575; text-decoration: none; background: transparent; } .leaflet-container a.leaflet-popup-close-button:hover, .leaflet-container a.leaflet-popup-close-button:focus { color: #585858; } .leaflet-popup-scrolled { overflow: auto; } .leaflet-oldie .leaflet-popup-content-wrapper { -ms-zoom: 1; } .leaflet-oldie .leaflet-popup-tip { width: 24px; margin: 0 auto; -ms-filter: "progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678)"; filter: progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678); } .leaflet-oldie .leaflet-control-zoom, .leaflet-oldie .leaflet-control-layers, .leaflet-oldie .leaflet-popup-content-wrapper, .leaflet-oldie .leaflet-popup-tip { border: 1px solid #999; } .leaflet-div-icon { background: #fff; border: 1px solid #666; } .leaflet-tooltip { position: absolute; padding: 6px; background-color: #fff; border: 1px solid #fff; border-radius: 3px; color: #222; white-space: nowrap; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; pointer-events: none; box-shadow: 0 1px 3px rgba(0,0,0,0.4); } .leaflet-tooltip.leaflet-interactive { cursor: pointer; pointer-events: auto; } .leaflet-tooltip-top:before, .leaflet-tooltip-bottom:before, .leaflet-tooltip-left:before, .leaflet-tooltip-right:before { position: absolute; pointer-events: none; border: 6px solid transparent; background: transparent; content: ""; } .leaflet-tooltip-bottom { margin-top: 6px; } .leaflet-tooltip-top { margin-top: -6px; } .leaflet-tooltip-bottom:before, .leaflet-tooltip-top:before { left: 50%; margin-left: -6px; } .leaflet-tooltip-top:before { bottom: 0; margin-bottom: -12px; border-top-color: #fff; } .leaflet-tooltip-bottom:before { top: 0; margin-top: -12px; margin-left: -6px; border-bottom-color: #fff; } .leaflet-tooltip-left { margin-left: -6px; } .leaflet-tooltip-right { margin-left: 6px; } .leaflet-tooltip-left:before, .leaflet-tooltip-right:before { top: 50%; margin-top: -6px; } .leaflet-tooltip-left:before { right: 0; margin-right: -12px; border-left-color: #fff; } .leaflet-tooltip-right:before { left: 0; margin-left: -12px; border-right-color: #fff; } @media print { .leaflet-control { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }</style>
+<style>
+/* Layout: white app shell — control rail | live site plan | results ledger. Light-only by design: a clean drafting-table look like site-planning tools. */
+:root{
+  --ground:#F2F4F7; --surface:#FFFFFF; --soft:#F8F9FB; --ink:#101828; --muted:#667085; --line:#E4E7EC;
+  --accent:#2F54EB; --accent-soft:#EEF2FF; --accent-ink:#2440C8;
+  --cad:#E5484D; --lot1:#B5DCAA; --lot2:#9ACF8D; --lotline:#6FA764; --house:#46704B;
+  --green:#E6F2E0; --tree:#C9E4BD; --road:#D7DCE3; --roadline:#FFFFFF;
+  --bldg:#5F7FA3; --bldgtop:#9CB3CB; --shadow:rgba(16,24,40,.10); --grid:rgba(16,24,40,.045);
+  --good:#0E7A55; --warn:#B54708; --bad:#D92D20; --chip:#F2F4F7; --cash:#0E9F6E;
+  --good-bg:#ECFDF3; --warn-bg:#FFF6E5; --bad-bg:#FEF3F2;
+  --display:"Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --body:"Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --code:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --card-shadow:0 1px 2px rgba(16,24,40,.04),0 2px 8px rgba(16,24,40,.06);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45}
+.wrap{max-width:1520px;margin:0 auto;padding-block:20px 36px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 28px;margin-bottom:16px}
+.brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.brand h1{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:-.01em;margin:0}
+.brand h1 span{color:var(--cad)}
+.brand p{margin:0;color:var(--muted);max-width:56ch}
+.demo-tag{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:3px 7px}
+.app{display:grid;grid-template-columns:272px minmax(0,1fr) 352px;gap:14px;align-items:start}
+@media (max-width:1240px){.app{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.stage{grid-column:1/-1;order:-1}}
+@media (max-width:760px){.app{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.group{display:flex;flex-direction:column;gap:12px}
+.group h2{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg.two{grid-template-columns:repeat(2,1fr)}
+.seg button{font:inherit;font-size:12.5px;padding:8px 2px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface);font-weight:600}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,.drop:focus-within,tr[tabindex]:focus-visible{outline:2px solid var(--cad);outline-offset:2px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.field label{font-size:13px}
+.field output{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums}
+.field small{color:var(--muted);font-size:12px}
+.fields3{display:flex;flex-direction:column;gap:8px}
+.fields3>div{display:grid;grid-template-columns:minmax(0,1fr) 104px;gap:8px;align-items:center}
+.fields3 label{font-size:13px}
+input[type=range]{width:100%;accent-color:var(--ink)}
+select.sel{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:6px;background:var(--ground);color:var(--ink);padding:7px 8px;width:100%}
+.num{display:flex;align-items:center;border:1px solid var(--line);border-radius:6px;background:var(--ground);overflow:hidden;min-width:0}
+.num input{flex:1;min-width:0;font:inherit;font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums;border:0;background:transparent;color:var(--ink);padding:6px 8px;width:100%}
+.num span{font-size:11.5px;color:var(--muted);padding-right:8px;white-space:nowrap}
+.note{font-size:12px;color:var(--muted);margin:0}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.stage-bar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--line)}
+.site-area{display:flex;gap:16px;flex-wrap:wrap;font-variant-numeric:tabular-nums;align-items:baseline}
+.site-area b{font-family:var(--mono);font-weight:500;font-size:14px}
+.site-area span{color:var(--muted);font-size:12px;margin-right:4px}
+.src-tabs{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.src-tabs .lbl{font-size:12px;color:var(--muted);margin-right:2px}
+.btn{font:inherit;font-size:12.5px;padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--ink);color:var(--surface);border-color:var(--ink);font-weight:600}
+.btn.accent{background:var(--cad);border-color:var(--cad);color:#fff;font-weight:600}
+.src-tabs .btn[aria-expanded="true"]{background:var(--cad);border-color:var(--cad);color:#fff}
+.viewtog{display:inline-grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.viewtog button{font:inherit;font-size:12px;padding:4px 10px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.viewtog button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.subpanel{border-bottom:1px solid var(--line);padding:14px 12px;display:flex;flex-direction:column;gap:10px;background:var(--ground)}
+.searchrow{display:flex;gap:8px;flex-wrap:wrap}
+.searchrow .num{flex:1;min-width:200px;background:var(--surface)}
+.imp-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media (max-width:700px){.imp-grid{grid-template-columns:minmax(0,1fr)}}
+.drop{position:relative;display:flex;flex-direction:column;justify-content:center;gap:8px;border:1.5px dashed var(--muted);border-radius:8px;padding:16px;background:var(--surface);cursor:pointer;min-height:150px;min-width:0}
+.drop.over{border-color:var(--cad);background:var(--chip)}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.drop b{font-size:14px}
+.drop ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted)}
+.drop ul em{font-style:normal;font-family:var(--mono);font-size:11.5px;color:var(--ink)}
+.paste{display:flex;flex-direction:column;gap:6px;min-width:0}
+.paste label{font-size:13px}
+.paste textarea{font:inherit;font-family:var(--mono);font-size:12.5px;line-height:1.5;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);padding:8px;resize:vertical;min-height:96px;width:100%}
+.row-btns{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.manual-grid{display:grid;grid-template-columns:repeat(3,minmax(0,160px)) auto;gap:10px;align-items:end}
+@media (max-width:700px){.manual-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.manual-grid label{font-size:12.5px;display:block;margin-bottom:4px}
+.manual-grid .num{background:var(--surface)}
+.status{margin:0;font-size:13px;min-height:1.2em}
+.status.err{color:var(--bad)}
+.status.ok{color:var(--good)}
+.status.busy{color:var(--muted)}
+.modebar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--line);background:var(--chip);font-size:13px}
+.modebar b{font-weight:600}
+.mb-btns{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.calib-form{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.calib-form select{font:inherit;font-size:12.5px;font-family:var(--mono);border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);padding:5px 6px;max-width:100%}
+.calib-form .num{width:120px;background:var(--surface)}
+#calib-info{font-variant-numeric:tabular-nums;color:var(--muted)}
+#calib-msg{flex-basis:100%;margin:0}
+.map{position:relative;height:clamp(400px,68vh,760px);background:var(--ground)}
+#map{width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+#map [data-v],#map [data-m]{cursor:grab}
+#map.tracing{cursor:crosshair}
+#geomap{position:absolute;inset:0;background:#1d2420;font-family:var(--body)}
+#geomap.drawing{cursor:crosshair}
+#geomap.drawing .leaflet-interactive{cursor:crosshair}
+.vtx{background:#fff;border:2.5px solid #D3432A;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.vtx.first{background:#D3432A}
+.elbl{font-family:var(--mono);font-size:11px;color:#fff;background:rgba(211,67,42,.9);border-radius:3px;padding:1px 4px;white-space:nowrap;transform:translate(-50%,-50%);display:inline-block;pointer-events:none}
+.geonote{position:absolute;left:12px;right:12px;bottom:12px;z-index:500;background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:9px 12px;font-size:12.5px;color:var(--ink);max-width:560px}
+.hint{position:absolute;left:12px;top:12px;max-width:min(360px,calc(100% - 24px));background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:7px 10px;font-size:12px;color:var(--muted);pointer-events:none}
+.hint b{color:var(--cad);font-weight:600}
+.scalebar{position:absolute;left:12px;bottom:12px;display:flex;flex-direction:column;gap:3px;font-family:var(--mono);font-size:11px;color:var(--ink);pointer-events:none}
+.scalebar i{display:block;height:6px;border:1.5px solid var(--ink);border-top:0}
+.north{position:absolute;right:14px;bottom:12px;font-family:var(--mono);font-size:11px;display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;color:var(--ink)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;padding:9px 12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:2px;display:inline-block}
+.cmp{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+.cmp th{font-weight:500;color:var(--muted);text-align:right;padding:4px 4px;font-size:11.5px}
+.cmp th:first-child,.cmp td:first-child{text-align:left}
+.cmp td{padding:7px 4px;border-top:1px solid var(--line);text-align:right;font-family:var(--mono);font-size:12px}
+.cmp td:first-child{font-family:var(--body);font-size:12.5px}
+.cmp tr.row{cursor:pointer}
+.cmp tr.row:hover td{background:var(--ground)}
+.cmp tr.on td{background:var(--chip);font-weight:600}
+.cmp .best{display:block;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--good)}
+.vars{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.var{font:inherit;text-align:left;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--ink);padding:9px 10px;cursor:pointer;display:flex;flex-direction:column;gap:3px;min-width:0}
+.var[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink);background:var(--ground)}
+.var .vh{display:flex;justify-content:space-between;gap:6px;align-items:center}
+.var .vid{font-family:var(--display);font-weight:700;font-size:15px}
+.var .vl{font-size:11.5px;color:var(--muted);line-height:1.3}
+.var .vu{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums}
+.var .vp{font-family:var(--mono);font-size:12.5px;font-weight:500;font-variant-numeric:tabular-nums}
+.badge{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--good);border:1px solid currentColor;border-radius:4px;padding:1px 5px;white-space:nowrap}
+.tep{display:grid;grid-template-columns:1fr auto;gap:7px 12px;margin:0;font-size:13px}
+.tep dt{color:var(--muted)}
+.tep dd{margin:0;text-align:right;font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums}
+.tep dt.strong,.tep dd.strong{color:var(--ink);font-weight:600}
+.tep dd.neg{color:var(--bad)}
+.chip{display:inline-block;font-size:11px;font-weight:600;padding:1px 6px;border-radius:4px;margin-left:6px;font-family:var(--body)}
+.chip.ok{color:var(--good);background:var(--chip)}.chip.warn{color:var(--warn);background:var(--chip)}.chip.bad{color:var(--bad);background:var(--chip)}
+.modebar .chip{background:var(--surface)}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.kpi{border:1px solid var(--line);border-radius:8px;padding:8px 9px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi span{font-size:11px;color:var(--muted)}
+.kpi b{font-family:var(--mono);font-weight:500;font-size:13.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kpi.neg b{color:var(--bad)}
+.cashchart svg{width:100%;height:auto;display:block}
+.cashcap{font-size:12px;color:var(--muted);margin:0}
+.usebar{display:flex;height:10px;border-radius:3px;overflow:hidden;border:1px solid var(--line)}
+.usebar i{display:block;height:100%}
+.uselegend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.uselegend span{display:inline-flex;gap:5px;align-items:center}
+.uselegend em{width:9px;height:9px;border-radius:2px;display:inline-block}
+.land{border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:4px}
+.land .lbl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.land .big{font-family:var(--display);font-weight:700;font-size:28px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.land .sub{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
+.land .sub span{color:var(--muted);font-family:var(--body)}
+.land.neg .big{color:var(--bad)}
+.copyrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.copyrow small{color:var(--muted);font-size:12px}
+footer.assume{margin-top:16px;font-size:12px;color:var(--muted);max-width:120ch;display:flex;flex-direction:column;gap:6px}
+footer.assume b{color:var(--ink);font-weight:600}
+footer.assume a{color:var(--ink)}
+.vmini{display:flex;gap:10px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:8px;padding:10px 12px;text-decoration:none;color:var(--ink)}
+.vmini b{font-size:14px}
+.vmini span{font-size:12px;color:var(--muted)}
+.vmini:hover{border-color:var(--ink)}
+.verdict{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 16px;display:flex;flex-direction:column;gap:16px;scroll-margin-top:16px}
+.vd-head{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-start;justify-content:space-between}
+.vd-title{font-family:var(--display);font-weight:700;font-size:20px;margin:0;letter-spacing:-.01em}
+.vd-sub{margin:4px 0 0;color:var(--muted);max-width:70ch}
+.vd-badge{font-weight:600;font-size:15px;padding:8px 14px;border-radius:8px;border:1.5px solid currentColor;max-width:100%}
+.vd-badge.ok{color:var(--good)}.vd-badge.warn{color:var(--warn)}.vd-badge.bad{color:var(--bad)}
+.vd-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:24px}
+@media (max-width:900px){.vd-grid{grid-template-columns:minmax(0,1fr)}}
+.vd-col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.vd-col h3{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:6px 0 0}
+.vd-rec{margin:0;line-height:1.55;max-width:75ch}
+.vd-rec b{font-weight:600}
+.vd-rec a{color:var(--cad);font-weight:600}
+.tablewrap{overflow-x:auto}
+.fac{width:100%;border-collapse:collapse;font-size:13px}
+.fac td{padding:8px 6px;border-top:1px solid var(--line);vertical-align:top}
+.fac td.f-name{font-weight:500;width:28%}
+.fac td.f-note{color:var(--muted)}
+.fac td.f-src{font-size:11.5px;color:var(--muted);white-space:nowrap;text-align:right}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;white-space:nowrap;background:var(--chip)}
+.pill.ok{color:var(--good)}.pill.warn{color:var(--warn)}.pill.bad{color:var(--bad)}.pill.unk{color:var(--muted)}.pill.load{color:var(--muted)}
+.chk{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.chk label{font-size:13px}
+.chk small{grid-column:1/-1;color:var(--muted);font-size:12px}
+.chk .seg{grid-template-columns:repeat(3,auto)}
+.chk .seg button{padding:5px 10px;font-size:12px}
+/* ---- white UI layer ---- */
+header.top{background:var(--surface);border-radius:14px;box-shadow:var(--card-shadow);padding:14px 18px;align-items:center}
+.brand h1{font-weight:700;font-size:24px;letter-spacing:-.02em}
+.brand h1 span{color:var(--accent)}
+.brand p{font-size:13.5px}
+.demo-tag{font-family:var(--body);text-transform:none;letter-spacing:0;font-size:12px;border:0;background:var(--accent-soft);color:var(--accent-ink);border-radius:999px;padding:5px 10px;font-weight:500}
+.panel,.stage,.verdict{border:0;border-radius:14px;box-shadow:var(--card-shadow)}
+.panel{gap:22px}
+.group h2,.vd-col h3,.land .lbl{font-size:11.5px;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.seg{background:var(--chip);border:0;padding:3px;border-radius:10px;gap:3px}
+.seg button{border-radius:8px;color:var(--muted);font-weight:500}
+.seg button+button{border-left:0}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(16,24,40,.12)}
+.btn{background:var(--surface);border-radius:8px;padding:7px 12px;font-weight:500;border-color:var(--line)}
+.btn:hover{border-color:#C9CED6;background:var(--soft)}
+.btn.primary,.btn.accent{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover,.btn.accent:hover{background:var(--accent-ink);border-color:var(--accent-ink)}
+.src-tabs .btn[aria-expanded="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+.viewtog{border:0;background:var(--chip);padding:3px;border-radius:9px;gap:3px}
+.viewtog button{border-radius:7px;color:var(--muted)}
+.viewtog button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(16,24,40,.12)}
+.num,select.sel{background:var(--surface);border-radius:8px;border-color:var(--line)}
+.num:focus-within,select.sel:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);outline:none}
+.num input{font-size:13.5px}
+input[type=range]{accent-color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,.drop:focus-within,tr[tabindex]:focus-visible{outline:2px solid var(--accent)}
+.stage-bar{padding:12px 14px}
+.subpanel{background:var(--soft)}
+.paste textarea{font-family:var(--code);border-radius:8px}
+.drop{border-color:#C9CED6;border-radius:12px}
+.drop ul em{font-family:var(--code)}
+.modebar{background:var(--accent-soft)}
+.map{background:#FBFCFD}
+#geomap{background:#E9EDF1}
+.hint{border:0;box-shadow:var(--card-shadow);border-radius:10px;padding:9px 12px}
+.hint b{color:var(--accent-ink)}
+.vmini{border:0;background:var(--soft);border-radius:12px;padding:12px 14px}
+.vmini:hover{background:var(--accent-soft)}
+.cmp td{font-size:13px}
+.cmp tr.row:hover td{background:var(--soft)}
+.cmp tr.on td{background:var(--accent-soft)}
+.var{border-radius:12px;border-color:var(--line)}
+.var[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-soft)}
+.var .vid{font-size:16px}
+.badge{border:0;background:var(--good-bg);border-radius:999px;padding:2px 8px}
+.kpi{border:0;background:var(--soft);border-radius:12px;padding:10px 12px}
+.kpi b{font-size:17px;font-weight:600}
+.kpi span{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tep dd{font-size:13px}
+.chip{border-radius:999px}
+.chip.ok{background:var(--good-bg)}.chip.warn{background:var(--warn-bg)}.chip.bad{background:var(--bad-bg)}
+.modebar .chip{background:var(--surface)}
+.usebar{border:0;height:8px;border-radius:999px}
+.land{border-top-color:var(--line)}
+.land .big{font-weight:700;font-size:30px}
+.vd-title{font-size:22px}
+.vd-badge{border:0;border-radius:12px;padding:10px 16px}
+.vd-badge.ok{background:var(--good-bg)}.vd-badge.warn{background:var(--warn-bg)}.vd-badge.bad{background:var(--bad-bg)}
+.pill{padding:3px 9px}
+.pill.ok{background:var(--good-bg)}.pill.warn{background:var(--warn-bg)}.pill.bad{background:var(--bad-bg)}
+.vd-rec a{color:var(--accent-ink)}
+.fac td{border-top-color:var(--line)}
+footer.assume a{color:var(--accent-ink)}
+.steps{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:600;display:flex;gap:4px;background:var(--surface);border-radius:999px;padding:4px;box-shadow:0 2px 10px rgba(16,24,40,.14);max-width:calc(100% - 24px);overflow-x:auto}
+.steps span{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.steps span i{font-style:normal;width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;background:var(--chip);font-size:11.5px;font-weight:600;color:var(--muted)}
+.steps span.on{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.steps span.on i{background:var(--accent);color:#fff}
+.steps span.done i{background:var(--good);color:#fff}
+.searchrow .num{min-height:42px;padding-left:10px}
+.searchrow .num input{font-size:15px;font-family:var(--body)}
+.searchrow .num svg{flex:none;color:var(--muted)}
+.searchrow .btn{padding:9px 16px;font-size:13.5px}
+#p-map{gap:8px}
+.vmini.example b{color:var(--accent-ink)!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Yer<span>Plan</span></h1>
+      <p>Выберите участок на карте или загрузите документ. Получите план застройки, сравнение вариантов и экономику проекта.</p>
+    </div>
+    <span class="demo-tag">Бета · расчёт ориентировочный</span>
+  </header>
+
+  <main class="app">
+    <aside class="panel" aria-label="Параметры">
+      <div class="group">
+        <h2>Регион</h2>
+        <select class="sel" id="region" aria-label="Регион"></select>
+        <small class="note">Подставляет ориентиры цен продажи и стройки. Их можно поправить ниже.</small>
+      </div>
+      <div class="group">
+        <h2>Тип проекта</h2>
+        <div class="seg" role="group" aria-label="Тип проекта">
+          <button type="button" id="t-cottage" data-type="cottage">Коттеджи</button>
+          <button type="button" id="t-town" data-type="town">Таунхаусы</button>
+          <button type="button" id="t-multi" data-type="multi">Многоэтажки</button>
+        </div>
+      </div>
+      <div class="group" id="plan-params"><h2>Планировка</h2></div>
+      <div class="group" id="fin-params"><h2>Продажи и затраты</h2></div>
+      <div class="group">
+        <h2>Земля</h2>
+        <div class="seg two" role="group" aria-label="Земля">
+          <button type="button" id="land-own" data-land="own">Участок мой</button>
+          <button type="button" id="land-buy" data-land="buy">Покупаю</button>
+        </div>
+        <div class="field" id="land-price-f" hidden>
+          <label for="land-price">Цена участка</label>
+          <div class="num"><input type="number" inputmode="decimal" id="land-price" min="0" step="1000" value="1500000"><span>$ всего</span></div>
+          <small id="land-price-x"></small>
+        </div>
+      </div>
+      <div class="group">
+        <h2>Сроки</h2>
+        <div class="fields3" id="timeline"></div>
+      </div>
+      <div class="group">
+        <h2>Целевая маржа</h2>
+        <div class="field">
+          <div class="row"><label for="margin">Маржа к выручке</label><output id="margin-out">20%</output></div>
+          <input type="range" id="margin" min="5" max="40" step="1" value="20">
+        </div>
+      </div>
+    </aside>
+
+    <section class="stage" aria-label="План участка">
+      <div class="stage-bar">
+        <div class="site-area"><span id="site-area"></span><span class="viewtog" id="viewtog" hidden><button type="button" id="v-geo" data-view="geo">Спутник</button><button type="button" id="v-schema" data-view="schema">Схема</button></span></div>
+        <div class="src-tabs">
+          <span class="lbl">Участок:</span>
+          <button class="btn" type="button" data-src="map" aria-expanded="false" aria-controls="p-map">На карте</button>
+          <button class="btn" type="button" data-src="doc" aria-expanded="false" aria-controls="p-doc">Из документа</button>
+          <button class="btn" type="button" data-src="manual" aria-expanded="false" aria-controls="p-manual">Ввести размеры</button>
+          <button class="btn" type="button" data-src="sample" aria-expanded="false" aria-controls="p-sample">Примеры</button>
+        </div>
+      </div>
+
+      <div class="subpanel" id="p-map" hidden>
+        <div class="searchrow">
+          <div class="num"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="geo-q" autocomplete="off" placeholder="Найдите свой участок: адрес, махалля или координаты 41.3111, 69.2797"></div>
+          <button class="btn primary" type="button" id="geo-search">Найти</button>
+          <button class="btn accent" type="button" id="geo-draw">Обвести участок</button>
+        </div>
+        <p class="status" id="geo-status" aria-live="polite"></p>
+      </div>
+
+      <div class="subpanel" id="p-doc" hidden>
+        <div class="imp-grid">
+          <label class="drop" id="drop">
+            <input type="file" id="file" accept=".pdf,.dxf,.dwg,.kml,.kmz,.csv,.txt,.xlsx,.xls,.png,.jpg,.jpeg,.webp">
+            <b>Перетащите файл сюда или нажмите, чтобы выбрать</b>
+            <ul>
+              <li><em>PDF</em> кадастровый паспорт или выписка с координатами</li>
+              <li><em>DXF</em> съёмка геодезиста</li>
+              <li><em>KML, KMZ</em> контур из Google Earth</li>
+              <li><em>XLSX, CSV</em> таблица координат</li>
+              <li><em>JPG, PNG</em> фото плана, скан или скриншот карты</li>
+            </ul>
+          </label>
+          <div class="paste">
+            <label for="coords">Или вставьте координаты поворотных точек (номер, X, Y)</label>
+            <textarea id="coords" rows="5" spellcheck="false" placeholder="1  4576210.00  499850.00&#10;2  4576238.40  500118.60&#10;3  4576020.10  500171.30&#10;…"></textarea>
+            <div class="row-btns">
+              <button class="btn primary" type="button" id="coords-apply">Построить по координатам</button>
+              <button class="btn" type="button" id="coords-sample">Вставить пример</button>
+            </div>
+          </div>
+        </div>
+        <p class="status" id="imp-status" aria-live="polite"></p>
+      </div>
+
+      <div class="subpanel" id="p-manual" hidden>
+        <div class="manual-grid">
+          <div><label for="m-l">Длина</label><div class="num"><input type="number" inputmode="decimal" id="m-l" min="10" placeholder="300"><span>м</span></div></div>
+          <div><label for="m-w">Ширина</label><div class="num"><input type="number" inputmode="decimal" id="m-w" min="10" placeholder="200"><span>м</span></div></div>
+          <div><label for="m-a">или площадь</label><div class="num"><input type="number" inputmode="decimal" id="m-a" min="0.05" step="0.1" placeholder="6"><span>га</span></div></div>
+          <button class="btn primary" type="button" id="m-apply">Построить</button>
+        </div>
+        <p class="status" id="m-status" aria-live="polite"></p>
+      </div>
+
+      <div class="subpanel" id="p-sample" hidden>
+        <div class="row-btns">
+          <button class="btn" type="button" data-preset="trap">Трапеция, 13,6 га</button>
+          <button class="btn" type="button" data-preset="rect">Прямоугольник, 9,9 га</button>
+          <button class="btn" type="button" data-preset="L">Г-образный, 10,5 га</button>
+          <button class="btn" type="button" data-preset="irr">Неровный, 11,8 га</button>
+        </div>
+      </div>
+
+      <div class="modebar" id="tracebar" hidden>
+        <span id="trace-text"><b>Обведите участок:</b> кликайте по углам по порядку, клик по первой точке замыкает контур.</span>
+        <span>Точек: <b id="trace-n">0</b></span>
+        <div class="mb-btns">
+          <button class="btn" type="button" id="trace-undo">Отменить точку</button>
+          <button class="btn primary" type="button" id="trace-done">Замкнуть контур</button>
+          <button class="btn" type="button" id="trace-cancel">Отмена</button>
+        </div>
+      </div>
+
+      <div class="modebar" id="calibbar" hidden>
+        <div class="calib-form">
+          <label for="calib-side">Сторона</label>
+          <select id="calib-side"></select>
+          <label for="calib-len">по документу</label>
+          <div class="num"><input id="calib-len" inputmode="decimal" autocomplete="off" placeholder="напр. 125,4"><span>м</span></div>
+          <button class="btn primary" type="button" id="calib-apply">Задать масштаб</button>
+        </div>
+        <div class="mb-btns">
+          <span id="calib-info"></span>
+          <button class="btn" type="button" id="calib-mirror">Отразить</button>
+          <button class="btn" type="button" id="calib-close">Готово</button>
+        </div>
+        <p class="status" id="calib-msg" aria-live="polite"></p>
+      </div>
+
+      <div class="map" id="mapwrap">
+        <svg id="map" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="План застройки участка">
+          <g id="bg"></g>
+          <image id="under" x="0" y="0" width="0" height="0" preserveAspectRatio="none"></image>
+          <g id="layer"></g>
+        </svg>
+        <div id="geomap" hidden></div>
+        <div class="steps" id="steps" hidden><span data-step="1"><i>1</i>Найдите участок</span><span data-step="2"><i>2</i>Обведите границу</span><span data-step="3"><i>3</i>Смотрите план и расчёт</span></div>
+        <div class="geonote" id="geonote" hidden></div>
+        <div class="hint" id="hint">Это пример. Выберите свой участок кнопками <b>«На карте»</b>, <b>«Из документа»</b> или <b>«Ввести размеры»</b>. Красные точки можно тянуть.</div>
+        <div class="scalebar" id="scalebar"><i id="scale-line"></i><span id="scale-label"></span></div>
+        <div class="north" id="north" aria-hidden="true">
+          <svg width="16" height="22" viewBox="0 0 16 22"><path d="M8 1 L14 20 L8 15 L2 20 Z" fill="currentColor"/></svg>С
+        </div>
+      </div>
+      <div class="legend" id="legend"></div>
+    </section>
+
+    <aside class="panel" aria-label="Результаты">
+      <a class="vmini" id="vmini" href="#verdict-sec"></a>
+      <div class="group">
+        <h2>Что выгоднее построить</h2>
+        <table class="cmp" id="cmp"></table>
+      </div>
+      <div class="group">
+        <h2 id="vars-title">Варианты планировки</h2>
+        <div class="vars" id="vars"></div>
+      </div>
+      <div class="group">
+        <h2 id="tep-title">Показатели</h2>
+        <dl class="tep" id="tep"></dl>
+        <div class="usebar" id="usebar"></div>
+        <div class="uselegend" id="uselegend"></div>
+      </div>
+      <div class="group">
+        <h2>Экономика проекта</h2>
+        <div class="kpis" id="kpis"></div>
+        <dl class="tep" id="fin"></dl>
+        <div class="cashchart" id="cashchart"></div>
+        <p class="cashcap" id="cashcap"></p>
+        <div class="land" id="land"></div>
+      </div>
+      <div class="copyrow">
+        <button class="btn primary" type="button" id="copy">Скопировать сводку</button>
+        <small id="copy-status" aria-live="polite"></small>
+      </div>
+    </aside>
+  </main>
+
+  <section class="verdict" id="verdict-sec" aria-label="Стоит ли строить">
+    <div class="vd-head">
+      <div><h2 class="vd-title">Стоит ли строить</h2><p class="vd-sub" id="vd-sub"></p></div>
+      <div class="vd-badge" id="vd-badge"></div>
+    </div>
+    <div class="vd-grid">
+      <div class="vd-col">
+        <h3>Рекомендация</h3>
+        <p class="vd-rec" id="vd-rec"></p>
+        <h3>Факторы</h3>
+        <div class="tablewrap"><table class="fac" id="fac"></table></div>
+      </div>
+      <div class="vd-col">
+        <h3>Проверьте по документам</h3>
+        <div id="checklist"></div>
+        <p class="note">Этих данных нет на карте. Ответ «Нет» по назначению земли, правам или градплану означает, что строить в таком виде нельзя.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="assume" id="assume"></footer>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const nf=new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0});
+const nf1=new Intl.NumberFormat('ru-RU',{maximumFractionDigits:1,minimumFractionDigits:1});
+const nf2=new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2,minimumFractionDigits:2});
+const money=x=>{const s=x<0?'−':'';const a=Math.abs(x);if(a>=1e6)return s+'$'+nf1.format(a/1e6)+' млн';return s+'$'+nf.format(a)};
+const pct=x=>(x<0?'−':'')+nf1.format(Math.abs(x*100))+'%';
+const irrTxt=x=>x==null?'—':x>1.5?'>150%':pct(x);
+const plural=(n,f)=>{const a=Math.abs(n)%100,b=a%10;if(a>10&&a<20)return f[2];if(b>1&&b<5)return f[1];if(b===1)return f[0];return f[2]};
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const PRESETS={
+  trap:[[0,0],[420,0],[420,220],[300,340],[0,340]],
+  rect:[[0,0],[380,0],[380,260],[0,260]],
+  L:[[0,0],[200,0],[200,170],[410,170],[410,340],[0,340]],
+  irr:[[0,40],[250,0],[430,90],[400,300],[180,370],[20,260]]
+};
+const SAMPLE=`Координаты поворотных точек (пример)
+№   X            Y
+1   4576210.00   499850.00
+2   4576238.40   500118.60
+3   4576020.10   500171.30
+4   4575902.70   500004.80
+5   4575955.20   499842.10`;
+/* region: [id, name, apartment sale $/m², construction cost factor, sourced?] */
+const REGIONS=[
+  ['tash','г. Ташкент',1200,1.00,1],['tashobl','Ташкентская область',760,0.93,0],['sam','Самаркандская область',870,0.90,1],
+  ['buh','Бухарская область',700,0.88,0],['nav','Навоийская область',620,0.88,0],['and','Андижанская область',610,0.86,1],
+  ['nam','Наманганская область',570,0.86,1],['fer','Ферганская область',600,0.86,0],['kash','Кашкадарьинская область',560,0.86,0],
+  ['surx','Сурхандарьинская область',530,0.86,1],['jiz','Джизакская область',490,0.85,1],['sir','Сырдарьинская область',480,0.85,0],
+  ['xor','Хорезмская область',560,0.86,0],['kk','Каракалпакстан',480,0.85,0]
+];
+/* regional centres: [region id, lat, lng] */
+const CENTRES=[['tash',41.3111,69.2797],['tashobl',41.0450,69.3580],['sam',39.6542,66.9597],['buh',39.7747,64.4286],['nav',40.0844,65.3792],['and',40.7821,72.3442],['nam',40.9983,71.6726],['fer',40.3864,71.7864],['kash',38.8606,65.7891],['surx',37.2242,67.2783],['jiz',40.1158,67.8422],['sir',40.4897,68.7842],['xor',41.5500,60.6333],['kk',42.4531,59.6103]];
+/* realistic sales pace, units per month (assumption): [Tashkent city, elsewhere] */
+const PACE={cottage:[6,3],town:[10,5],multi:[40,15]};
+const CHECKS=[
+  ['zone','Назначение земли допускает жилую застройку','Категория и вид разрешённого использования в кадастровом паспорте. Сельхозземлю нужно переводить, это долго и не всегда возможно.','bad'],
+  ['title','Права на землю чистые','Собственность или долгосрочная аренда оформлены, нет ареста, залога и споров.','bad'],
+  ['red','Градплан не запрещает застройку','Красные линии, охранные зоны и предельная этажность проверены в хокимияте или управлении строительства.','bad'],
+  ['utils','Есть технические условия на сети','Свет, газ, вода, канализация: есть ли мощности рядом и сколько стоит подключение.','warn'],
+  ['soil','Сделана геология участка','В Узбекистане часто встречаются просадочные лёссовые грунты: они удорожают фундаменты, особенно для многоэтажек.','warn']
+];
+/* regions where sites are usually 8+ points seismic (assumption — verify on the seismic zoning map) */
+const SEIS8=['tash','tashobl','and','nam','fer','sam','jiz','sir','surx','kash'];
+/* ШНК 2.07.01-03* п.21.1: gap between long sides by storeys (upper bound of the range taken) */
+function normGap(fl){return fl<=3?15:fl<=5?30:fl<9?30+(fl-5)*15/4:45}
+const PLAY_PER_PERSON=0.7+0.1+2.0+0.3, M2_PER_PERSON=20, GREEN_MIN=0.25;
+const PRICE_K={cottage:0.95,town:0.85,multi:1}, COST_BASE={cottage:450,town:430,multi:420}, INFRA_BASE={cottage:18,town:20,multi:30};
+const DEF={
+  cottage:{lotW:18,lotD:33,road:9,perBlock:10,house:180,price:0,cost:0,infra:0},
+  town:{lotW:8,lotD:26,road:8,perBlock:12,house:140,price:0,cost:0,infra:0},
+  multi:{floors:12,secLen:60,insol:1.0,price:0,cost:0,infra:0,eff:0.78}
+};
+const TL={cottage:{build:18,start:9,sales:24},town:{build:18,start:9,sales:24},multi:{build:30,start:12,sales:36}};
+const APT=65, PARK=0.7, SOFT=0.10, FAR_MAX=2.5;
+const PLAN={
+  cottage:[['lotW','Ширина участка',12,30,1,'м'],['lotD','Глубина участка',20,50,1,'м'],['road','Ширина улицы',6,14,0.5,'м'],['perBlock','Участков в квартале',4,20,1,'']],
+  town:[['lotW','Ширина участка',6,12,0.5,'м'],['lotD','Глубина участка',18,35,1,'м'],['road','Ширина улицы',6,12,0.5,'м'],['perBlock','Домов в ряду',6,24,1,'']],
+  multi:[['floors','Этажность',5,25,1,'эт.'],['secLen','Длина дома',30,120,5,'м'],['insol','Разрыв не меньше',0.5,2,0.1,'× высоты']]
+};
+const FIN={
+  cottage:[['house','Площадь дома','м²'],['price','Цена продажи','$/м²'],['cost','Стоимость стройки','$/м²'],['infra','Сети и дороги','$/м² участка']],
+  town:[['house','Площадь дома','м²'],['price','Цена продажи','$/м²'],['cost','Стоимость стройки','$/м²'],['infra','Сети и дороги','$/м² участка']],
+  multi:[['price','Цена продажи','$/м²'],['cost','Стоимость стройки','$/м² общей'],['infra','Сети и благоустройство','$/м² участка'],['eff','Доля продаваемой площади','0–1']]
+};
+const VARS={
+  lots:[{id:'А',label:'Вдоль длинной стороны',da:0},{id:'Б',label:'Поперёк участка',da:90},{id:'В',label:'Длинные кварталы',da:0,blockMul:1.6},{id:'Г',label:'Под углом 45°',da:45}],
+  multi:[{id:'А',label:'Вдоль длинной стороны',da:0},{id:'Б',label:'Поперёк участка',da:90},{id:'В',label:'Короткие дома',da:0,lenMul:0.6},{id:'Г',label:'Под углом 45°',da:45}]
+};
+const TYPES=['cottage','town','multi'];
+const TYPE_NAME={cottage:'Коттеджный посёлок',town:'Таунхаусы',multi:'Многоэтажный ЖК'};
+const TYPE_LOW={cottage:'коттеджный посёлок',town:'таунхаусы',multi:'многоэтажный ЖК'};
+const TYPE_SHORT={cottage:'Коттеджи',town:'Таунхаусы',multi:'Многоэтажки'};
+const UNIT_W={cottage:['дом','дома','домов'],town:['дом','дома','домов'],multi:['квартира','квартиры','квартир']};
+
+const state={type:'cottage',region:'tash',poly:PRESETS.trap.map(p=>p.slice()),p:JSON.parse(JSON.stringify(DEF)),tl:JSON.parse(JSON.stringify(TL)),
+  margin:20,land:{own:true,price:1500000},sel:null,manual:false,vb:null,variants:[],compare:{},
+  mode:'edit',trace:[],gtrace:[],under:null,calib:false,calibSide:0,needScale:false,source:'Пример',
+  geo:null,view:'schema',dragging:false,src:null,
+  checks:{zone:'?',title:'?',red:'?',utils:'?',soil:'?'},site:{status:'nogeo',key:null,d:null,elev:null}};
+
+function applyRegion(id){
+  const r=REGIONS.find(x=>x[0]===id)||REGIONS[0];state.region=r[0];state.seis=SEIS8.includes(r[0]);
+  for(const t of TYPES){const p=state.p[t];p.price=Math.round(r[2]*PRICE_K[t]/10)*10;p.cost=Math.round(COST_BASE[t]*r[3]/5)*5;p.infra=Math.round(INFRA_BASE[t]*r[3])}
+}
+applyRegion('tash');
+
+/* ---------- geometry ---------- */
+function polyArea(P){let a=0;for(let i=0,j=P.length-1;i<P.length;j=i++)a+=(P[j][0]+P[i][0])*(P[j][1]-P[i][1]);return a/2}
+function pip(x,y,P){let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const xi=P[i][0],yi=P[i][1],xj=P[j][0],yj=P[j][1];if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))c=!c}return c}
+function dseg(px,py,ax,ay,bx,by){const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy;let t=l?((px-ax)*dx+(py-ay)*dy)/l:0;t=t<0?0:t>1?1:t;return Math.hypot(ax+t*dx-px,ay+t*dy-py)}
+function edist(x,y,P){let m=Infinity;for(let i=0,j=P.length-1;i<P.length;j=i++){const d=dseg(x,y,P[j][0],P[j][1],P[i][0],P[i][1]);if(d<m)m=d}return m}
+function ok(q,P,md){return pip(q[0],q[1],P)&&edist(q[0],q[1],P)>=md}
+function edgeLen(P,i){const a=P[i],b=P[(i+1)%P.length];return Math.hypot(b[0]-a[0],b[1]-a[1])}
+function longestAngle(P){let best=0,ang=0;for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length];const L=Math.hypot(b[0]-a[0],b[1]-a[1]);if(L>best){best=L;ang=Math.atan2(b[1]-a[1],b[0]-a[0])}}return ang}
+function frame(P,th){const c=Math.cos(th),s=Math.sin(th);let umin=1e9,umax=-1e9,vmin=1e9,vmax=-1e9;for(const [x,y] of P){const u=x*c+y*s,v=-x*s+y*c;if(u<umin)umin=u;if(u>umax)umax=u;if(v<vmin)vmin=v;if(v>vmax)vmax=v}return{c,s,umin,umax,vmin,vmax,toXY:(u,v)=>[u*c-v*s,u*s+v*c],toUV:(x,y)=>[x*c+y*s,-x*s+y*c]}}
+function hull(pts){const p=pts.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);const lo=[],up=[];for(const q of p){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],q)<=0)lo.pop();lo.push(q)}for(let i=p.length-1;i>=0;i--){const q=p[i];while(up.length>=2&&cr(up[up.length-2],up[up.length-1],q)<=0)up.pop();up.push(q)}up.pop();lo.pop();return lo.concat(up)}
+function inset(P,d){
+  const n=P.length,s=polyArea(P)>0?1:-1,L=[];
+  for(let i=0;i<n;i++){const a=P[i],b=P[(i+1)%n];const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1;const nx=-dy/l*s*-1,ny=dx/l*s*-1;
+    const o=[a[0]+nx*d,a[1]+ny*d];L.push([o,[dx,dy]])}
+  const out=[];
+  for(let i=0;i<n;i++){const [p1,d1]=L[(i-1+n)%n],[p2,d2]=L[i];const den=d1[0]*d2[1]-d1[1]*d2[0];
+    if(Math.abs(den)<1e-9){out.push(p2);continue}
+    const t=((p2[0]-p1[0])*d2[1]-(p2[1]-p1[1])*d2[0])/den;out.push([p1[0]+d1[0]*t,p1[1]+d1[1]*t])}
+  return out;
+}
+
+function clipConvex(subj,clip){
+  const sc=polyArea(clip)>0?1:-1;let out=subj;
+  for(let i=0;i<clip.length&&out.length;i++){
+    const a=clip[i],b=clip[(i+1)%clip.length],inp=out;out=[];
+    const inside=q=>sc*((b[0]-a[0])*(q[1]-a[1])-(b[1]-a[1])*(q[0]-a[0]))<=0;
+    const inter=(p,q)=>{const x1=p[0],y1=p[1],x2=q[0],y2=q[1],x3=a[0],y3=a[1],x4=b[0],y4=b[1];const d=(x1-x2)*(y3-y4)-(y1-y2)*(x3-x4);if(Math.abs(d)<1e-12)return q;const t=((x1-x3)*(y3-y4)-(y1-y3)*(x3-x4))/d;return[x1+t*(x2-x1),y1+t*(y2-y1)]};
+    for(let j=0;j<inp.length;j++){const cur=inp[j],prev=inp[(j+inp.length-1)%inp.length];const ci=inside(cur),pi=inside(prev);
+      if(ci){if(!pi)out.push(inter(prev,cur));out.push(cur)}else if(pi)out.push(inter(prev,cur))}
+  }
+  return out;
+}
+
+/* ---------- generators ---------- */
+function layoutLots(P,th,p,town){
+  const F=frame(P,th),T=F.toXY;
+  const w=p.road,d=p.lotD,lw=p.lotW,N=Math.max(2,Math.round(p.perBlock)),per=w;
+  const PP=w+2*d,Q=N*lw+w;
+  let best=null;
+  for(const fo of [0,.25,.5,.75])for(const go of [0,.5]){
+    const vs=F.vmin-PP+fo*PP,us=F.umin-Q+go*Q;
+    const nk=Math.ceil((F.vmax-vs)/PP)+1,nj=Math.ceil((F.umax-us)/Q)+1;
+    const lots=[],h=new Set(),vr=new Set();
+    for(let k=0;k<nk;k++){const r=vs+k*PP;
+      for(let row=0;row<2;row++){const v0=r+w+row*d;
+        for(let j=0;j<nj;j++){const c0=us+j*Q;
+          for(let i=0;i<N;i++){const u0=c0+w+i*lw;
+            const pts=[T(u0,v0),T(u0+lw,v0),T(u0+lw,v0+d),T(u0,v0+d)];
+            if(!pts.every(q=>ok(q,P,per+0.3)))continue;
+            const ct=T(u0+lw/2,v0+d/2);if(!pip(ct[0],ct[1],P))continue;
+            lots.push({pts,row,u0,v0,par:(i+j+k+row)%2});
+            h.add((k+row)+','+j);vr.add(k+','+j);vr.add(k+','+(j+1));
+          }}}}
+    if(!best||lots.length>best.lots.length)best={lots,h,vr,vs,us};
+  }
+  const roads=[],lines=[];
+  for(const key of best.h){const [k,j]=key.split(',').map(Number);const r=best.vs+k*PP,c0=best.us+j*Q;
+    roads.push([T(c0,r),T(c0+Q+w,r),T(c0+Q+w,r+w),T(c0,r+w)]);lines.push([T(c0+w,r+w/2),T(c0+Q,r+w/2)])}
+  for(const key of best.vr){const [k,j]=key.split(',').map(Number);const r=best.vs+k*PP,c0=best.us+j*Q;
+    roads.push([T(c0,r),T(c0+w,r),T(c0+w,r+PP+w),T(c0,r+PP+w)]);lines.push([T(c0+w/2,r+w),T(c0+w/2,r+PP)])}
+  const hw=town?lw-0.8:Math.min(lw-6,13),hd=Math.min(d*0.5,town?13:14),front=town?3:5;
+  const houses=best.lots.map(l=>{const hv=l.row===0?l.v0+front:l.v0+d-front-hd,hu=l.u0+(lw-hw)/2;return[T(hu,hv),T(hu+hw,hv),T(hu+hw,hv+hd),T(hu,hv+hd)]});
+  const isRoad=(x,y)=>{const [u,v]=F.toUV(x,y);const k=Math.floor((v-best.vs)/PP),vv=v-(best.vs+k*PP),j=Math.floor((u-best.us)/Q),uu=u-(best.us+j*Q);return(vv<w&&best.h.has(k+','+j))||(uu<w&&best.vr.has(k+','+j))};
+  return{kind:'lots',lots:best.lots,houses,roads,lines,per,w,lotArea:lw*d,isRoad,th};
+}
+function layoutBlocks(P,th,p){
+  const F=frame(P,th),T=F.toXY;
+  const D=16,L=p.secLen,H=p.floors*3.3,Gn=normGap(p.floors),Gs=state.seis?2*H:0,G=Math.max(Gn,Gs,H*p.insol),Gu=20,per=7,set=per+7;
+  const gWhy=G===Gs&&Gs>0?'сейсмика: 2 высоты':G===Gn?'норма по этажности':'ваш минимум';
+  const PP=D+G,Q=L+Gu;let best=null;
+  for(const fo of [0,.2,.4,.6,.8])for(const go of [0,.33,.66]){
+    const vs=F.vmin-PP+fo*PP,us=F.umin-Q+go*Q;
+    const nk=Math.ceil((F.vmax-vs)/PP)+1,nj=Math.ceil((F.umax-us)/Q)+1;const b=[];
+    for(let k=0;k<nk;k++){const v0=vs+k*PP;for(let j=0;j<nj;j++){const u0=us+j*Q;
+      const pts=[T(u0,v0),T(u0+L,v0),T(u0+L,v0+D),T(u0,v0+D)];
+      const mids=[T(u0+L/2,v0),T(u0+L/2,v0+D)];
+      if(!pts.every(q=>ok(q,P,set))||!mids.every(q=>ok(q,P,set)))continue;
+      b.push({pts,ct:T(u0+L/2,v0+D/2)})}}
+    if(!best||b.length>best.length)best=b;
+  }
+  const sh=H*0.55;
+  const shadows=best.map(bd=>hull(bd.pts.concat(bd.pts.map(q=>[q[0],q[1]-sh]))));
+  return{kind:'multi',blds:best,shadows,per,L,D,H,G,gWhy,th};
+}
+
+/* ---------- stats, finance, cash flow ---------- */
+function stats(t,Lo,p,area){
+  if(Lo.kind==='lots'){const n=Lo.lots.length;return{units:n,sale:n*p.house,built:n*Lo.lotArea,dens:n/(area/1e4)}}
+  const n=Lo.blds.length,foot=n*Lo.L*Lo.D,gba=foot*p.floors,sale=gba*p.eff,apts=Math.round(sale/APT);
+  return{units:apts,bldgs:n,foot,gba,sale,built:foot,far:gba/area,cover:foot/area,park:Math.round(apts*PARK)};
+}
+function finance(t,st,p,area,m){
+  const revenue=st.sale*p.price;
+  const build=(t==='multi'?st.gba:st.sale)*p.cost;
+  const infra=area*p.infra;const soft=SOFT*(build+infra);const total=build+infra+soft;
+  const land=revenue*(1-m)-total;
+  return{revenue,build,infra,soft,total,land,perSotka:land/(area/100),perHa:land/(area/1e4)};
+}
+function cashflow(t,f){
+  const tl=state.tl[t],B=Math.max(1,Math.round(tl.build)),S0=Math.max(0,Math.round(tl.start)),SN=Math.max(1,Math.round(tl.sales));
+  const n=Math.max(B,S0+SN)+1,cf=new Array(n).fill(0);
+  const landCost=state.land.own?0:Math.max(0,state.land.price||0);
+  cf[0]-=landCost;
+  const im=Math.max(1,Math.round(B*0.4));for(let m=0;m<im;m++)cf[m]-=f.infra/im;
+  for(let m=1;m<=B;m++)cf[m]-=(f.build+f.soft)/B;
+  for(let m=S0;m<S0+SN;m++)cf[m]+=f.revenue/SN;
+  let cum=0,minC=0,minM=0;const cumA=cf.map((v,i)=>{cum+=v;if(cum<minC){minC=cum;minM=i}return cum});
+  let pay=null;for(let i=minM;i<n;i++){if(cumA[i]>=0){pay=i;break}}
+  const profit=cum,cost=f.total+landCost,roi=cost>0?profit/cost:0;
+  const npv=r=>cf.reduce((s,v,i)=>s+v/Math.pow(1+r,i),0);
+  let irr=null;
+  if(cf.some(v=>v<0)&&cf.some(v=>v>0)){let lo=-0.99,hi=1,a=npv(lo),b=npv(hi);
+    if(a*b<0){for(let k=0;k<80;k++){const mid=(lo+hi)/2,v=npv(mid);if(v*a>0){lo=mid;a=v}else hi=mid}irr=Math.pow(1+(lo+hi)/2,12)-1}}
+  return{cf,cum:cumA,profit,roi,irr,peak:-minC,peakM:minM,pay,months:n-1,landCost};
+}
+function evalType(t,P,area,a0){
+  const p=state.p[t],list=t==='multi'?VARS.multi:VARS.lots;
+  const vs=list.map(v=>{
+    const th=a0+v.da*Math.PI/180;
+    const L=t==='multi'?layoutBlocks(P,th,{...p,secLen:Math.max(30,Math.round(p.secLen*(v.lenMul||1)/5)*5)}):layoutLots(P,th,{...p,perBlock:Math.round(p.perBlock*(v.blockMul||1))},t==='town');
+    const st=stats(t,L,p,area);const f=finance(t,st,p,area,state.margin/100);
+    return{...v,L,st,f};
+  });
+  let bi=-1;vs.forEach((v,i)=>{if(v.st.units>0&&(bi<0||v.f.land>vs[bi].f.land))bi=i});
+  return{vs,bi};
+}
+function compute(){
+  const P=state.poly;if(P.length<3)return;
+  const area=Math.abs(polyArea(P)),a0=longestAngle(P);state.area=area;
+  const cur=evalType(state.type,P,area,a0);
+  state.variants=cur.vs;state.best=cur.bi;
+  if(!state.manual||state.sel==null||state.sel>=state.variants.length)state.sel=cur.bi<0?0:cur.bi;
+  for(const v of state.variants)v.cash=cashflow(state.type,v.f);
+  if(!state.dragging){
+    const sv=state.variants[state.sel];if(sv)state.lu=landuse(sv.L,P,area);
+    state.compare={};
+    for(const t of TYPES){
+      const r=t===state.type?cur:evalType(t,P,area,a0);
+      const v=r.bi<0?null:r.vs[r.bi];
+      state.compare[t]=v?{v,cash:cashflow(t,v.f)}:null;
+    }
+  }
+}
+
+function landuse(Lo,P,area){
+  let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;for(const [x,y] of P){minx=Math.min(minx,x);miny=Math.min(miny,y);maxx=Math.max(maxx,x);maxy=Math.max(maxy,y)}
+  const step=Math.max(2.5,Math.sqrt(area)/85);let tot=0,road=0;
+  for(let x=minx+step/2;x<maxx;x+=step)for(let y=miny+step/2;y<maxy;y+=step){
+    if(!pip(x,y,P))continue;tot++;
+    if(edist(x,y,P)<Lo.per)road++;else if(Lo.kind==='lots'&&Lo.isRoad(x,y))road++;
+  }
+  const roadA=tot?area*road/tot:0;const built=Lo.kind==='lots'?Lo.lots.length*Lo.lotArea:Lo.blds.length*Lo.L*Lo.D;
+  return{built,road:roadA,green:Math.max(0,area-roadA-built)};
+}
+
+/* ---------- schematic view ---------- */
+const svg=$('#map'),bgG=$('#bg'),layer=$('#layer'),underEl=$('#under');
+function bbox(P){let a=[1e9,1e9,-1e9,-1e9];for(const [x,y] of P){a[0]=Math.min(a[0],x);a[1]=Math.min(a[1],y);a[2]=Math.max(a[2],x);a[3]=Math.max(a[3],y)}return a}
+function fit(){
+  let b;
+  if(state.mode==='trace'&&state.under){const u=state.under;b=[u.x,u.y,u.x+u.w,u.y+u.h]}else b=bbox(state.poly);
+  const w=b[2]-b[0],h=b[3]-b[1];const pad=state.mode==='trace'?Math.max(w,h)*0.02:Math.max(w,h)*0.1+30;
+  state.vb=[b[0]-pad,b[1]-pad,w+2*pad,h+2*pad];
+}
+function scale(){const r=svg.getBoundingClientRect();if(!r.width||!state.vb)return 1;return Math.min(r.width/state.vb[2],r.height/state.vb[3])}
+const pts=a=>a.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ');
+function setUnder(){
+  const u=state.under;
+  if(!u){underEl.setAttribute('width',0);underEl.setAttribute('height',0);underEl.removeAttribute('href');underEl.dataset.src='';return}
+  if(underEl.dataset.src!==u.id){underEl.setAttribute('href',u.href);underEl.dataset.src=u.id}
+  underEl.setAttribute('x',u.x);underEl.setAttribute('y',u.y);underEl.setAttribute('width',u.w);underEl.setAttribute('height',u.h);
+  underEl.setAttribute('opacity',state.mode==='trace'?1:.85);
+}
+function drawBg(k){
+  const vb=state.vb,P=state.poly;
+  bgG.innerHTML=`<defs><clipPath id="site"><polygon points="${P.length>2?pts(P):'0,0'}"/></clipPath>
+  <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M50 0H0V50" fill="none" stroke="var(--grid)" stroke-width="${k}"/></pattern>
+  <pattern id="trees" width="15" height="15" patternUnits="userSpaceOnUse"><circle cx="4" cy="5" r="2.3" fill="var(--tree)"/><circle cx="11.5" cy="11" r="1.8" fill="var(--tree)"/></pattern></defs>
+  <rect x="${vb[0]-vb[2]}" y="${vb[1]-vb[3]}" width="${vb[2]*3}" height="${vb[3]*3}" fill="url(#grid)"/>`;
+}
+function drawTrace(){
+  const vb=state.vb,k=1/scale(),T=state.trace;
+  svg.setAttribute('viewBox',vb.join(' '));drawBg(k);setUnder();
+  const o=[];
+  if(T.length>2)o.push(`<polygon points="${pts(T)}" fill="var(--cad)" fill-opacity=".12" stroke="none"/>`);
+  if(T.length>1)o.push(`<polyline points="${pts(T)}" fill="none" stroke="var(--cad)" stroke-width="2.5" vector-effect="non-scaling-stroke"/>`);
+  T.forEach((q,i)=>{o.push(`<circle cx="${q[0]}" cy="${q[1]}" r="${(i===0&&T.length>2?8:5)*k}" fill="${i===0?'var(--cad)':'var(--surface)'}" stroke="var(--cad)" stroke-width="2" vector-effect="non-scaling-stroke"/>`);
+    o.push(`<text x="${q[0]+9*k}" y="${q[1]-9*k}" font-size="${12*k}" font-family="JetBrains Mono, monospace" fill="var(--cad)" stroke="var(--surface)" stroke-width="${3*k}" paint-order="stroke">${i+1}</text>`)});
+  layer.innerHTML=o.join('');
+  $('#trace-n').textContent=T.length;
+}
+function drawSchema(){
+  if(state.mode==='trace'){drawTrace();return}
+  const v=state.variants[state.sel],Lo=v.L,P=state.poly,vb=state.vb,k=1/scale();
+  svg.setAttribute('viewBox',vb.join(' '));drawBg(k);setUnder();
+  const o=[];
+  o.push(`<polygon points="${pts(P)}" fill="var(--green)"/><polygon points="${pts(P)}" fill="url(#trees)"/>`);
+  o.push(`<g clip-path="url(#site)"><polygon points="${pts(P)}" fill="none" stroke="var(--road)" stroke-width="${Lo.per*2}" stroke-linejoin="round"/>`);
+  if(Lo.kind==='lots'){
+    for(const r of Lo.roads)o.push(`<polygon points="${pts(r)}" fill="var(--road)"/>`);
+    for(const l of Lo.lines)o.push(`<line x1="${l[0][0].toFixed(1)}" y1="${l[0][1].toFixed(1)}" x2="${l[1][0].toFixed(1)}" y2="${l[1][1].toFixed(1)}" stroke="var(--roadline)" stroke-width="${Math.max(0.35,Lo.w*0.04)}" stroke-dasharray="3 3"/>`);
+  }
+  o.push('</g>');
+  if(Lo.kind==='lots'){
+    for(const l of Lo.lots)o.push(`<polygon points="${pts(l.pts)}" fill="${l.par?'var(--lot2)':'var(--lot1)'}" stroke="var(--lotline)" stroke-width="0.35"/>`);
+    for(const hs of Lo.houses)o.push(`<polygon points="${pts(hs)}" fill="var(--house)"/>`);
+  }else{
+    for(const s of Lo.shadows)o.push(`<polygon points="${pts(s)}" fill="var(--shadow)"/>`);
+    const deg=Lo.th*180/Math.PI;let dg=((deg%180)+180)%180;if(dg>90)dg-=180;
+    for(const b of Lo.blds){o.push(`<polygon points="${pts(b.pts)}" fill="var(--bldg)" stroke="var(--bldgtop)" stroke-width="0.8"/>`);
+      if(Lo.L>=40&&k<2.2)o.push(`<text x="${b.ct[0].toFixed(1)}" y="${b.ct[1].toFixed(1)}" transform="rotate(${dg.toFixed(1)} ${b.ct[0].toFixed(1)} ${b.ct[1].toFixed(1)})" font-size="6.5" font-family="JetBrains Mono, monospace" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">${state.p.multi.floors} эт.</text>`)}
+  }
+  o.push(`<polygon points="${pts(P)}" fill="none" stroke="var(--cad)" stroke-width="2" vector-effect="non-scaling-stroke"/>`);
+  if(state.calib){const i=state.calibSide%P.length,a=P[i],b=P[(i+1)%P.length];
+    o.push(`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="var(--cad)" stroke-width="7" stroke-linecap="round" opacity=".5" vector-effect="non-scaling-stroke"/>`)}
+  const sgn=polyArea(P)>0?1:-1;
+  for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length];const L=Math.hypot(b[0]-a[0],b[1]-a[1]);if(L*scale()<46)continue;
+    const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;const nx=(b[1]-a[1])/L*sgn,ny=-(b[0]-a[0])/L*sgn;
+    let ang=Math.atan2(b[1]-a[1],b[0]-a[0])*180/Math.PI;if(ang>90)ang-=180;if(ang<-90)ang+=180;
+    const tx=mx+nx*14*k,ty=my+ny*14*k;
+    const lbl=L<100?nf1.format(L):nf.format(L);
+    o.push(`<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" transform="rotate(${ang.toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)})" font-size="${(11*k).toFixed(2)}" font-family="JetBrains Mono, monospace" fill="var(--cad)" text-anchor="middle" dominant-baseline="central" stroke="var(--ground)" stroke-width="${(3*k).toFixed(2)}" paint-order="stroke">${state.needScale?'≈':''}${lbl} м</text>`)}
+  for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length];const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;
+    o.push(`<g data-m="${i}"><circle cx="${mx}" cy="${my}" r="${12*k}" fill="transparent"/><circle cx="${mx}" cy="${my}" r="${3.5*k}" fill="var(--cad)" opacity=".55"/></g>`)}
+  for(let i=0;i<P.length;i++){const a=P[i];
+    o.push(`<g data-v="${i}"><circle cx="${a[0]}" cy="${a[1]}" r="${14*k}" fill="transparent"/><circle cx="${a[0]}" cy="${a[1]}" r="${5.5*k}" fill="var(--surface)" stroke="var(--cad)" stroke-width="2" vector-effect="non-scaling-stroke"/></g>`);
+    if(state.calib){const c=bbox(P),cx=(c[0]+c[2])/2,cy=(c[1]+c[3])/2,dx=a[0]-cx,dy=a[1]-cy,dl=Math.hypot(dx,dy)||1;
+      o.push(`<text x="${a[0]+dx/dl*16*k}" y="${a[1]+dy/dl*16*k}" font-size="${12*k}" font-weight="600" font-family="JetBrains Mono, monospace" fill="var(--ink)" text-anchor="middle" dominant-baseline="central" stroke="var(--ground)" stroke-width="${3*k}" paint-order="stroke">${i+1}</text>`)}}
+  layer.innerHTML=o.join('');
+  const s=scale();const opts=[5,10,20,50,100,200,500,1000];let len=opts[0];for(const c of opts){if(c*s<=150)len=c}
+  $('#scale-line').style.width=(len*s)+'px';$('#scale-label').textContent=(state.needScale?'≈ ':'')+(len>=1000?len/1000+' км':len+' м');
+}
+
+/* ---------- satellite map ---------- */
+const LIB={
+  leaflet:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js',
+  pdf:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+  pdfw:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
+  xlsx:'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+  zip:'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'
+};
+const loaded={};
+function loadScript(src){return loaded[src]||(loaded[src]=new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>{delete loaded[src];rej(new Error('Не удалось загрузить модуль. Проверьте интернет и попробуйте ещё раз.'))};document.head.appendChild(s)}))}
+let lmap=null,renderer=null,planLayer=null,drawLayer=null,vtxLayer=null,satLayer=null,tilesOk=false;
+async function ensureMap(){
+  if(lmap)return lmap;
+  await loadScript(LIB.leaflet);
+  const el=$('#geomap');el.hidden=false;
+  lmap=L.map(el,{zoomControl:true,doubleClickZoom:false,attributionControl:true}).setView([41.3111,69.2797],13);
+  satLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:19,attribution:'Снимки © Esri, Maxar'}).addTo(lmap);
+  let errs=0;
+  satLayer.on('tileload',()=>{tilesOk=true;$('#geonote').hidden=true});
+  satLayer.on('tileerror',()=>{if(!tilesOk&&++errs===3)mapUnavailable()});
+  renderer=L.canvas({padding:0.4});
+  planLayer=L.layerGroup().addTo(lmap);drawLayer=L.layerGroup().addTo(lmap);vtxLayer=L.layerGroup().addTo(lmap);
+  lmap.on('click',onMapClick);
+  lmap.on('dblclick',()=>{if(state.mode==='geotrace'&&state.gtrace.length>=3)finishGeoTrace()});
+  return lmap;
+}
+let mapDown=false;
+function mapUnavailable(msg){
+  mapDown=true;
+  if(state.mode==='geotrace'){state.mode='edit';state.gtrace=[]}
+  if(!state.geo){state.view='schema';fit()}
+  status($('#geo-status'),msg||'Спутниковая карта в этом окне недоступна — она работает в полной версии на сайте. Здесь можно загрузить документ участка или ввести размеры.','err');
+  update();
+}
+function toLL([x,y]){const g=state.geo;return[g.lat0-(y+g.oy)/g.ky,g.lng0+(x+g.ox)/g.kx]}
+function fromLL(ll){const g=state.geo;return[Math.round(((ll.lng-g.lng0)*g.kx-g.ox)*10)/10,Math.round((-(ll.lat-g.lat0)*g.ky-g.oy)*10)/10]}
+function setGeo(lls,label){
+  const lat0=lls.reduce((s,p)=>s+p[0],0)/lls.length,lng0=lls.reduce((s,p)=>s+p[1],0)/lls.length;
+  const kx=111320*Math.cos(lat0*Math.PI/180),ky=110574;
+  const raw=lls.map(([la,lo])=>[(lo-lng0)*kx,-(la-lat0)*ky]);
+  let ox=Infinity,oy=Infinity;for(const [x,y] of raw){ox=Math.min(ox,x);oy=Math.min(oy,y)}
+  state.geo={lat0,lng0,kx,ky,ox,oy};
+  state.poly=raw.map(([x,y])=>[Math.round((x-ox)*10)/10,Math.round((y-oy)*10)/10]);
+  state.under=null;state.calib=false;state.needScale=false;state.mode='edit';state.gtrace=[];state.source=label;state.view='geo';
+  const rg=regionFor(lat0,lng0);
+  if(rg&&rg!==state.region){applyRegion(rg);$('#region').value=rg;buildControls();state.regionAuto=true}
+  resetFlags();
+}
+function hav(a1,o1,a2,o2){const R=6371000,r=Math.PI/180,da=(a2-a1)*r,dO=(o2-o1)*r;const h=Math.sin(da/2)**2+Math.cos(a1*r)*Math.cos(a2*r)*Math.sin(dO/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
+function nearestCentre(lat,lng){let best=null;for(const c of CENTRES){if(c[0]==='tashobl')continue;const d=hav(lat,lng,c[1],c[2]);if(!best||d<best.d)best={id:c[0],d,lat:c[1],lng:c[2]}}return best}
+function regionFor(lat,lng){const n=nearestCentre(lat,lng);if(!n||n.d>250000)return null;if(n.id==='tash'&&n.d>13000)return 'tashobl';return n.id}
+async function showGeoPlan(fitView){
+  await ensureMap();showView();
+  if(fitView&&state.geo)lmap.fitBounds(L.latLngBounds(state.poly.map(toLL)),{padding:[40,40],maxZoom:18});
+  update();
+}
+function drawGeo(){
+  if(!lmap)return;
+  planLayer.clearLayers();
+  if(state.mode==='geotrace'||!state.geo){if(!state.dragging)vtxLayer.clearLayers();return}
+  const v=state.variants[state.sel],Lo=v.L,P=state.poly,R=renderer;
+  const C={green:css('--green'),road:css('--road'),lot1:css('--lot1'),lot2:css('--lot2'),line:css('--lotline'),house:css('--house'),bldg:css('--bldg'),top:css('--bldgtop'),cad:'#E5484D'};
+  const poly=(a,o)=>L.polygon(a.map(toLL),Object.assign({renderer:R,interactive:false,stroke:false,fillOpacity:1},o)).addTo(planLayer);
+  poly(P,{fillColor:C.road,fillOpacity:.95});
+  const inner=inset(P,Lo.per);if(Math.abs(polyArea(inner))>0)poly(inner,{fillColor:C.green,fillOpacity:.95});
+  if(Lo.kind==='lots'){
+    for(const r of Lo.roads){const c=clipConvex(P,r);if(c.length>2)poly(c,{fillColor:C.road})}
+    for(const l of Lo.lots)poly(l.pts,{fillColor:l.par?C.lot2:C.lot1,stroke:true,color:C.line,weight:.6});
+    for(const h of Lo.houses)poly(h,{fillColor:C.house});
+  }else{
+    for(const s of Lo.shadows)poly(s,{fillColor:'#000',fillOpacity:.22});
+    for(const b of Lo.blds)poly(b.pts,{fillColor:C.bldg,stroke:true,color:C.top,weight:1});
+  }
+  L.polygon(P.map(toLL),{renderer:R,interactive:false,fill:false,color:C.cad,weight:3}).addTo(planLayer);
+  for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length],len=Math.hypot(b[0]-a[0],b[1]-a[1]);
+    L.marker(toLL([(a[0]+b[0])/2,(a[1]+b[1])/2]),{interactive:false,icon:L.divIcon({className:'',html:`<span class="elbl">${len<100?nf1.format(len):nf.format(len)} м</span>`,iconSize:[0,0]})}).addTo(planLayer)}
+  if(!state.dragging){
+    vtxLayer.clearLayers();
+    P.forEach((q,i)=>{
+      const m=L.marker(toLL(q),{draggable:true,autoPan:false,icon:L.divIcon({className:'vtx',iconSize:[14,14]}),title:'Вершина '+(i+1)}).addTo(vtxLayer);
+      m.on('dragstart',()=>{state.dragging=true});
+      m.on('drag',()=>{state.poly[i]=fromLL(m.getLatLng());schedule()});
+      m.on('dragend',()=>{state.dragging=false;state.poly[i]=fromLL(m.getLatLng());update()});
+    });
+  }
+}
+function drawGeoTrace(){
+  drawLayer.clearLayers();
+  const T=state.gtrace;
+  if(T.length>1)L.polyline(T,{color:'#E2462B',weight:3,interactive:false}).addTo(drawLayer);
+  if(T.length>2)L.polygon(T,{color:'#E2462B',weight:0,fillOpacity:.15,interactive:false}).addTo(drawLayer);
+  T.forEach((q,i)=>L.marker(q,{interactive:false,icon:L.divIcon({className:'vtx'+(i===0?' first':''),iconSize:i===0&&T.length>2?[18,18]:[14,14]})}).addTo(drawLayer));
+  $('#trace-n').textContent=T.length;
+}
+function onMapClick(e){
+  if(state.mode!=='geotrace')return;
+  const T=state.gtrace,ll=[e.latlng.lat,e.latlng.lng];
+  if(T.length>=3){const p0=lmap.latLngToContainerPoint(T[0]),p=lmap.latLngToContainerPoint(e.latlng);if(p0.distanceTo(p)<14){finishGeoTrace();return}}
+  T.push(ll);drawGeoTrace();
+}
+async function startGeoTrace(){
+  await ensureMap();if(mapDown){mapUnavailable();return}
+  state.view='geo';state.mode='geotrace';state.gtrace=[];state.calib=false;
+  $('#trace-text').innerHTML='<b>Обведите участок на снимке:</b> кликайте по углам по порядку, клик по первой точке или двойной клик замыкает контур.';
+  showView();drawGeoTrace();drawGeo();renderModes();
+}
+function finishGeoTrace(){
+  if(state.gtrace.length<3)return;
+  const T=state.gtrace.slice();drawLayer.clearLayers();
+  setGeo(T,'Карта');
+  update();
+  if(state.area>3e6){status($('#geo-status'),`Обведена очень большая территория — ${nf.format(state.area/1e4)} га. Приблизьте карту кнопкой «+» или колёсиком мыши и обведите сам участок заново.`,'err');return}
+  status($('#geo-status'),`Участок обведён: ${nf2.format(state.area/1e4)} га, регион: ${REGIONS.find(x=>x[0]===state.region)[1]}. Вершины можно двигать. Проверка окружения — внизу, в блоке «Стоит ли строить».`,'ok');
+}
+function showView(){
+  const geo=state.view==='geo';
+  $('#geomap').hidden=!geo;svg.style.visibility=geo?'hidden':'visible';
+  $('#scalebar').hidden=geo||state.mode==='trace';$('#north').hidden=geo;
+  $('#viewtog').hidden=!state.geo;
+  document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===state.view));
+  $('#geomap').classList.toggle('drawing',state.mode==='geotrace');
+  if(!geo)$('#geonote').hidden=true;
+  const step=state.mode==='geotrace'?2:state.geo?3:1;
+  $('#steps').hidden=!geo||mapDown;
+  document.querySelectorAll('#steps [data-step]').forEach(e=>{const n=+e.dataset.step;e.className=n===step?'on':n<step?'done':''});
+  if(geo&&lmap)lmap.invalidateSize();
+}
+
+/* ---------- site analysis ---------- */
+let anaTimer=0;
+function polyKey(){return state.geo?state.poly.map(p=>p.join(',')).join(';')+'|'+state.geo.lat0.toFixed(5)+','+state.geo.lng0.toFixed(5):null}
+function maybeAnalyze(){
+  if(!state.geo){if(state.site.status!=='nogeo'){state.site={status:'nogeo',key:null,d:null,elev:null}}return}
+  const key=polyKey();if(key===state.site.key)return;
+  clearTimeout(anaTimer);state.site={status:'loading',key,d:null,elev:null};
+  anaTimer=setTimeout(()=>runAnalysis(key),900);
+}
+function llOf(x,y){return toLL([x,y])}
+function siteXY(lat,lng){const g=state.geo;return[(lng-g.lng0)*g.kx-g.ox,-(lat-g.lat0)*g.ky-g.oy]}
+function distToSite(pts){
+  const P=state.poly;let m=Infinity;
+  for(const q of pts){if(pip(q[0],q[1],P))return 0;m=Math.min(m,edist(q[0],q[1],P))}
+  for(let i=0;i+1<pts.length;i++){const a=pts[i],b=pts[i+1];for(const v of P)m=Math.min(m,dseg(v[0],v[1],a[0],a[1],b[0],b[1]))}
+  return m;
+}
+async function fetchJSON(url,opt,ms){const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),ms||25000);try{const r=await fetch(url,Object.assign({signal:ctl.signal},opt||{}));if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(to)}}
+async function runAnalysis(key){
+  const P=state.poly;const c=bbox(P);const cx=(c[0]+c[2])/2,cy=(c[1]+c[3])/2;const [la,lo]=llOf(cx,cy);
+  const R=Math.round(Math.max(...P.map(p=>Math.hypot(p[0]-cx,p[1]-cy))));
+  const polyStr=P.map(p=>{const q=llOf(p[0],p[1]);return q[0].toFixed(6)+' '+q[1].toFixed(6)}).join(' ');
+  const a=(r)=>`(around:${R+r},${la.toFixed(6)},${lo.toFixed(6)})`;
+  const q=`[out:json][timeout:25];(
+way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street)$"]${a(600)};
+nwr["amenity"~"^(school|kindergarten)$"]${a(1000)};
+nwr["amenity"~"^(clinic|hospital|doctors)$"]${a(2000)};
+node["shop"]${a(1000)};
+node["highway"="bus_stop"]${a(1000)};
+node["public_transport"="platform"]${a(1000)};
+node["railway"~"^(station|subway_entrance|halt)$"]${a(1500)};
+way["power"="line"]${a(200)};
+way["railway"="rail"]${a(300)};
+way["landuse"~"^(industrial|cemetery)$"]${a(500)};
+way["amenity"="grave_yard"]${a(500)};
+way["waterway"~"^(river|canal)$"]${a(200)};
+way["aeroway"="aerodrome"]${a(6000)};
+way["building"](poly:"${polyStr}");
+);out geom qt;`;
+  const elevPts=[];const n=6;
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++){const x=c[0]+(c[2]-c[0])*(i+.5)/n,y=c[1]+(c[3]-c[1])*(j+.5)/n;if(pip(x,y,P))elevPts.push([x,y])}
+  if(elevPts.length<3)elevPts.push([cx,cy]);
+  const ell=elevPts.map(p=>llOf(p[0],p[1]));
+  const [ov,el]=await Promise.allSettled([
+    fetchJSON('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}}),
+    fetchJSON('https://api.open-meteo.com/v1/elevation?latitude='+ell.map(p=>p[0].toFixed(5)).join(',')+'&longitude='+ell.map(p=>p[1].toFixed(5)).join(','),null,15000)
+  ]);
+  if(state.site.key!==key)return;
+  let d=null,elev=null;
+  if(ov.status==='fulfilled')d=summarizeOSM(ov.value.elements||[]);
+  if(el.status==='fulfilled'&&Array.isArray(el.value.elevation)){
+    const h=el.value.elevation;let maxS=0;
+    for(let i=0;i<elevPts.length;i++)for(let j=i+1;j<elevPts.length;j++){const dd=Math.hypot(elevPts[i][0]-elevPts[j][0],elevPts[i][1]-elevPts[j][1]);if(dd>40&&dd<Math.max(250,R))maxS=Math.max(maxS,Math.abs(h[i]-h[j])/dd)}
+    elev={min:Math.min(...h),max:Math.max(...h),slope:maxS};
+  }
+  state.site={status:(d||elev)?'ok':'error',key,d,elev};
+  renderVerdict();
+}
+function summarizeOSM(els){
+  const s={road:Infinity,major:Infinity,schools:0,kinder:0,clinic:Infinity,shops:0,stop:Infinity,metro:Infinity,power:Infinity,rail:Infinity,industrial:Infinity,cemetery:Infinity,water:Infinity,airport:Infinity,buildings:0};
+  for(const e of els){
+    const t=e.tags||{};let pts=[];
+    if(e.type==='node')pts=[siteXY(e.lat,e.lon)];
+    else if(e.geometry)pts=e.geometry.filter(Boolean).map(g=>siteXY(g.lat,g.lon));
+    else if(e.center)pts=[siteXY(e.center.lat,e.center.lon)];
+    else if(e.members){for(const m of e.members)if(m.geometry)pts=pts.concat(m.geometry.filter(Boolean).map(g=>siteXY(g.lat,g.lon)))}
+    if(!pts.length)continue;
+    if(t.building){if(e.type==='way'){const cc=pts.reduce((a,p)=>[a[0]+p[0]/pts.length,a[1]+p[1]/pts.length],[0,0]);if(pip(cc[0],cc[1],state.poly))s.buildings++}continue}
+    const d=distToSite(pts);
+    if(t.highway&&t.highway!=='bus_stop'){s.road=Math.min(s.road,d);if(/^(motorway|trunk|primary|secondary)$/.test(t.highway))s.major=Math.min(s.major,d)}
+    if(t.amenity==='school'&&d<=1000)s.schools++;
+    if(t.amenity==='kindergarten'&&d<=1000)s.kinder++;
+    if(/^(clinic|hospital|doctors)$/.test(t.amenity||''))s.clinic=Math.min(s.clinic,d);
+    if(t.shop&&d<=1000)s.shops++;
+    if(t.highway==='bus_stop'||t.public_transport==='platform')s.stop=Math.min(s.stop,d);
+    if(/^(station|subway_entrance|halt)$/.test(t.railway||''))s.metro=Math.min(s.metro,d);
+    if(t.power==='line')s.power=Math.min(s.power,d);
+    if(t.railway==='rail')s.rail=Math.min(s.rail,d);
+    if(t.landuse==='industrial')s.industrial=Math.min(s.industrial,d);
+    if(t.landuse==='cemetery'||t.amenity==='grave_yard')s.cemetery=Math.min(s.cemetery,d);
+    if(t.waterway)s.water=Math.min(s.water,d);
+    if(t.aeroway==='aerodrome')s.airport=Math.min(s.airport,d);
+  }
+  return s;
+}
+const dm=x=>x===Infinity?'нет рядом':x<1?'на участке':x<1000?nf.format(Math.round(x/10)*10)+' м':nf1.format(x/1000)+' км';
+function factors(){
+  const F=[],t=state.type,isT=state.region==='tash';
+  // economics
+  let bestT=null;for(const k of TYPES){const r=state.compare[k];if(r&&(!bestT||r.cash.profit>state.compare[bestT].cash.profit))bestT=k}
+  const bc=bestT&&state.compare[bestT];
+  if(!bc)F.push({n:'Экономика',st:'bad',v:'—',note:'Ни один тип застройки не помещается на участок.',src:'Расчёт',crit:true});
+  else{const mg=bc.cash.profit/bc.v.f.revenue;
+    F.push({n:'Экономика',st:bc.cash.profit<=0?'bad':mg<state.margin/100?'warn':'ok',v:`${money(bc.cash.profit)}`,note:bc.cash.profit<=0?'Ни один вариант не приносит прибыли при текущих ценах и затратах.':mg<state.margin/100?`Лучший вариант (${TYPE_SHORT[bestT].toLowerCase()}) даёт маржу ${pct(mg)} — ниже целевой ${state.margin}%.`:`Лучший вариант — ${TYPE_SHORT[bestT].toLowerCase()}, маржа ${pct(mg)}, IRR ${irrTxt(bc.cash.irr)}.`,src:'Расчёт',crit:bc.cash.profit<=0})}
+  // pace for selected type
+  const v=state.variants[state.sel];
+  if(v&&v.st.units){const pace=v.st.units/Math.max(1,state.tl[t].sales),lim=PACE[t][isT?0:1];
+    F.push({n:'Темп продаж',st:pace>lim?'warn':'ok',v:`${nf1.format(pace)} в мес.`,note:pace>lim?`Для «${TYPE_SHORT[t].toLowerCase()}» в этом регионе реалистично около ${lim} в месяц. Увеличьте срок продаж в «Сроках» — прибыль и IRR снизятся.`:`В пределах реалистичного (до ${lim} в месяц по допущению).`,src:'Расчёт'})}
+  if(t==='multi'&&v&&v.st.units&&state.lu){const res=v.st.sale/M2_PER_PERSON,need=GREEN_MIN*state.area+res*PLAY_PER_PERSON,have=state.lu.green;
+    F.push({n:'Двор, озеленение, площадки',st:have>=need?'ok':'warn',v:`${nf.format(have/100)} из ${nf.format(need/100)} сот.`,note:have>=need?'По нормам двора и площадок вариант проходит.':'Свободной территории меньше нормы (озеленение не меньше 25% + площадки 3,1 м² на жителя). Уменьшите этажность или число домов.',src:'Нормы'})}
+  // site
+  const S=state.site;
+  if(S.status==='nogeo'){F.push({n:'Окружение и рельеф',st:'unk',v:'—',note:'Выберите участок на карте или загрузите KML — тогда проверю дороги, школы, транспорт, ЛЭП, реки, промзоны и рельеф.',src:'Карта'})}
+  else if(S.status==='loading'){F.push({n:'Окружение и рельеф',st:'load',v:'…',note:'Проверяю по карте…',src:'Карта'})}
+  else{
+    const d=S.d;
+    if(d){
+      F.push({n:'Подъезд',st:d.road<=150?'ok':d.road<=600?'warn':'bad',v:dm(d.road),note:d.road<=150?'Дорога рядом с участком.':d.road<=600?'До дороги далеко — заложите строительство подъездной дороги.':'В радиусе 600 м дорог нет. Подъезд — отдельный дорогой проект.',src:'Карта',crit:d.road>600});
+      const soc=d.schools+d.kinder;
+      F.push({n:'Школы и детсады в 1 км',st:soc>=2?'ok':'warn',v:`${d.schools} шк., ${d.kinder} сад.`,note:soc>=2?'Социалка рядом — плюс для продаж семьям.':'Мало школ и садов. Для большого проекта хокимият может потребовать построить свои.',src:'Карта'});
+      F.push({n:'Общественный транспорт',st:Math.min(d.stop,d.metro)<=500?'ok':'warn',v:dm(Math.min(d.stop,d.metro)),note:d.metro<=1500?`Станция метро или ж/д в ${dm(d.metro)}.`:Math.min(d.stop,d.metro)<=500?'Остановка рядом.':'Остановок рядом нет — важнее всего для многоэтажек.',src:'Карта'});
+      F.push({n:'Магазины в 1 км',st:d.shops>=3?'ok':'warn',v:nf.format(d.shops),note:d.shops>=3?'Район обжитой.':'Район пока малообжитой: продажи могут идти медленнее.',src:'Карта'});
+      F.push({n:'Строения на участке',st:d.buildings?'warn':'ok',v:nf.format(d.buildings),note:d.buildings?'На участке есть здания: снос, выкуп или переселение — время и деньги.':'На карте зданий на участке нет.',src:'Карта'});
+      const z=[];
+      if(d.power<=30)z.push(`ЛЭП в ${dm(d.power)} — охранная зона, строить под ней нельзя`);
+      if(d.water<=50)z.push(`река или канал в ${dm(d.water)} — водоохранная зона`);
+      if(d.rail<=100)z.push(`железная дорога в ${dm(d.rail)} — шум и санитарный разрыв`);
+      if(d.industrial<=300)z.push(`промзона в ${dm(d.industrial)}`);
+      if(d.cemetery<=300)z.push(`кладбище в ${dm(d.cemetery)} — санитарная зона`);
+      if(d.airport<=5000)z.push(`аэродром в ${dm(d.airport)} — ограничения по высоте`);
+      state.site.airport=d.airport<=5000;
+      F.push({n:'Охранные зоны и соседство',st:z.length?'warn':'ok',v:z.length?`${z.length}`:'нет',note:z.length?z.join('; ')+'.':'ЛЭП, рек, железной дороги, промзон, кладбищ и аэродромов вплотную нет.',src:'Карта'});
+    }else F.push({n:'Окружение',st:'unk',v:'—',note:'Данные карты сейчас недоступны (в закрытом предпросмотре или нет связи). На вашем домене проверка работает.',src:'Карта'});
+    const e=S.elev;
+    if(e){const sl=e.slope*100;F.push({n:'Рельеф',st:sl<5?'ok':sl<12?'warn':'bad',v:`уклон до ${nf1.format(sl)}%`,note:`Перепад высот ${nf.format(e.max-e.min)} м. `+(sl<5?'Участок ровный.':sl<12?'Нужна вертикальная планировка — дороже земляные работы.':'Крутой склон: стройка сильно дороже, часть участка может быть непригодна.'),src:'Карта высот',crit:sl>=12})}
+    else F.push({n:'Рельеф',st:'unk',v:'—',note:'Высоты сейчас недоступны.',src:'Карта высот'});
+  }
+  // distance to centre
+  if(state.geo){const n=nearestCentre(state.geo.lat0,state.geo.lng0);const r=REGIONS.find(x=>x[0]===n.id);
+    F.push({n:'До центра города',st:n.d<=12000?'ok':n.d<=30000?'warn':'warn',v:dm(n.d),note:`До центра: ${r?r[1].replace(' область',''):''}. `+(n.d<=12000?'Городская локация.':'Загородная локация: лучше подходят дома, спрос на квартиры ниже.'),src:'Карта',far:n.d>15000})}
+  // checklist
+  for(const [k,label,,sev] of CHECKS){const a=state.checks[k];
+    F.push({n:label,st:a==='yes'?'ok':a==='no'?sev:'unk',v:a==='yes'?'да':a==='no'?'нет':'не знаю',note:a==='no'?(sev==='bad'?'Без этого строить нельзя.':'Заложите время и деньги в бюджет.'):a==='yes'?'':'Уточните по документам.',src:'Документы',crit:a==='no'&&sev==='bad',chk:true})}
+  return{F,bestT};
+}
+function recText(bestT,F){
+  if(!bestT)return 'На этом участке не помещается ни один тип застройки с текущими параметрами. Попробуйте уменьшить участки или ширину улиц.';
+  const c=state.compare,far=F.some(f=>f.far),noTransit=F.some(f=>f.n==='Общественный транспорт'&&f.st!=='ok');
+  const order=TYPES.filter(k=>c[k]).sort((a,b)=>c[b].cash.profit-c[a].cash.profit);
+  let rec=bestT,why=`По расчёту больше всего прибыли даёт вариант <b>${TYPE_LOW[bestT]}</b>: ${money(c[bestT].cash.profit)}.`;
+  if(bestT==='multi'&&(far||noTransit)){
+    const alt=order.find(k=>k!=='multi'&&c[k].cash.profit>0);
+    why+=` Но участок ${far?'далеко от центра':'без общественного транспорта рядом'}: квартиры там продаются медленнее, а многоэтажкам нужны сети большой мощности.`;
+    if(alt){rec=alt;why+=` Надёжнее начать с варианта <b>${TYPE_LOW[alt]}</b> (${money(c[alt].cash.profit)}) или проверить спрос на квартиры у местных агентств.`}
+  }
+  if(bestT==='multi'&&state.site.airport)why+=' Рядом аэродром: этажность нужно согласовать.';
+  if(F.some(f=>f.n==='Рельеф'&&f.st!=='ok'))why+=' Из-за уклона заложите дополнительные расходы на земляные работы.';
+  const v=state.variants[state.sel];
+  if(rec!==state.type)why+=` <a href="#" data-pick="${rec}">Показать этот вариант</a>.`;
+  return why;
+}
+function renderVerdict(){
+  if(!state.variants.length)return;
+  const {F,bestT}=factors();
+  const crit=F.filter(f=>f.st==='bad');const warn=F.filter(f=>f.st==='warn');const unk=F.filter(f=>f.st==='unk');
+  let cls,txt,sub;
+  if(crit.length){cls='bad';txt='Не стоит строить в таком виде';sub='Критично: '+crit.map(f=>f.n.toLowerCase()).join(', ')+'.'}
+  else if(warn.length+unk.length===0){cls='ok';txt='Можно строить';sub='Критичных проблем не найдено. Финальное решение — после проверки архитектором и юристом.'}
+  else{cls='warn';const n=warn.length+unk.length;txt=`Можно, но сначала проверьте ${n} ${plural(n,['пункт','пункта','пунктов'])}`;sub=(warn.length?'Внимание: '+warn.map(f=>f.n.toLowerCase()).join(', ')+'. ':'')+(unk.length?'Нет данных: '+unk.map(f=>f.n.toLowerCase()).join(', ')+'.':'')}
+  $('#vd-badge').className='vd-badge '+cls;$('#vd-badge').textContent=txt;$('#vd-sub').textContent=sub;
+  if(state.source==='Пример'){$('#vmini').className='vmini example';$('#vmini').innerHTML=`<div><span>Сейчас показан пример расчёта</span><br><b>Обведите свой участок — всё пересчитается</b></div><span>↖</span>`;$('#vmini').setAttribute('href','#mapwrap')}
+  else{$('#vmini').className='vmini';$('#vmini').setAttribute('href','#verdict-sec');$('#vmini').innerHTML=`<div><span>Стоит ли строить</span><br><b style="color:var(--${cls==='ok'?'good':cls==='bad'?'bad':'warn'})">${txt}</b></div><span>подробнее ↓</span>`}
+  $('#vd-rec').innerHTML=recText(bestT,F);
+  const lab={ok:'Хорошо',warn:'Проверить',bad:'Риск',unk:'Нет данных',load:'Проверяю'};
+  $('#fac').innerHTML=F.filter(f=>!f.chk).map(f=>`<tr><td class="f-name">${f.n}</td><td><span class="pill ${f.st}">${lab[f.st]}</span></td><td style="font-family:var(--mono);font-size:12px;white-space:nowrap">${f.v}</td><td class="f-note">${f.note}</td><td class="f-src">${f.src}</td></tr>`).join('');
+}
+function renderChecklist(){
+  $('#checklist').innerHTML=CHECKS.map(([k,label,help])=>`<div class="chk"><label id="lbl-${k}">${label}</label><div class="seg" role="group" aria-labelledby="lbl-${k}">${[['yes','Да'],['no','Нет'],['?','Не знаю']].map(([v,t])=>`<button type="button" data-chk="${k}" data-val="${v}" aria-pressed="${state.checks[k]===v}">${t}</button>`).join('')}</div><small>${help}</small></div>`).join('');
+}
+$('#checklist').addEventListener('click',e=>{const b=e.target.closest('[data-chk]');if(!b)return;state.checks[b.dataset.chk]=b.dataset.val;renderChecklist();renderVerdict()});
+$('#vd-rec').addEventListener('click',e=>{const a=e.target.closest('[data-pick]');if(!a)return;e.preventDefault();state.type=a.dataset.pick;resetFlags();buildControls();update();$('.stage').scrollIntoView({behavior:'smooth'})});
+
+/* ---------- panels ---------- */
+function field(id,label,min,max,step,unit,val,extra){
+  return `<div class="field"><div class="row"><label for="${id}">${label}</label><output id="${id}-out">${fmtVal(val,step)} ${unit}</output></div><input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}">${extra?`<small id="${id}-x"></small>`:''}</div>`;
+}
+const fmtVal=(v,step)=>step<1?String(v).replace('.',','):nf.format(v);
+function buildControls(){
+  const t=state.type,p=state.p[t],tl=state.tl[t];
+  document.querySelectorAll('[data-type]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.type===t));
+  $('#plan-params').innerHTML='<h2>Планировка</h2>'+PLAN[t].map(([k,l,mi,ma,st,u])=>field(`p-${t}-${k}`,l,mi,ma,st,u,p[k],t!=='multi'&&k==='lotD')).join('');
+  $('#fin-params').innerHTML='<h2>Продажи и затраты</h2>'+FIN[t].map(([k,l,u])=>`<div class="field"><label for="f-${t}-${k}">${l}</label><div class="num"><input type="number" inputmode="decimal" id="f-${t}-${k}" value="${p[k]}" step="${k==='eff'?0.01:1}" min="0"><span>${u}</span></div></div>`).join('');
+  $('#timeline').innerHTML=[['build','Стройка длится'],['start','Продажи начинаются с'],['sales','Продажи длятся']].map(([k,l])=>`<div><label for="tl-${t}-${k}">${l}</label><div class="num"><input type="number" inputmode="numeric" id="tl-${t}-${k}" min="${k==='start'?0:1}" max="120" value="${tl[k]}"><span>мес.</span></div></div>`).join('');
+  if(t==='multi'){$('#plan-params').insertAdjacentHTML('beforeend',`<div class="seg two" role="group" aria-label="Сейсмичность площадки"><button type="button" data-seis="1" aria-pressed="${state.seis}">8+ баллов</button><button type="button" data-seis="0" aria-pressed="${!state.seis}">до 7 баллов</button></div><small class="note">Сейсмичность площадки. При 8+ баллах разрыв между длинными сторонами — не меньше 2 высот дома (ШНК 2.07.01-03*, п. 21.1). По умолчанию задана по региону — уточните по карте сейсмического районирования.</small>`);
+    document.querySelectorAll('[data-seis]').forEach(b=>b.addEventListener('click',()=>{state.seis=b.dataset.seis==='1';buildControls();update()}))}
+  PLAN[t].forEach(([k,,,,st,u])=>{const el=$(`#p-${t}-${k}`);el.addEventListener('input',()=>{p[k]=parseFloat(el.value);$(`#p-${t}-${k}-out`).textContent=fmtVal(p[k],st)+' '+u;update()})});
+  FIN[t].forEach(([k])=>{const el=$(`#f-${t}-${k}`);el.addEventListener('input',()=>{const v=parseFloat(el.value);if(!isNaN(v)){p[k]=v;update()}})});
+  ['build','start','sales'].forEach(k=>{const el=$(`#tl-${t}-${k}`);el.addEventListener('input',()=>{const v=parseFloat(el.value);if(!isNaN(v)&&v>=0){tl[k]=v;update()}})});
+  const lg=t==='multi'
+    ?[['var(--bldg)','Жилые дома'],['var(--shadow)','Тень (инсоляция)'],['var(--road)','Проезды'],['var(--green)','Двор и озеленение']]
+    :[['var(--lot1)','Участки'],['var(--house)','Дома'],['var(--road)','Улицы'],['var(--green)','Озеленение']];
+  $('#legend').innerHTML=lg.map(([c,n])=>`<span><i style="background:${c}"></i>${n}</span>`).join('')+`<span><i style="background:transparent;border:2px solid var(--cad)"></i>Граница участка</span>`;
+  renderAssume();
+}
+function renderAssume(){
+  const t=state.type,r=REGIONS.find(x=>x[0]===state.region);
+  $('#assume').innerHTML=`<span><b>Допущения:</b> ${t==='multi'
+    ?`глубина секции 16 м, высота этажа 3,3 м, разрыв между домами по торцам 20 м, отступ от границы 14 м, средняя квартира ${APT} м², парковка ${nf1.format(PARK)} места на квартиру, предельный КИТ ${nf1.format(FAR_MAX)}.`
+    :`улицы в красных линиях без тротуаров, внешний проезд по периметру, дом стоит с отступом от улицы.`} Прочие затраты (проект, согласования, продажи) — ${SOFT*100}% от стройки и сетей. Сети и дороги оплачиваются в первые 40% срока стройки, стройка — равномерно, выручка — равномерно в период продаж. Нормы ШНК в бете упрощены: перед покупкой участка вариант проверяет архитектор.</span>
+  <span><b>Нормы в расчёте</b> (ШНК 2.07.01-03* с изменениями 2020 г.; с 24.06.2024 действует ШНК 2.07.01-23 — значения нужно сверить с новой редакцией): разрыв между длинными сторонами — 15 м для 2–3 этажей, до 30 м для 4–5, до 45 м для 9+; при сейсмичности 8+ баллов — не меньше 2 высот дома; торцы с окнами — 20 м; инсоляция жилых комнат — 2,5 ч в день; противопожарный проезд — 5–8 м от стены; озеленение двора — не меньше 25%; площадки — 3,1 м² на жителя при норме 20 м² жилья на человека; у частного дома — 3 м от стены до границы участка. Норматив парковок в открытых источниках не найден, 0,7 места на квартиру — допущение. <a href="https://lex.uz/ru/docs/4444165?ONDATE=28.12.2009" target="_blank" rel="noopener">ШНК 2.07.01-03 на Lex.uz</a>, <a href="https://mc.uz/uploads/mcuz_9972494552682.pdf" target="_blank" rel="noopener">изменение №4 (Минстрой, 2020)</a>.</span>
+  <span><b>Цены по умолчанию (${r[1]}):</b> ${r[4]?'опираются на опубликованные данные о ценах жилья':'оценка по соседним регионам, уточните у местных застройщиков'}. Стоимость стройки — ориентир, замените на свою. Источники: <a href="https://kun.uz/ru/news/2026/04/07/skolko-stoyat-kvartiry-v-tashkente-v-2026-godu" target="_blank" rel="noopener">Kun.uz, новостройки Ташкента 2026</a>, <a href="https://www.spot.uz/ru/2026/03/17/real-estate-feb26/" target="_blank" rel="noopener">Spot.uz, цены жилья по регионам, февраль 2026</a>.</span>
+  <span>Темп продаж для проверки (допущение, в месяц): коттеджи 6 в Ташкенте и 3 в регионах, таунхаусы 10 и 5, квартиры 40 и 15. Загруженные файлы обрабатываются в браузере и никуда не отправляются. Спутниковые снимки © Esri; окружение участка © участники OpenStreetMap (данные могут быть неполными); высоты — Open-Meteo.</span>`;
+}
+
+function cashChart(c){
+  const W=320,H=120,pl=4,pr=4,pt=10,pb=18,n=c.cum.length;
+  const mn=Math.min(0,...c.cum),mx=Math.max(0,...c.cum),rng=(mx-mn)||1;
+  const X=i=>pl+(W-pl-pr)*i/Math.max(1,n-1),Y=v=>pt+(H-pt-pb)*(mx-v)/rng;
+  const line=c.cum.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+  const area=`${X(0)},${Y(0)} ${line} ${X(n-1)},${Y(0)}`;
+  const y0=Y(0),pk=c.peakM,last=c.cum[n-1];
+  const ticks=[0,Math.round((n-1)/2),n-1];
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Накопленный денежный поток по месяцам">
+    <defs><clipPath id="cpos"><rect x="0" y="0" width="${W}" height="${y0}"/></clipPath><clipPath id="cneg"><rect x="0" y="${y0}" width="${W}" height="${H}"/></clipPath></defs>
+    <polygon points="${area}" fill="var(--cash)" opacity=".18" clip-path="url(#cpos)"/>
+    <polygon points="${area}" fill="var(--bad)" opacity=".14" clip-path="url(#cneg)"/>
+    <line x1="${pl}" x2="${W-pr}" y1="${y0}" y2="${y0}" stroke="var(--muted)" stroke-width=".8" stroke-dasharray="3 3"/>
+    <polyline points="${line}" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linejoin="round"/>
+    <circle cx="${X(pk)}" cy="${Y(c.cum[pk])}" r="3" fill="var(--bad)"/>
+    <circle cx="${X(n-1)}" cy="${Y(last)}" r="3" fill="${last>=0?'var(--cash)':'var(--bad)'}"/>
+    ${ticks.map(i=>`<text x="${X(i)}" y="${H-4}" font-size="9.5" font-family="JetBrains Mono, monospace" fill="var(--muted)" text-anchor="${i===0?'start':i===n-1?'end':'middle'}">${i} мес</text>`).join('')}
+  </svg>`;
+}
+
+function renderResults(){
+  const t=state.type,area=state.area,vs=state.variants,v=vs[state.sel],st=v.st,f=v.f,c=v.cash;
+  const uw=UNIT_W[t];
+  // comparison
+  if(!state.dragging){
+    let bestT=null;for(const k of TYPES){const r=state.compare[k];if(r&&(!bestT||r.cash.profit>state.compare[bestT].cash.profit))bestT=k}
+    $('#cmp').innerHTML=`<thead><tr><th>Тип</th><th>Объём</th><th>Прибыль</th><th>IRR</th></tr></thead><tbody>`+TYPES.map(k=>{const r=state.compare[k];
+      if(!r)return `<tr class="row${k===t?' on':''}" data-t="${k}" tabindex="0"><td>${TYPE_SHORT[k]}</td><td colspan="3">не помещается</td></tr>`;
+      const u=r.v.st.units;return `<tr class="row${k===t?' on':''}" data-t="${k}" tabindex="0"><td>${TYPE_SHORT[k]}${k===bestT?'<span class="best">выгоднее всего</span>':''}</td><td>${nf.format(u)} ${k==='multi'?'кв.':'д.'}</td><td>${money(r.cash.profit)}</td><td>${irrTxt(r.cash.irr)}</td></tr>`}).join('')+'</tbody>';
+  }
+  $('#vars-title').textContent=`Варианты планировки: ${TYPE_SHORT[t].toLowerCase()}`;
+  $('#vars').innerHTML=vs.map((x,i)=>`<button type="button" class="var" id="var-${i}" data-var="${i}" aria-pressed="${i===state.sel}">
+    <div class="vh"><span class="vid">${x.id}</span>${i===state.best?'<span class="badge">Лучший</span>':''}</div>
+    <span class="vl">${x.label}</span>
+    <span class="vu">${x.st.units?nf.format(x.st.units)+' '+plural(x.st.units,uw):'не помещается'}</span>
+    <span class="vp">${x.st.units?'прибыль '+money(x.cash.profit):'—'}</span></button>`).join('');
+  $('#tep-title').textContent=`Показатели варианта ${v.id}`;
+  let rows=[];
+  if(t==='multi'){
+    const farChip=st.far>FAR_MAX?`<span class="chip bad">выше ${nf1.format(FAR_MAX)}</span>`:st.far>FAR_MAX*0.85?`<span class="chip warn">близко к пределу</span>`:`<span class="chip ok">в норме</span>`;
+    const res=Math.round(st.sale/M2_PER_PERSON);
+    rows=[['Жилых домов',nf.format(st.bldgs)],['Разрыв между рядами',`${nf.format(v.L.G)} м <span class="chip warn">${v.L.gWhy}</span>`],['Общая площадь',nf.format(st.gba)+' м²'],['Продаваемая площадь',nf.format(st.sale)+' м²'],['Квартир',nf.format(st.units)],['Жителей ≈',nf.format(res)],['Плотность (КИТ)',nf2.format(st.far)+farChip],['Процент застройки',nf.format(st.cover*100)+'%'],['Машино-мест (допущение)',nf.format(st.park)]];
+    if(state.lu){const need=GREEN_MIN*area+res*PLAY_PER_PERSON,have=state.lu.green;rows.push(['Двор: есть / нужно',`${nf.format(have/100)} / ${nf.format(need/100)} сот.<span class="chip ${have>=need?'ok':'bad'}">${have>=need?'хватает':'мало'}</span>`])}
+  }else{
+    rows=[[t==='town'?'Домов':'Участков с домами',nf.format(st.units)],['Размер участка',nf1.format(v.L.lotArea/100)+' сот.'],['Продаваемая площадь',nf.format(st.sale)+' м²'],['Плотность',nf1.format(st.dens)+' на га']];
+  }
+  $('#tep').innerHTML=rows.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('');
+  if(!state.dragging){
+    const lu=state.lu||landuse(v.L,state.poly,area);const pc=x=>area?x/area*100:0;
+    const bn=t==='multi'?'Застройка':'Участки';const rn=t==='multi'?'Проезды':'Улицы';
+    const segs=[[lu.built,t==='multi'?'var(--bldg)':'var(--lot1)',bn],[lu.road,'var(--road)',rn],[lu.green,'var(--green)','Озеленение']];
+    $('#usebar').innerHTML=segs.map(([a,c])=>`<i style="width:${pc(a).toFixed(1)}%;background:${c}"></i>`).join('');
+    $('#uselegend').innerHTML=segs.map(([a,c,n])=>`<span><em style="background:${c}"></em>${n} ${nf.format(pc(a))}%</span>`).join('');
+  }
+  const neg=c.profit<0;
+  $('#kpis').innerHTML=`<div class="kpi${neg?' neg':''}"><span>Прибыль</span><b>${money(c.profit)}</b></div><div class="kpi${c.irr!=null&&c.irr<0?' neg':''}"><span>IRR годовых</span><b>${irrTxt(c.irr)}</b></div><div class="kpi${neg?' neg':''}"><span>Рентабельность</span><b>${pct(c.roi)}</b></div>`;
+  const finRows=[['Выручка от продаж',money(f.revenue)],['Стройка',money(f.build)],['Сети и дороги',money(f.infra)],['Проект, согласования, продажи',money(f.soft)]];
+  if(!state.land.own)finRows.push(['Покупка участка',money(c.landCost)]);
+  finRows.push(['Пик вложений',money(c.peak)+` <span class="chip warn">мес. ${c.peakM}</span>`]);
+  finRows.push(['Окупаемость',c.pay==null?'не окупается':`${c.pay} мес.`]);
+  finRows.push(['Срок проекта',`${c.months} мес.`]);
+  $('#fin').innerHTML=finRows.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('');
+  $('#cashchart').innerHTML=cashChart(c);
+  $('#cashcap').textContent=`Накопленные деньги проекта по месяцам. Больше всего вложений нужно к ${c.peakM}-му месяцу: ${money(c.peak)} собственных денег или кредита.${state.land.own?' Земля уже ваша, её стоимость не учтена.':''}`;
+  const land=$('#land');land.classList.toggle('neg',f.land<=0||!st.units);
+  land.innerHTML=!st.units?`<span class="lbl">Сколько можно заплатить за землю</span><span class="big">—</span><span class="sub"><span>Вариант не помещается на участок.</span></span>`
+    :f.land>0?`<span class="lbl">Сколько можно заплатить за землю</span><span class="big">${money(f.land)}</span><span class="sub">${money(f.perSotka)} <span>за сотку при марже ${state.margin}%</span></span>`
+    :`<span class="lbl">Сколько можно заплатить за землю</span><span class="big">${money(f.land)}</span><span class="sub"><span>При этих ценах проект не даёт маржу ${state.margin}% даже на бесплатной земле.</span></span>`;
+  const a=state.area,ap=state.needScale?'≈ ':'';
+  $('#site-area').innerHTML=`<span><span>Площадь</span><b>${ap}${nf2.format(a/1e4)} га</b></span> <span><span>Соток</span><b>${ap}${nf.format(a/100)}</b></span> <span><span>Источник</span><b style="font-family:var(--body);font-size:13px">${state.source||'—'}</b></span>`;
+  if(t!=='multi'){const x=$(`#p-${t}-lotD-x`);if(x)x.textContent=`Участок ${nf1.format(state.p[t].lotW*state.p[t].lotD/100)} сотки`}
+  if(!state.land.own){const x=$('#land-price-x');x.textContent=`${money(state.land.price/(a/100))} за сотку`}
+}
+
+function renderModes(){
+  const tr=state.mode==='trace'||state.mode==='geotrace';
+  $('#tracebar').hidden=!tr;
+  $('#calibbar').hidden=tr||!state.calib||state.view==='geo';
+  $('#hint').hidden=tr||state.calib||state.view==='geo'||state.source!=='Пример';
+  $('#scalebar').hidden=tr||state.view==='geo';
+  svg.classList.toggle('tracing',state.mode==='trace');
+  if(!tr&&state.calib){
+    const P=state.poly,sel=$('#calib-side');if(state.calibSide>=P.length)state.calibSide=0;
+    const opts=P.map((_,i)=>`<option value="${i}"${i===state.calibSide?' selected':''}>${i+1}–${(i+1)%P.length+1}: ${state.needScale?'≈':''}${nf1.format(edgeLen(P,i))} м</option>`).join('');
+    if(sel.innerHTML!==opts&&document.activeElement!==sel)sel.innerHTML=opts;
+    const a=Math.abs(polyArea(P));
+    $('#calib-info').innerHTML=`Площадь по контуру <b>${state.needScale?'≈ ':''}${nf2.format(a/1e4)} га</b>${state.needScale?'<span class="chip warn">масштаб не задан</span>':''}`;
+    $('#calib-mirror').hidden=!!state.under;
+  }
+  showView();
+}
+
+function update(){
+  if(state.mode==='trace'){drawSchema();renderModes();return}
+  if(state.mode==='geotrace'){renderModes();return}
+  compute();
+  if(state.view==='geo')drawGeo();else drawSchema();
+  renderResults();renderModes();
+  if(!state.dragging){maybeAnalyze();renderVerdict()}
+}
+
+/* ---------- import: parsers ---------- */
+function median(a){const b=a.slice().sort((x,y)=>x-y);return b[Math.floor(b.length/2)]}
+function dedupe(a,eps){const out=[],seen=new Set();for(const p of a){const key=p.map(v=>Math.round(v/eps)).join('|');if(seen.has(key))continue;seen.add(key);out.push(p)}return out}
+function parsePairs(lines){
+  const geo=[],ll=[];
+  for(const raw of lines){
+    const s=String(raw).replace(/(\d),(\d)/g,'$1.$2');
+    const toks=s.match(/-?\d+(?:\.\d+)?/g)||[];
+    const big=toks.filter(t=>{const n=Math.abs(parseFloat(t));return n>=10000||(n>=1000&&t.includes('.'))}).map(Number);
+    if(big.length>=2){geo.push([big[0],big[1]]);continue}
+    const dec=toks.filter(t=>t.includes('.')).map(Number);
+    const lat=dec.find(n=>n>=36&&n<=47),lon=dec.find(n=>n>=55&&n<=74);
+    if(lat!=null&&lon!=null)ll.push([lat,lon]);
+  }
+  const clean=(a,lim,eps)=>{if(a.length<3)return null;const mx=median(a.map(p=>p[0])),my=median(a.map(p=>p[1]));const b=dedupe(a.filter(p=>Math.abs(p[0]-mx)<lim&&Math.abs(p[1]-my)<lim),eps);return b.length>=3?b:null};
+  const g=clean(geo,5000,0.005);if(g)return{kind:'geo',pts:g};
+  const l=clean(ll,0.05,1e-7);if(l)return{kind:'ll',pts:l};
+  return null;
+}
+function parseDXF(text){
+  const L=text.split(/\r?\n/);const pr=[];for(let i=0;i+1<L.length;i+=2)pr.push([L[i].trim(),L[i+1].trim()]);
+  let units=0;const polys=[];let cur=null,ent=null,vx=null;
+  for(let i=0;i<pr.length;i++){const [c,v]=pr[i];
+    if(c==='9'&&v==='$INSUNITS'){const n=pr[i+1];if(n&&n[0]==='70')units=+n[1]}
+    if(c==='0'){
+      if(ent==='VERTEX'&&vx&&cur&&vx[0]!=null&&vx[1]!=null)cur.push(vx);vx=null;
+      if(v==='LWPOLYLINE'){cur=[];polys.push(cur);ent='LW'}
+      else if(v==='POLYLINE'){cur=[];polys.push(cur);ent='PL'}
+      else if(v==='VERTEX'&&cur&&(ent==='PL'||ent==='VERTEX')){ent='VERTEX';vx=[null,null]}
+      else{ent=null;cur=null}
+      continue}
+    if(ent==='LW'){if(c==='10')cur.push([+v,null]);else if(c==='20'&&cur.length)cur[cur.length-1][1]=+v}
+    else if(ent==='VERTEX'&&vx){if(c==='10')vx[0]=+v;else if(c==='20')vx[1]=+v}
+  }
+  const f={1:0.0254,2:0.3048,4:0.001,5:0.01,6:1}[units]||1;
+  let best=null,ba=0;
+  for(const p of polys){const q=dedupe(p.filter(x=>x[0]!=null&&x[1]!=null&&isFinite(x[0])&&isFinite(x[1])),1e-6);if(q.length<3)continue;const a=Math.abs(polyArea(q));if(a>ba){ba=a;best=q}}
+  return best?{kind:'cad',pts:best.map(([x,y])=>[x*f,y*f])}:null;
+}
+function parseKML(text){
+  const xml=new DOMParser().parseFromString(text,'application/xml');
+  let best=null;
+  for(const n of xml.getElementsByTagName('coordinates')){
+    const a=n.textContent.trim().split(/\s+/).map(t=>t.split(',').map(Number)).filter(x=>x.length>=2&&isFinite(x[0])&&isFinite(x[1]));
+    if(a.length>=3&&(!best||a.length>best.length))best=a;
+  }
+  if(!best)return null;
+  const p=dedupe(best.map(([lo,la])=>[la,lo]),1e-7);
+  return p.length>=3?{kind:'ll',pts:p}:null;
+}
+function toWorld(r){
+  let w;
+  if(r.kind==='geo')w=r.pts.map(([x,y])=>[y,-x]);
+  else w=r.pts.map(([x,y])=>[x,-y]);
+  return normalize(w);
+}
+function normalize(w){let mx=Infinity,my=Infinity;for(const [x,y] of w){mx=Math.min(mx,x);my=Math.min(my,y)}return w.map(([x,y])=>[Math.round((x-mx)*10)/10,Math.round((y-my)*10)/10])}
+
+/* ---------- import: flow ---------- */
+function status(el,msg,cls){el.textContent=msg;el.className='status'+(cls?' '+cls:'')}
+const impStatus=$('#imp-status'),calibMsg=$('#calib-msg');
+function resetFlags(){state.sel=null;state.manual=false}
+function closeSrc(){state.src=null;document.querySelectorAll('[data-src]').forEach(b=>b.setAttribute('aria-expanded','false'));['map','doc','manual','sample'].forEach(k=>$('#p-'+k).hidden=true)}
+async function usePoints(r,label){
+  if(r.kind==='ll'){
+    setGeo(r.pts,label);closeSrc();status(impStatus,'','');
+    try{await showGeoPlan(true)}catch(e){state.view='schema';update()}
+    status(calibMsg,'','');
+    status($('#geo-status'),`${label}: найдено ${r.pts.length} ${plural(r.pts.length,['точка','точки','точек'])}, площадь ${nf2.format(state.area/1e4)} га.`,'ok');
+    return;
+  }
+  let w=toWorld(r),a=Math.abs(polyArea(w)),note='';
+  if(a>2e7){w=normalize(w.map(([x,y])=>[x/1000,y/1000]));a=Math.abs(polyArea(w));note=' Площадь была больше 2000 га — похоже, единицы в миллиметрах, пересчитал. Проверьте по документу.'}
+  else if(a<50){w=normalize(w.map(([x,y])=>[x*1000,y*1000]));a=Math.abs(polyArea(w));note=' Площадь была меньше 50 м² — похоже, единицы в километрах, пересчитал. Проверьте по документу.'}
+  state.poly=w;state.under=null;state.geo=null;state.view='schema';state.mode='edit';state.trace=[];state.calib=true;state.calibSide=0;state.needScale=false;state.source=label;
+  resetFlags();closeSrc();status(impStatus,'','');fit();update();
+  status(calibMsg,`${label}: найдено ${w.length} ${plural(w.length,['точка','точки','точек'])}, площадь ${nf2.format(a/1e4)} га. Сверьте площадь и длины сторон с документом.${note}`,note?'err':'ok');
+}
+function startTrace(href,nw,nh,msg){
+  const W=600,H=W*nh/nw;
+  state.under={id:'u'+Date.now(),href,x:0,y:0,w:W,h:H};
+  state.mode='trace';state.trace=[];state.calib=false;state.needScale=true;state.view='schema';state.geo=null;
+  $('#trace-text').innerHTML=msg||'<b>Обведите участок:</b> кликайте по углам по порядку, клик по первой точке замыкает контур.';
+  closeSrc();fit();update();
+}
+function finishTrace(){
+  const T=state.trace;if(T.length<3)return;
+  state.poly=T.map(p=>p.slice());state.trace=[];state.mode='edit';state.calib=true;state.calibSide=0;state.needScale=true;state.source='Обводка плана';
+  resetFlags();fit();update();
+  status(calibMsg,'Контур готов. Выберите сторону, длину которой знаете, и введите её — без этого размеры условные.','busy');
+  setTimeout(()=>$('#calib-len').focus(),0);
+}
+function imageFromBlob(blob){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>{const img=new Image();img.onload=()=>res({href:fr.result,w:img.naturalWidth,h:img.naturalHeight});img.onerror=()=>rej(new Error('Не удалось открыть изображение.'));img.src=fr.result};fr.onerror=()=>rej(new Error('Не удалось прочитать файл.'));fr.readAsDataURL(blob)})}
+async function handlePDF(file){
+  status(impStatus,'Читаю PDF…','busy');
+  await loadScript(LIB.pdf);await loadScript(LIB.pdfw);
+  const lib=window.pdfjsLib||window['pdfjs-dist/build/pdf'];
+  lib.GlobalWorkerOptions.workerSrc=LIB.pdfw;
+  const doc=await lib.getDocument({data:new Uint8Array(await file.arrayBuffer()),isEvalSupported:false}).promise;
+  const lines=[];
+  for(let n=1;n<=Math.min(doc.numPages,6);n++){
+    const pg=await doc.getPage(n);const tc=await pg.getTextContent();const rows=new Map();
+    for(const it of tc.items){if(!it.str||!it.str.trim())continue;const y=Math.round(it.transform[5]/3);if(!rows.has(y))rows.set(y,[]);rows.get(y).push([it.transform[4],it.str])}
+    [...rows.entries()].sort((a,b)=>b[0]-a[0]).forEach(([,arr])=>lines.push(arr.sort((a,b)=>a[0]-b[0]).map(x=>x[1]).join(' ')));
+  }
+  const r=parsePairs(lines);
+  if(r){await usePoints(r,'Кадастровый документ');return}
+  const pg=await doc.getPage(1);const vp=pg.getViewport({scale:Math.min(3,2400/pg.getViewport({scale:1}).width)});
+  const c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;
+  await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+  startTrace(c.toDataURL('image/jpeg',0.9),vp.width,vp.height,'<b>В PDF нет таблицы координат</b> (скан или только чертёж). Обведите участок по плану: кликайте по углам, клик по первой точке замыкает контур.');
+}
+async function handleFile(file){
+  const name=file.name.toLowerCase(),ext=name.split('.').pop();
+  try{
+    if(ext==='pdf')return await handlePDF(file);
+    if(ext==='dwg'){status(impStatus,'DWG — закрытый формат AutoCAD. Откройте файл в AutoCAD и сохраните как DXF (Файл → Сохранить как → DXF), затем загрузите DXF.','err');return}
+    if(ext==='dxf'){const r=parseDXF(await file.text());if(!r)throw new Error('В DXF не нашлось замкнутой полилинии. Попросите геодезиста сохранить границу участка одной полилинией.');await usePoints(r,'Файл DXF');return}
+    if(ext==='kml'){const r=parseKML(await file.text());if(!r)throw new Error('В KML не нашлось контура. Нарисуйте участок в Google Earth инструментом «Многоугольник» и сохраните снова.');await usePoints(r,'Google Earth');return}
+    if(ext==='kmz'){status(impStatus,'Распаковываю KMZ…','busy');await loadScript(LIB.zip);const z=await JSZip.loadAsync(await file.arrayBuffer());const k=Object.keys(z.files).find(n=>n.toLowerCase().endsWith('.kml'));if(!k)throw new Error('Внутри KMZ нет файла KML.');const r=parseKML(await z.file(k).async('string'));if(!r)throw new Error('В KMZ не нашлось контура участка.');await usePoints(r,'Google Earth');return}
+    if(ext==='xlsx'||ext==='xls'){status(impStatus,'Читаю таблицу…','busy');await loadScript(LIB.xlsx);const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});const lines=[];wb.SheetNames.forEach(n=>XLSX.utils.sheet_to_csv(wb.Sheets[n],{FS:' '}).split('\n').forEach(l=>lines.push(l)));const r=parsePairs(lines);if(!r)throw new Error('В таблице не нашлось координат. Нужны столбцы X и Y (метры) или широта и долгота.');await usePoints(r,'Таблица');return}
+    if(ext==='csv'||ext==='txt'){const r=parsePairs((await file.text()).split(/\r?\n/));if(!r)throw new Error('В файле не нашлось координат. Нужны строки вида «1  4576210.00  499850.00».');await usePoints(r,'Таблица');return}
+    if(/^(png|jpe?g|webp)$/.test(ext)||file.type.startsWith('image/')){const im=await imageFromBlob(file);startTrace(im.href,im.w,im.h);return}
+    status(impStatus,'Этот формат пока не поддерживается. Подойдут PDF, DXF, KML, KMZ, XLSX, CSV, JPG или PNG.','err');
+  }catch(e){status(impStatus,e.message||'Не удалось прочитать файл.','err')}
+}
+
+/* ---------- interaction ---------- */
+let drag=null,raf=0;
+function svgPt(e,raw){const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const r=pt.matrixTransform(svg.getScreenCTM().inverse());return raw?[r.x,r.y]:[Math.round(r.x*10)/10,Math.round(r.y*10)/10]}
+function schedule(){if(raf)return;raf=requestAnimationFrame(()=>{raf=0;update()})}
+svg.addEventListener('pointerdown',e=>{
+  if(state.view==='geo')return;
+  if(state.mode==='trace'){
+    if(e.button)return;e.preventDefault();
+    const p=svgPt(e,true),T=state.trace,k=1/scale();
+    if(T.length>=3&&Math.hypot(p[0]-T[0][0],p[1]-T[0][1])<12*k){finishTrace();return}
+    const last=T[T.length-1];if(last&&Math.hypot(p[0]-last[0],p[1]-last[1])<3*k)return;
+    T.push(p);drawTrace();return;
+  }
+  const v=e.target.closest('[data-v]'),m=e.target.closest('[data-m]');
+  if(v){drag=+v.dataset.v}
+  else if(m){const i=+m.dataset.m;const a=state.poly[i],b=state.poly[(i+1)%state.poly.length];state.poly.splice(i+1,0,[Math.round((a[0]+b[0])/2*10)/10,Math.round((a[1]+b[1])/2*10)/10]);drag=i+1;if(state.calibSide>i)state.calibSide++;schedule()}
+  else return;
+  state.dragging=true;e.preventDefault();svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener('pointermove',e=>{if(drag==null)return;state.poly[drag]=svgPt(e);schedule()});
+const end=()=>{if(drag==null)return;drag=null;state.dragging=false;const b=bbox(state.poly),vb=state.vb,pad=20;if(b[0]<vb[0]+pad||b[1]<vb[1]+pad||b[2]>vb[0]+vb[2]-pad||b[3]>vb[1]+vb[3]-pad||(b[2]-b[0])<vb[2]*0.5&&(b[3]-b[1])<vb[3]*0.5)fit();update()};
+svg.addEventListener('pointerup',end);svg.addEventListener('pointercancel',end);
+svg.addEventListener('dblclick',e=>{
+  if(state.mode==='trace'){if(state.trace.length>=3)finishTrace();return}
+  const v=e.target.closest('[data-v]');if(!v||state.poly.length<=3)return;state.poly.splice(+v.dataset.v,1);update()});
+
+document.querySelectorAll('[data-type]').forEach(b=>b.addEventListener('click',()=>{state.type=b.dataset.type;resetFlags();buildControls();update()}));
+$('#cmp').addEventListener('click',e=>{const r=e.target.closest('[data-t]');if(!r)return;state.type=r.dataset.t;resetFlags();buildControls();update()});
+$('#cmp').addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;const r=e.target.closest('[data-t]');if(!r)return;e.preventDefault();state.type=r.dataset.t;resetFlags();buildControls();update()});
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{
+  state.poly=PRESETS[b.dataset.preset].map(p=>p.slice());state.under=null;state.geo=null;state.view='schema';state.mode='edit';state.trace=[];state.calib=false;state.needScale=false;state.source='Пример';
+  resetFlags();closeSrc();fit();update()}));
+$('#vars').addEventListener('click',e=>{const b=e.target.closest('[data-var]');if(!b)return;state.sel=+b.dataset.var;state.manual=true;update()});
+$('#margin').addEventListener('input',e=>{state.margin=+e.target.value;$('#margin-out').textContent=state.margin+'%';update()});
+const regSel=$('#region');regSel.innerHTML=REGIONS.map(r=>`<option value="${r[0]}">${r[1]}</option>`).join('');regSel.value=state.region;
+regSel.addEventListener('change',()=>{applyRegion(regSel.value);buildControls();update()});
+document.querySelectorAll('[data-land]').forEach(b=>b.addEventListener('click',()=>{state.land.own=b.dataset.land==='own';renderLand();update()}));
+function renderLand(){document.querySelectorAll('[data-land]').forEach(b=>b.setAttribute('aria-pressed',(b.dataset.land==='own')===state.land.own));$('#land-price-f').hidden=state.land.own}
+$('#land-price').addEventListener('input',e=>{const v=parseFloat(e.target.value);if(!isNaN(v)){state.land.price=v;update()}});
+document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',async()=>{state.view=b.dataset.view;if(state.view==='schema')fit();if(state.view==='geo')await ensureMap();update()}));
+window.addEventListener('resize',()=>{if(state.vb&&state.view==='schema')drawSchema()});
+
+async function openSrc(k,toggle){
+  const b=document.querySelector(`[data-src="${k}"]`),open=!toggle||state.src!==k;closeSrc();
+  if(!open)return;
+  state.src=k;b.setAttribute('aria-expanded','true');$('#p-'+k).hidden=false;
+  if(k==='map'){
+    const gs=$('#geo-status');
+    if(mapDown){mapUnavailable();return}
+    try{status(gs,'Загружаю карту…','busy');await ensureMap();if(mapDown)return;state.view='geo';update();if(state.geo)lmap.fitBounds(L.latLngBounds(state.poly.map(toLL)),{padding:[40,40],maxZoom:18});status(gs,state.geo?'':'Введите адрес или координаты, найдите свой участок и нажмите «Обвести участок».','busy')}
+    catch(e){mapUnavailable()}
+  }
+}
+document.querySelectorAll('[data-src]').forEach(b=>b.addEventListener('click',()=>openSrc(b.dataset.src,true)));
+async function geoSearch(){
+  const q=$('#geo-q').value.trim(),gs=$('#geo-status');if(!q)return;
+  try{await ensureMap()}catch(e){status(gs,e.message,'err');return}
+  state.view='geo';showView();
+  const m=q.match(/(-?\d{1,3}[.,]\d+)\s*[,;\s]\s*(-?\d{1,3}[.,]\d+)/);
+  if(m){const a=parseFloat(m[1].replace(',','.')),b=parseFloat(m[2].replace(',','.'));lmap.setView([a,b],17);status(gs,'Нашёл. Теперь нажмите «Обвести участок».','ok');return}
+  status(gs,'Ищу…','busy');
+  try{
+    const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),8000);
+    const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=uz&accept-language=ru&q='+encodeURIComponent(q),{signal:ctl.signal});clearTimeout(to);
+    const j=await r.json();
+    if(!j.length){status(gs,'Ничего не нашёл. Попробуйте город и улицу или вставьте координаты из Google Maps.','err');return}
+    lmap.setView([+j[0].lat,+j[0].lon],17);status(gs,`Нашёл: ${j[0].display_name.split(',').slice(0,3).join(',')}. Теперь нажмите «Обвести участок».`,'ok');
+  }catch(e){status(gs,'Поиск адреса сейчас недоступен. Вставьте координаты (в Google Maps: правый клик по участку → скопировать координаты).','err')}
+}
+$('#geo-search').addEventListener('click',geoSearch);
+$('#geo-q').addEventListener('keydown',e=>{if(e.key==='Enter')geoSearch()});
+$('#geo-draw').addEventListener('click',async()=>{try{await startGeoTrace();status($('#geo-status'),'','')}catch(e){status($('#geo-status'),e.message,'err')}});
+
+$('#m-apply').addEventListener('click',()=>{
+  const n=id=>parseFloat(String($(id).value).replace(',','.'));
+  let Lm=n('#m-l'),Wm=n('#m-w');const A=n('#m-a');
+  if(!(Lm>0&&Wm>0)){if(A>0){Wm=Math.sqrt(A*1e4/1.5);Lm=Wm*1.5}else{status($('#m-status'),'Введите длину и ширину или площадь в гектарах.','err');return}}
+  if(Lm*Wm>2e7){status($('#m-status'),'Участок больше 2000 га — проверьте единицы, нужны метры.','err');return}
+  Lm=Math.round(Lm*10)/10;Wm=Math.round(Wm*10)/10;
+  state.poly=[[0,0],[Lm,0],[Lm,Wm],[0,Wm]];state.under=null;state.geo=null;state.view='schema';state.mode='edit';state.calib=false;state.needScale=false;state.source='Размеры';
+  resetFlags();closeSrc();fit();update();status($('#m-status'),'','');
+});
+
+const drop=$('#drop');
+$('#file').addEventListener('change',e=>{const f=e.target.files[0];if(f)handleFile(f);e.target.value=''});
+['dragenter','dragover'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(t=>drop.addEventListener(t,()=>drop.classList.remove('over')));
+drop.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f)handleFile(f)});
+$('#coords-sample').addEventListener('click',()=>{$('#coords').value=SAMPLE});
+$('#coords-apply').addEventListener('click',()=>{const r=parsePairs($('#coords').value.split(/\r?\n/));if(!r){status(impStatus,'Не нашёл координат. Нужно минимум 3 строки вида «номер  X  Y» в метрах или широта и долгота.','err');return}usePoints(r,'Координаты')});
+document.addEventListener('paste',e=>{
+  if(state.src!=='doc'&&state.mode!=='trace')return;
+  const it=[...(e.clipboardData?.items||[])].find(i=>i.type.startsWith('image/'));
+  if(it){e.preventDefault();imageFromBlob(it.getAsFile()).then(im=>startTrace(im.href,im.w,im.h)).catch(err=>status(impStatus,err.message,'err'))}
+});
+
+$('#trace-undo').addEventListener('click',()=>{if(state.mode==='geotrace'){state.gtrace.pop();drawGeoTrace()}else{state.trace.pop();drawTrace()}});
+$('#trace-done').addEventListener('click',()=>{if(state.mode==='geotrace'){if(state.gtrace.length>=3)finishGeoTrace();return}if(state.trace.length>=3)finishTrace()});
+$('#trace-cancel').addEventListener('click',()=>{
+  if(state.mode==='geotrace'){state.mode='edit';state.gtrace=[];drawLayer&&drawLayer.clearLayers();if(!state.geo){state.view='schema';fit()}update();return}
+  state.mode='edit';state.trace=[];state.under=null;state.needScale=false;if(state.poly.length<3)state.poly=PRESETS.trap.map(p=>p.slice());resetFlags();fit();update()});
+$('#calib-side').addEventListener('change',e=>{state.calibSide=+e.target.value;drawSchema()});
+function applyScale(){
+  const v=parseFloat(String($('#calib-len').value).replace(',','.').replace(/\s/g,''));
+  const i=state.calibSide,cur=edgeLen(state.poly,i);
+  if(!(v>0)){status(calibMsg,'Введите длину стороны в метрах, например 125,4.','err');return}
+  const s=v/cur;
+  state.poly=state.poly.map(([x,y])=>[Math.round(x*s*10)/10,Math.round(y*s*10)/10]);
+  if(state.under){const u=state.under;u.x*=s;u.y*=s;u.w*=s;u.h*=s}
+  state.needScale=false;$('#calib-len').value='';
+  fit();update();
+  status(calibMsg,`Масштаб задан: сторона ${i+1}–${(i+1)%state.poly.length+1} = ${nf1.format(v)} м. Площадь ${nf2.format(Math.abs(polyArea(state.poly))/1e4)} га — сверьте с документом.`,'ok');
+}
+$('#calib-apply').addEventListener('click',applyScale);
+$('#calib-len').addEventListener('keydown',e=>{if(e.key==='Enter')applyScale()});
+$('#calib-mirror').addEventListener('click',()=>{state.poly=normalize(state.poly.map(([x,y])=>[-x,y]));fit();update();status(calibMsg,'Контур отражён. Используйте, если оси X и Y в документе перепутаны.','busy')});
+$('#calib-close').addEventListener('click',()=>{state.calib=false;status(calibMsg,'','');update()});
+
+function summary(){
+  const t=state.type,v=state.variants[state.sel],st=v.st,f=v.f,c=v.cash,a=state.area,r=REGIONS.find(x=>x[0]===state.region);
+  const L=[`YerPlan — оценка участка`,`Участок: ${nf2.format(a/1e4)} га (${nf.format(a/100)} соток), ${r[1]}, источник: ${state.source}`];
+  L.push('Сравнение типов:');
+  for(const k of TYPES){const x=state.compare[k];L.push(x?`• ${TYPE_SHORT[k]}: ${nf.format(x.v.st.units)} ${plural(x.v.st.units,UNIT_W[k])}, прибыль ${money(x.cash.profit)}, IRR ${irrTxt(x.cash.irr)}`:`• ${TYPE_SHORT[k]}: не помещается`)}
+  L.push(`Выбран: ${TYPE_NAME[t]}, вариант ${v.id} (${v.label})`);
+  if(t==='multi')L.push(`Домов ${st.bldgs}, ${state.p.multi.floors} эт., общая площадь ${nf.format(st.gba)} м², квартир ${nf.format(st.units)}, КИТ ${nf2.format(st.far)}`);
+  else L.push(`${nf.format(st.units)} ${plural(st.units,UNIT_W[t])} на участках по ${nf1.format(v.L.lotArea/100)} сот.`);
+  L.push(`Выручка ${money(f.revenue)}, затраты ${money(f.total+c.landCost)}${state.land.own?' (без земли)':' (с землёй)'}`);
+  L.push(`Прибыль ${money(c.profit)}, рентабельность ${pct(c.roi)}, IRR ${irrTxt(c.irr)}, пик вложений ${money(c.peak)}, срок ${c.months} мес.`);
+  L.push(f.land>0?`Максимальная цена земли при марже ${state.margin}%: ${money(f.land)} (${money(f.perSotka)} за сотку)`:`При текущих ценах маржа ${state.margin}% недостижима`);
+  L.push('Расчёт ориентировочный, нормы и цены — допущения.');
+  return L.join('\n');
+}
+$('#copy').addEventListener('click',()=>{const txt=summary(),s=$('#copy-status');
+  const fb=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');s.textContent='Скопировано'}catch(_){s.textContent='Выделите текст вручную'}ta.remove()};
+  try{navigator.clipboard.writeText(txt).then(()=>{s.textContent='Скопировано'},fb)}catch(_){fb()}
+  setTimeout(()=>{s.textContent=''},2500);
+});
+
+renderLand();renderChecklist();buildControls();fit();update();
+requestAnimationFrame(()=>{update();openSrc('map')});
+})();
+</script>
+</body>
+</html>
