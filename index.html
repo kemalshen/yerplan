@@ -17,7 +17,7 @@
   --accent:#2F54EB; --accent-soft:#EEF2FF; --accent-ink:#2440C8;
   --cad:#E5484D; --lot1:#B5DCAA; --lot2:#9ACF8D; --lotline:#6FA764; --house:#46704B;
   --green:#E6F2E0; --tree:#C9E4BD; --road:#D7DCE3; --roadline:#FFFFFF;
-  --bldg:#5F7FA3; --bldgtop:#9CB3CB; --shadow:rgba(16,24,40,.10); --grid:rgba(16,24,40,.045);
+  --bldg:#F4F6FA; --bldgtop:#2B3A55; --shadow:rgba(16,24,40,.10); --grid:rgba(16,24,40,.045);
   --good:#0E7A55; --warn:#B54708; --bad:#D92D20; --chip:#F2F4F7; --cash:#0E9F6E;
   --good-bg:#ECFDF3; --warn-bg:#FFF6E5; --bad-bg:#FEF3F2;
   --display:"Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -270,6 +270,9 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .vd-rec a{color:var(--accent-ink)}
 .fac td{border-top-color:var(--line)}
 footer.assume a{color:var(--accent-ink)}
+#geomap.lowzoom .alab,#geomap.lowzoom .blbl{display:none}
+.alab{display:inline-block;transform:translate(-50%,-50%);font:600 12px/1.2 var(--body);color:#1D2939;background:rgba(255,255,255,.92);border-radius:6px;padding:3px 7px;white-space:nowrap;box-shadow:0 1px 3px rgba(16,24,40,.18);pointer-events:none}
+.blbl{display:inline-block;font:600 11px/1 var(--body);color:#2B3A55;white-space:nowrap;pointer-events:none}
 .steps{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:600;display:flex;gap:4px;background:var(--surface);border-radius:999px;padding:4px;box-shadow:0 2px 10px rgba(16,24,40,.14);max-width:calc(100% - 24px);overflow-x:auto}
 .steps span{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:12.5px;color:var(--muted);white-space:nowrap}
 .steps span i{font-style:normal;width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;background:var(--chip);font-size:11.5px;font-weight:600;color:var(--muted)}
@@ -549,12 +552,16 @@ const CHECKS=[
 const SEIS8=['tash','tashobl','and','nam','fer','sam','jiz','sir','surx','kash'];
 /* ШНК 2.07.01-03* п.21.1: gap between long sides by storeys (upper bound of the range taken) */
 function normGap(fl){return fl<=3?15:fl<=5?30:fl<9?30+(fl-5)*15/4:45}
+/* social & amenity assumptions (no open norm found — verify with architect) */
+const HH=4.5;                       // people per house (cottage, townhouse)
+const KG={per:2500,min:2000,area:5000}, SCH={per:8000,min:5000,area:20000}; // one kindergarten per 2 000 residents (0.5 ha), one school per 7 000 (2 ha)
+const AM={school:{label:'Школа',c:'#F2C46D'},kinder:{label:'Детсад',c:'#F4A9BC'},park:{label:'Парк и площадки',c:'#7CC47A'},center:{label:'Магазины и парковка',c:'#93B4F2'},play:{label:'Площадка',c:'#9ED69B'},parking:{label:'Парковка',c:'#C9CED6'}};
 const PLAY_PER_PERSON=0.7+0.1+2.0+0.3, M2_PER_PERSON=20, GREEN_MIN=0.25;
 const PRICE_K={cottage:0.95,town:0.85,multi:1}, COST_BASE={cottage:450,town:430,multi:420}, INFRA_BASE={cottage:18,town:20,multi:30};
 const DEF={
   cottage:{lotW:18,lotD:33,road:9,perBlock:10,house:180,price:0,cost:0,infra:0},
   town:{lotW:8,lotD:26,road:8,perBlock:12,house:140,price:0,cost:0,infra:0},
-  multi:{floors:12,secLen:60,insol:1.0,price:0,cost:0,infra:0,eff:0.78}
+  multi:{floors:12,secLen:60,insol:1.0,price:0,cost:0,infra:0,eff:0.78,parkCost:0,parkPrice:0}
 };
 const TL={cottage:{build:18,start:9,sales:24},town:{build:18,start:9,sales:24},multi:{build:30,start:12,sales:36}};
 const APT=65, PARK=0.7, SOFT=0.10, FAR_MAX=2.5;
@@ -566,7 +573,7 @@ const PLAN={
 const FIN={
   cottage:[['house','Площадь дома','м²'],['price','Цена продажи','$/м²'],['cost','Стоимость стройки','$/м²'],['infra','Сети и дороги','$/м² участка']],
   town:[['house','Площадь дома','м²'],['price','Цена продажи','$/м²'],['cost','Стоимость стройки','$/м²'],['infra','Сети и дороги','$/м² участка']],
-  multi:[['price','Цена продажи','$/м²'],['cost','Стоимость стройки','$/м² общей'],['infra','Сети и благоустройство','$/м² участка'],['eff','Доля продаваемой площади','0–1']]
+  multi:[['price','Цена продажи','$/м²'],['cost','Стоимость стройки','$/м² общей'],['infra','Сети и благоустройство','$/м² участка'],['eff','Доля продаваемой площади','0–1'],['parkCost','Подземный паркинг: стройка','$ за место'],['parkPrice','Подземный паркинг: продажа','$ за место']]
 };
 const VARS={
   lots:[{id:'А',label:'Вдоль длинной стороны',da:0},{id:'Б',label:'Поперёк участка',da:90},{id:'В',label:'Длинные кварталы',da:0,blockMul:1.6},{id:'Г',label:'Под углом 45°',da:45}],
@@ -582,11 +589,12 @@ const state={type:'cottage',region:'tash',poly:PRESETS.trap.map(p=>p.slice()),p:
   margin:20,land:{own:true,price:1500000},sel:null,manual:false,vb:null,variants:[],compare:{},
   mode:'edit',trace:[],gtrace:[],under:null,calib:false,calibSide:0,needScale:false,source:'Пример',
   geo:null,view:'schema',dragging:false,src:null,
-  checks:{zone:'?',title:'?',red:'?',utils:'?',soil:'?'},site:{status:'nogeo',key:null,d:null,elev:null}};
+  social:true,checks:{zone:'?',title:'?',red:'?',utils:'?',soil:'?'},site:{status:'nogeo',key:null,d:null,elev:null}};
 
 function applyRegion(id){
   const r=REGIONS.find(x=>x[0]===id)||REGIONS[0];state.region=r[0];state.seis=SEIS8.includes(r[0]);
   for(const t of TYPES){const p=state.p[t];p.price=Math.round(r[2]*PRICE_K[t]/10)*10;p.cost=Math.round(COST_BASE[t]*r[3]/5)*5;p.infra=Math.round(INFRA_BASE[t]*r[3])}
+  state.p.multi.parkCost=Math.round(8000*r[3]/100)*100;state.p.multi.parkPrice=r[0]==='tash'?12000:r[0]==='tashobl'?7000:5000;
 }
 applyRegion('tash');
 
@@ -595,7 +603,43 @@ function polyArea(P){let a=0;for(let i=0,j=P.length-1;i<P.length;j=i++)a+=(P[j][
 function pip(x,y,P){let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const xi=P[i][0],yi=P[i][1],xj=P[j][0],yj=P[j][1];if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))c=!c}return c}
 function dseg(px,py,ax,ay,bx,by){const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy;let t=l?((px-ax)*dx+(py-ay)*dy)/l:0;t=t<0?0:t>1?1:t;return Math.hypot(ax+t*dx-px,ay+t*dy-py)}
 function edist(x,y,P){let m=Infinity;for(let i=0,j=P.length-1;i<P.length;j=i++){const d=dseg(x,y,P[j][0],P[j][1],P[i][0],P[i][1]);if(d<m)m=d}return m}
-function ok(q,P,md){return pip(q[0],q[1],P)&&edist(q[0],q[1],P)>=md}
+let MP=null;
+function ok(q,P,md){return pip(q[0],q[1],P)&&edist(q[0],q[1],P)>=md&&!(MP&&MP.blocked(q))}
+/* large sites: main streets every ~260 m and public centres (school, kindergarten, park) */
+function masterplan(P,a0){
+  const area=Math.abs(polyArea(P));if(area<25e4)return null;
+  const F=frame(P,a0),T=F.toXY,S=260,W=22,G=5;
+  const us=[],vs=[];
+  for(let u=F.umin+S;u<F.umax-S*0.45;u+=S)us.push(u);
+  for(let v=F.vmin+S;v<F.vmax-S*0.45;v+=S)vs.push(v);
+  const R=(u0,v0,u1,v1)=>[T(u0,v0),T(u1,v0),T(u1,v1),T(u0,v1)];
+  const roads=[];
+  for(const u of us){const c=clipConvex(P,R(u-W/2,F.vmin-5,u+W/2,F.vmax+5));if(c.length>2)roads.push(c)}
+  for(const v of vs){const c=clipConvex(P,R(F.umin-5,v-W/2,F.umax+5,v+W/2));if(c.length>2)roads.push(c)}
+  const ub=[F.umin,...us,F.umax],vb=[F.vmin,...vs,F.vmax],cells=[];
+  for(let i=0;i+1<ub.length;i++)for(let j=0;j+1<vb.length;j++){
+    const r=[ub[i]+(i?W/2+G:G),vb[j]+(j?W/2+G:G),ub[i+1]-(i+2<ub.length?W/2+G:G),vb[j+1]-(j+2<vb.length?W/2+G:G)];
+    if(r[2]-r[0]<60||r[3]-r[1]<60)continue;
+    const rect=R(...r),cl=clipConvex(P,rect),fr=Math.abs(polyArea(cl))/Math.abs(polyArea(rect));
+    if(fr>0.85){const c=bbox(rect);cells.push({r,ct:[(c[0]+c[2])/2,(c[1]+c[3])/2]})}
+  }
+  const nSoc=0; // schools, kindergartens and parks are placed by the amenity step
+  const bb=bbox(P),cx=(bb[0]+bb[2])/2,cy=(bb[1]+bb[3])/2,chosen=[];
+  if(nSoc>0){cells.sort((a,b)=>Math.hypot(a.ct[0]-cx,a.ct[1]-cy)-Math.hypot(b.ct[0]-cx,b.ct[1]-cy));chosen.push(cells[0]);
+    while(chosen.length<nSoc){let best=null,bd=-1;for(const c of cells){if(chosen.includes(c))continue;const d=Math.min(...chosen.map(x=>Math.hypot(x.ct[0]-c.ct[0],x.ct[1]-c.ct[1])));if(d>bd){bd=d;best=c}}if(!best)break;chosen.push(best)}}
+  const zones=[];
+  for(const c of chosen){const [u0,v0,u1,v1]=c.r,w=u1-u0;
+    zones.push({kind:'park',poly:R(u0,v0,u0+w*0.55,v1),label:'Парк'});
+    zones.push({kind:'school',poly:R(u0+w*0.55+4,v0,u1,v0+(v1-v0)*0.6),label:'Школа'});
+    zones.push({kind:'kinder',poly:R(u0+w*0.55+4,v0+(v1-v0)*0.6+4,u1,v1),label:'Детсад'});}
+  const blocked=q=>{const [u,v]=F.toUV(q[0],q[1]);
+    for(const x of us)if(Math.abs(u-x)<W/2+3)return true;
+    for(const y of vs)if(Math.abs(v-y)<W/2+3)return true;
+    for(const c of chosen)if(u>c.r[0]-2&&u<c.r[2]+2&&v>c.r[1]-2&&v<c.r[3]+2)return true;
+    return false};
+  const civicArea=chosen.reduce((a,c)=>a+(c.r[2]-c.r[0])*(c.r[3]-c.r[1]),0);
+  return{roads,zones,blocked,centres:chosen.length,civicArea,streets:us.length+vs.length};
+}
 function edgeLen(P,i){const a=P[i],b=P[(i+1)%P.length];return Math.hypot(b[0]-a[0],b[1]-a[1])}
 function longestAngle(P){let best=0,ang=0;for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length];const L=Math.hypot(b[0]-a[0],b[1]-a[1]);if(L>best){best=L;ang=Math.atan2(b[1]-a[1],b[0]-a[0])}}return ang}
 function frame(P,th){const c=Math.cos(th),s=Math.sin(th);let umin=1e9,umax=-1e9,vmin=1e9,vmax=-1e9;for(const [x,y] of P){const u=x*c+y*s,v=-x*s+y*c;if(u<umin)umin=u;if(u>umax)umax=u;if(v<vmin)vmin=v;if(v>vmax)vmax=v}return{c,s,umin,umax,vmin,vmax,toXY:(u,v)=>[u*c-v*s,u*s+v*c],toUV:(x,y)=>[x*c+y*s,-x*s+y*c]}}
@@ -623,13 +667,49 @@ function clipConvex(subj,clip){
   return out;
 }
 
+/* ---------- amenities ---------- */
+function centroidOf(P){let x=0,y=0;for(const q of P){x+=q[0];y+=q[1]}return[x/P.length,y/P.length]}
+function entranceOf(P){let best=0,m=P[0];for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length],L=Math.hypot(b[0]-a[0],b[1]-a[1]);if(L>best){best=L;m=[(a[0]+b[0])/2,(a[1]+b[1])/2]}}return m}
+function spreadAnchors(items,n,pt){
+  if(n<=0)return[];
+  if(n<=1)return[centroidOf(items.map(pt))];
+  const s=items.slice().sort((a,b)=>pt(a)[0]-pt(b)[0]),out=[];
+  for(let i=0;i<n;i++){const g=s.slice(Math.floor(i*s.length/n),Math.floor((i+1)*s.length/n));if(g.length)out.push(centroidOf(g.map(pt)))}
+  return out;
+}
+/* take the free items nearest to an anchor until their area covers the need */
+function grab(items,anchor,need,cellArea,pt,key){
+  const free=items.filter(x=>!x.use).map(x=>({x,d:Math.hypot(pt(x)[0]-anchor[0],pt(x)[1]-anchor[1])})).sort((a,b)=>a.d-b.d);
+  const n=Math.max(1,Math.ceil(need/cellArea)),got=[];
+  for(const f of free.slice(0,n)){f.x.use=key;got.push(f.x)}
+  return got;
+}
+function reserveLots(lots,A,P,T,town){
+  const out=[];if(lots.length<12)return out;
+  const lc=l=>l.ct||(l.ct=centroidOf(l.pts));
+  const houses=lots.length,res=houses*HH,area=Math.abs(polyArea(P));
+  const C=centroidOf(P),E=entranceOf(P);
+  const add=(key,label,got)=>{if(got.length)out.push({key,label,cells:got.map(g=>g.pts),ct:centroidOf(got.map(lc)),area:got.length*A})};
+  const nS=state.social&&res>=SCH.min?Math.max(1,Math.round(res/SCH.per)):0,nK=state.social&&res>=KG.min?Math.max(1,Math.round(res/KG.per)):0;
+  spreadAnchors(lots,nS,lc).forEach((a,i)=>add('school','Школа',grab(lots,a,SCH.area,A,lc,'school')));
+  spreadAnchors(lots,nK,lc).forEach((a,i)=>add('kinder','Детсад',grab(lots,a,KG.area,A,lc,'kinder')));
+  const park=res*3+(houses>60?0.04*area:0);
+  add('park','Парк и площадки',grab(lots,C,park,A,lc,'park'));
+  const center=res*1.0+Math.ceil(houses/5)*25;
+  add('center','Магазины и парковка',grab(lots,E,center,A,lc,'center'));
+  return out;
+}
+
+function amenSummary(Lo){const g={};for(const a of (Lo.amen||[])){g[a.key]=g[a.key]||{n:0,area:0};g[a.key].n++;g[a.key].area+=a.area}return g}
+const amenLbl=a=>`${a.label}`;
+
 /* ---------- generators ---------- */
 function layoutLots(P,th,p,town){
   const F=frame(P,th),T=F.toXY;
   const w=p.road,d=p.lotD,lw=p.lotW,N=Math.max(2,Math.round(p.perBlock)),per=w;
   const PP=w+2*d,Q=N*lw+w;
   let best=null;
-  for(const fo of [0,.25,.5,.75])for(const go of [0,.5]){
+  for(const fo of [0,.125,.25,.375,.5,.625,.75,.875])for(const go of [0,.25,.5,.75]){
     const vs=F.vmin-PP+fo*PP,us=F.umin-Q+go*Q;
     const nk=Math.ceil((F.vmax-vs)/PP)+1,nj=Math.ceil((F.umax-us)/Q)+1;
     const lots=[],h=new Set(),vr=new Set();
@@ -650,46 +730,77 @@ function layoutLots(P,th,p,town){
     roads.push([T(c0,r),T(c0+Q+w,r),T(c0+Q+w,r+w),T(c0,r+w)]);lines.push([T(c0+w,r+w/2),T(c0+Q,r+w/2)])}
   for(const key of best.vr){const [k,j]=key.split(',').map(Number);const r=best.vs+k*PP,c0=best.us+j*Q;
     roads.push([T(c0,r),T(c0+w,r),T(c0+w,r+PP+w),T(c0,r+PP+w)]);lines.push([T(c0+w/2,r+w),T(c0+w/2,r+PP)])}
+  const amen=reserveLots(best.lots,lw*d,P,T,town);
+  best.lots=best.lots.filter(l=>!l.use);
   const hw=town?lw-0.8:Math.min(lw-6,13),hd=Math.min(d*0.5,town?13:14),front=town?3:5;
   const houses=best.lots.map(l=>{const hv=l.row===0?l.v0+front:l.v0+d-front-hd,hu=l.u0+(lw-hw)/2;return[T(hu,hv),T(hu+hw,hv),T(hu+hw,hv+hd),T(hu,hv+hd)]});
   const isRoad=(x,y)=>{const [u,v]=F.toUV(x,y);const k=Math.floor((v-best.vs)/PP),vv=v-(best.vs+k*PP),j=Math.floor((u-best.us)/Q),uu=u-(best.us+j*Q);return(vv<w&&best.h.has(k+','+j))||(uu<w&&best.vr.has(k+','+j))};
-  return{kind:'lots',lots:best.lots,houses,roads,lines,per,w,lotArea:lw*d,isRoad,th};
+  return{kind:'lots',lots:best.lots,houses,roads,lines,per,w,lotArea:lw*d,isRoad,th,amen};
 }
 function layoutBlocks(P,th,p){
   const F=frame(P,th),T=F.toXY;
   const D=16,L=p.secLen,H=p.floors*3.3,Gn=normGap(p.floors),Gs=state.seis?2*H:0,G=Math.max(Gn,Gs,H*p.insol),Gu=20,per=7,set=per+7;
   const gWhy=G===Gs&&Gs>0?'сейсмика: 2 высоты':G===Gn?'норма по этажности':'ваш минимум';
-  const PP=D+G,Q=L+Gu;let best=null;
-  for(const fo of [0,.2,.4,.6,.8])for(const go of [0,.33,.66]){
-    const vs=F.vmin-PP+fo*PP,us=F.umin-Q+go*Q;
-    const nk=Math.ceil((F.vmax-vs)/PP)+1,nj=Math.ceil((F.umax-us)/Q)+1;const b=[];
-    for(let k=0;k<nk;k++){const v0=vs+k*PP;for(let j=0;j<nj;j++){const u0=us+j*Q;
-      const pts=[T(u0,v0),T(u0+L,v0),T(u0+L,v0+D),T(u0,v0+D)];
-      const mids=[T(u0+L/2,v0),T(u0+L/2,v0+D)];
-      if(!pts.every(q=>ok(q,P,set))||!mids.every(q=>ok(q,P,set)))continue;
-      b.push({pts,ct:T(u0+L/2,v0+D/2)})}}
-    if(!best||b.length>best.length)best=b;
+  const PP=D+G;
+  const fits=(u0,v0)=>{const pts=[T(u0,v0),T(u0+L,v0),T(u0+L,v0+D),T(u0,v0+D)];const mids=[T(u0+L/2,v0),T(u0+L/2,v0+D),T(u0,v0+D/2),T(u0+L,v0+D/2)];return pts.every(q=>ok(q,P,set))&&mids.every(q=>ok(q,P,set))?pts:null};
+  // fill one row greedily along its length: place a house at the first spot that fits, then skip the end gap
+  const rowFill=v0=>{const out=[];let u=F.umin+set;while(u+L<=F.umax-set+0.01){const pts=fits(u,v0);if(pts){out.push({pts,u0:u,v0});u+=L+Gu}else u+=2}return out};
+  const cands=new Set(),step=Math.max(2,PP/40);
+  for(let o=0;o<PP;o+=step)cands.add(Math.round(o*10)/10);
+  for(const v of [F.vmin+set,F.vmax-set-D,(F.vmin+F.vmax)/2-D/2])cands.add(Math.round((((v-F.vmin)%PP)+PP)%PP*10)/10);
+  let best=[];
+  for(const o of cands){const b=[];for(let v0=F.vmin+o;v0+D<=F.vmax;v0+=PP)b.push(...rowFill(v0));if(b.length>best.length)best=b}
+  // social objects replace the houses nearest to their anchors
+  const amen=[],cellA=(L+Gu)*(D+G),cell=b=>[T(b.u0-Gu/2+4,b.v0-G/2+6),T(b.u0+L+Gu/2-4,b.v0-G/2+6),T(b.u0+L+Gu/2-4,b.v0+D+G/2-6),T(b.u0-Gu/2+4,b.v0+D+G/2-6)];
+  const bc=b=>b.ct0||(b.ct0=T(b.u0+L/2,b.v0+D/2));
+  const resOf=n=>n*L*D*p.floors*p.eff/M2_PER_PERSON;
+  const counts=r=>[state.social&&r>=SCH.min?Math.max(1,Math.round(r/SCH.per)):0,state.social&&r>=KG.min?Math.max(1,Math.round(r/KG.per)):0];
+  if(best.length>3){
+    // size schools and kindergartens for the people who will actually live here after houses give way to them
+    let [nS,nK]=counts(resOf(best.length));
+    for(let it=0;it<4;it++){
+      best.forEach(b=>{delete b.use});amen.length=0;
+      spreadAnchors(best,nS,bc).forEach(a=>{const g=grab(best,a,SCH.area,cellA,bc,'school');if(g.length)amen.push({key:'school',label:'Школа',cells:g.map(cell),ct:centroidOf(g.map(bc)),area:g.length*cellA})});
+      spreadAnchors(best,nK,bc).forEach(a=>{const g=grab(best,a,KG.area,cellA,bc,'kinder');if(g.length)amen.push({key:'kinder',label:'Детсад',cells:g.map(cell),ct:centroidOf(g.map(bc)),area:g.length*cellA})});
+      const [s2,k2]=counts(resOf(best.filter(b=>!b.use).length));
+      if(s2>=nS&&k2>=nK)break;nS=Math.min(nS,s2);nK=Math.min(nK,k2);
+    }
+    best=best.filter(b=>!b.use);
   }
-  const sh=H*0.55;
-  const shadows=best.map(bd=>hull(bd.pts.concat(bd.pts.map(q=>[q[0],q[1]-sh]))));
-  return{kind:'multi',blds:best,shadows,per,L,D,H,G,gWhy,th};
+  // surface parking along the north side of each house, playground in the gap south of it
+  const parkStrips=[],plays=[];let surf=0,playA=0;
+  const gapFree=G-10;
+  for(const b of best){
+    if(gapFree>=12){parkStrips.push([T(b.u0,b.v0-7.5),T(b.u0+L,b.v0-7.5),T(b.u0+L,b.v0-2.5),T(b.u0,b.v0-2.5)]);surf+=Math.floor(L/2.6)}
+    const pw=Math.min(L*0.7,40),pd=Math.min(gapFree-10,24);
+    if(pd>=8){const u=b.u0+(L-pw)/2,v=b.v0+D+5;const r=[T(u,v),T(u+pw,v),T(u+pw,v+pd),T(u,v+pd)];if(r.every(q=>pip(q[0],q[1],P))){plays.push(r);playA+=pw*pd}}
+  }
+  const nSec=Math.max(1,Math.round(L/18));
+  const blds=best.map(b=>({pts:b.pts,ct:T(b.u0+L/2,b.v0+D/2),secs:Array.from({length:nSec-1},(_,i)=>[T(b.u0+L*(i+1)/nSec,b.v0),T(b.u0+L*(i+1)/nSec,b.v0+D)])}));
+  const sh=Math.min(H*0.3,12);
+  const shadows=blds.map(bd=>bd.pts.map(q=>[q[0]+sh*0.35,q[1]-sh]));
+  return{kind:'multi',blds,shadows,per,L,D,H,G,gWhy,th,amen,parkStrips,plays,surf,playA};
 }
 
 /* ---------- stats, finance, cash flow ---------- */
 function stats(t,Lo,p,area){
   if(Lo.kind==='lots'){const n=Lo.lots.length;return{units:n,sale:n*p.house,built:n*Lo.lotArea,dens:n/(area/1e4)}}
   const n=Lo.blds.length,foot=n*Lo.L*Lo.D,gba=foot*p.floors,sale=gba*p.eff,apts=Math.round(sale/APT);
-  return{units:apts,bldgs:n,foot,gba,sale,built:foot,far:gba/area,cover:foot/area,park:Math.round(apts*PARK)};
+  const park=Math.round(apts*PARK),surf=Math.min(park,Lo.surf||0);
+  return{units:apts,bldgs:n,foot,gba,sale,built:foot,far:gba/area,cover:foot/area,park,parkSurf:surf,parkUnder:park-surf};
 }
 function finance(t,st,p,area,m){
-  const revenue=st.sale*p.price;
-  const build=(t==='multi'?st.gba:st.sale)*p.cost;
+  const pu=t==='multi'?(st.parkUnder||0):0;
+  const revenue=st.sale*p.price+pu*(p.parkPrice||0);
+  const build=(t==='multi'?st.gba:st.sale)*p.cost+pu*(p.parkCost||0);
   const infra=area*p.infra;const soft=SOFT*(build+infra);const total=build+infra+soft;
   const land=revenue*(1-m)-total;
   return{revenue,build,infra,soft,total,land,perSotka:land/(area/100),perHa:land/(area/1e4)};
 }
-function cashflow(t,f){
-  const tl=state.tl[t],B=Math.max(1,Math.round(tl.build)),S0=Math.max(0,Math.round(tl.start)),SN=Math.max(1,Math.round(tl.sales));
+function salesNeed(t,units){const pace=PACE[t][state.region==='tash'?0:1];return units>0?Math.ceil(units/pace):0}
+function cashflow(t,f,units){
+  const tl=state.tl[t],S0=Math.max(0,Math.round(tl.start)),need=salesNeed(t,units),SN=Math.min(600,Math.max(1,Math.round(tl.sales),need)),auto=need>Math.round(tl.sales);
+  const B=Math.max(1,Math.round(tl.build),auto?Math.round(SN*0.8):0);
   const n=Math.max(B,S0+SN)+1,cf=new Array(n).fill(0);
   const landCost=state.land.own?0:Math.max(0,state.land.price||0);
   cf[0]-=landCost;
@@ -701,9 +812,9 @@ function cashflow(t,f){
   const profit=cum,cost=f.total+landCost,roi=cost>0?profit/cost:0;
   const npv=r=>cf.reduce((s,v,i)=>s+v/Math.pow(1+r,i),0);
   let irr=null;
-  if(cf.some(v=>v<0)&&cf.some(v=>v>0)){let lo=-0.99,hi=1,a=npv(lo),b=npv(hi);
+  if(cf.some(v=>v<0)&&cf.some(v=>v>0)){let lo=-0.3,hi=1,a=npv(lo),b=npv(hi);
     if(a*b<0){for(let k=0;k<80;k++){const mid=(lo+hi)/2,v=npv(mid);if(v*a>0){lo=mid;a=v}else hi=mid}irr=Math.pow(1+(lo+hi)/2,12)-1}}
-  return{cf,cum:cumA,profit,roi,irr,peak:-minC,peakM:minM,pay,months:n-1,landCost};
+  return{cf,cum:cumA,profit,roi,irr,peak:-minC,peakM:minM,pay,months:n-1,landCost,salesM:SN,buildM:B,auto,need};
 }
 function evalType(t,P,area,a0){
   const p=state.p[t],list=t==='multi'?VARS.multi:VARS.lots;
@@ -719,17 +830,18 @@ function evalType(t,P,area,a0){
 function compute(){
   const P=state.poly;if(P.length<3)return;
   const area=Math.abs(polyArea(P)),a0=longestAngle(P);state.area=area;
+  MP=masterplan(P,a0);state.mp=MP;
   const cur=evalType(state.type,P,area,a0);
   state.variants=cur.vs;state.best=cur.bi;
   if(!state.manual||state.sel==null||state.sel>=state.variants.length)state.sel=cur.bi<0?0:cur.bi;
-  for(const v of state.variants)v.cash=cashflow(state.type,v.f);
+  for(const v of state.variants)v.cash=cashflow(state.type,v.f,v.st.units);
   if(!state.dragging){
     const sv=state.variants[state.sel];if(sv)state.lu=landuse(sv.L,P,area);
     state.compare={};
     for(const t of TYPES){
       const r=t===state.type?cur:evalType(t,P,area,a0);
       const v=r.bi<0?null:r.vs[r.bi];
-      state.compare[t]=v?{v,cash:cashflow(t,v.f)}:null;
+      state.compare[t]=v?{v,cash:cashflow(t,v.f,v.st.units)}:null;
     }
   }
 }
@@ -793,14 +905,28 @@ function drawSchema(){
     for(const l of Lo.lines)o.push(`<line x1="${l[0][0].toFixed(1)}" y1="${l[0][1].toFixed(1)}" x2="${l[1][0].toFixed(1)}" y2="${l[1][1].toFixed(1)}" stroke="var(--roadline)" stroke-width="${Math.max(0.35,Lo.w*0.04)}" stroke-dasharray="3 3"/>`);
   }
   o.push('</g>');
+  if(MP){for(const r of MP.roads)o.push(`<polygon points="${pts(r)}" fill="#C9CFD8"/>`);
+    for(const z of MP.zones){const c=z.kind==='park'?'#CFE6C0':z.kind==='school'?'#FFF0C2':'#FDE3E3',st=z.kind==='park'?'#8DBB78':z.kind==='school'?'#D9A93A':'#E29A9A';const b=bbox(z.poly);
+      o.push(`<polygon points="${pts(z.poly)}" fill="${c}" stroke="${st}" stroke-width="1.2" vector-effect="non-scaling-stroke"/>`);
+      if(z.kind==='park')o.push(`<polygon points="${pts(z.poly)}" fill="url(#trees)"/>`);
+      o.push(`<text x="${(b[0]+b[2])/2}" y="${(b[1]+b[3])/2}" font-size="${12*k}" font-weight="600" font-family="Golos Text, sans-serif" fill="#344054" text-anchor="middle" dominant-baseline="central" stroke="#fff" stroke-width="${3*k}" paint-order="stroke">${z.label}</text>`)}}
   if(Lo.kind==='lots'){
     for(const l of Lo.lots)o.push(`<polygon points="${pts(l.pts)}" fill="${l.par?'var(--lot2)':'var(--lot1)'}" stroke="var(--lotline)" stroke-width="0.35"/>`);
     for(const hs of Lo.houses)o.push(`<polygon points="${pts(hs)}" fill="var(--house)"/>`);
   }else{
     for(const s of Lo.shadows)o.push(`<polygon points="${pts(s)}" fill="var(--shadow)"/>`);
     const deg=Lo.th*180/Math.PI;let dg=((deg%180)+180)%180;if(dg>90)dg-=180;
-    for(const b of Lo.blds){o.push(`<polygon points="${pts(b.pts)}" fill="var(--bldg)" stroke="var(--bldgtop)" stroke-width="0.8"/>`);
-      if(Lo.L>=40&&k<2.2)o.push(`<text x="${b.ct[0].toFixed(1)}" y="${b.ct[1].toFixed(1)}" transform="rotate(${dg.toFixed(1)} ${b.ct[0].toFixed(1)} ${b.ct[1].toFixed(1)})" font-size="6.5" font-family="JetBrains Mono, monospace" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">${state.p.multi.floors} эт.</text>`)}
+    for(const b of Lo.blds){o.push(`<polygon points="${pts(b.pts)}" fill="var(--bldg)" stroke="var(--bldgtop)" stroke-width="1.4" vector-effect="non-scaling-stroke"/>`);
+      for(const l of b.secs)o.push(`<line x1="${l[0][0].toFixed(1)}" y1="${l[0][1].toFixed(1)}" x2="${l[1][0].toFixed(1)}" y2="${l[1][1].toFixed(1)}" stroke="var(--bldgtop)" stroke-width=".8" opacity=".45" vector-effect="non-scaling-stroke"/>`);
+      if(k<2.2)o.push(`<text x="${b.ct[0].toFixed(1)}" y="${b.ct[1].toFixed(1)}" transform="rotate(${dg.toFixed(1)} ${b.ct[0].toFixed(1)} ${b.ct[1].toFixed(1)})" font-size="${Math.min(7,10*k)}" font-weight="600" font-family="Golos Text, sans-serif" fill="var(--bldgtop)" text-anchor="middle" dominant-baseline="central">${state.p.multi.floors} эт.</text>`)}
+  }
+  if(Lo.kind==='multi'){
+    for(const r of Lo.parkStrips||[]){o.push(`<polygon points="${pts(r)}" fill="${AM.parking.c}"/>`)}
+    for(const r of Lo.plays||[])o.push(`<polygon points="${pts(r)}" fill="${AM.play.c}" stroke="#4E9A4B" stroke-width=".6" vector-effect="non-scaling-stroke"/>`);
+  }
+  for(const a of Lo.amen||[]){
+    for(const c0 of a.cells){const c=Lo.kind==='multi'?clipConvex(P,c0):c0;if(c.length>2)o.push(`<polygon points="${pts(c)}" fill="${AM[a.key].c}"/>`)}
+    if(Math.sqrt(a.area)/k>55)o.push(`<text x="${a.ct[0].toFixed(1)}" y="${a.ct[1].toFixed(1)}" font-size="${(12*k).toFixed(2)}" font-weight="600" font-family="Golos Text, sans-serif" fill="#1D2939" text-anchor="middle" dominant-baseline="central" stroke="#fff" stroke-width="${(3*k).toFixed(2)}" paint-order="stroke">${a.label}</text>`);
   }
   o.push(`<polygon points="${pts(P)}" fill="none" stroke="var(--cad)" stroke-width="2" vector-effect="non-scaling-stroke"/>`);
   if(state.calib){const i=state.calibSide%P.length,a=P[i],b=P[(i+1)%P.length];
@@ -847,6 +973,7 @@ async function ensureMap(){
   renderer=L.canvas({padding:0.4});
   planLayer=L.layerGroup().addTo(lmap);drawLayer=L.layerGroup().addTo(lmap);vtxLayer=L.layerGroup().addTo(lmap);
   lmap.on('click',onMapClick);
+  const zc=()=>el.classList.toggle('lowzoom',lmap.getZoom()<16);lmap.on('zoomend',zc);zc();
   lmap.on('dblclick',()=>{if(state.mode==='geotrace'&&state.gtrace.length>=3)finishGeoTrace()});
   return lmap;
 }
@@ -894,8 +1021,22 @@ function drawGeo(){
     for(const l of Lo.lots)poly(l.pts,{fillColor:l.par?C.lot2:C.lot1,stroke:true,color:C.line,weight:.6});
     for(const h of Lo.houses)poly(h,{fillColor:C.house});
   }else{
-    for(const s of Lo.shadows)poly(s,{fillColor:'#000',fillOpacity:.22});
-    for(const b of Lo.blds)poly(b.pts,{fillColor:C.bldg,stroke:true,color:C.top,weight:1});
+    for(const s of Lo.shadows)poly(s,{fillColor:'#101828',fillOpacity:.18});
+    const deg=Lo.th*180/Math.PI;let dg=((deg%180)+180)%180;if(dg>90)dg-=180;
+    for(const b of Lo.blds){poly(b.pts,{fillColor:'#F4F6FA',stroke:true,color:'#2B3A55',weight:1.6});
+      for(const l of b.secs)L.polyline(l.map(toLL),{renderer:R,interactive:false,color:'#2B3A55',weight:1,opacity:.45}).addTo(planLayer);
+      L.marker(toLL(b.ct),{interactive:false,icon:L.divIcon({className:'',html:`<span class="blbl" style="transform:translate(-50%,-50%) rotate(${dg.toFixed(1)}deg)">${state.p.multi.floors} эт.</span>`,iconSize:[0,0]})}).addTo(planLayer)}
+  }
+  if(MP){for(const r of MP.roads)poly(r,{fillColor:'#C9CFD8'});
+    for(const z of MP.zones){poly(z.poly,{fillColor:z.kind==='park'?'#CFE6C0':z.kind==='school'?'#FFF0C2':'#FDE3E3',stroke:true,color:z.kind==='park'?'#8DBB78':z.kind==='school'?'#D9A93A':'#E29A9A',weight:1.5});
+      const b=bbox(z.poly);L.marker(toLL([(b[0]+b[2])/2,(b[1]+b[3])/2]),{interactive:false,icon:L.divIcon({className:'',html:`<span class="blbl" style="transform:translate(-50%,-50%);background:#fff;padding:2px 6px;border-radius:6px">${z.label}</span>`,iconSize:[0,0]})}).addTo(planLayer)}}
+  if(Lo.kind==='multi'){
+    for(const r of Lo.parkStrips||[])poly(r,{fillColor:AM.parking.c,fillOpacity:.95});
+    for(const r of Lo.plays||[])poly(r,{fillColor:AM.play.c,stroke:true,color:'#4E9A4B',weight:.8});
+  }
+  for(const a of Lo.amen||[]){
+    for(const c0 of a.cells){const c=Lo.kind==='multi'?clipConvex(P,c0):c0;if(c.length>2)poly(c,{fillColor:AM[a.key].c,fillOpacity:.95})}
+    L.marker(toLL(a.ct),{interactive:false,icon:L.divIcon({className:'',html:`<span class="alab">${a.label}</span>`,iconSize:[0,0]})}).addTo(planLayer);
   }
   L.polygon(P.map(toLL),{renderer:R,interactive:false,fill:false,color:C.cad,weight:3}).addTo(planLayer);
   for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length],len=Math.hypot(b[0]-a[0],b[1]-a[1]);
@@ -1048,8 +1189,9 @@ function factors(){
     F.push({n:'Экономика',st:bc.cash.profit<=0?'bad':mg<state.margin/100?'warn':'ok',v:`${money(bc.cash.profit)}`,note:bc.cash.profit<=0?'Ни один вариант не приносит прибыли при текущих ценах и затратах.':mg<state.margin/100?`Лучший вариант (${TYPE_SHORT[bestT].toLowerCase()}) даёт маржу ${pct(mg)} — ниже целевой ${state.margin}%.`:`Лучший вариант — ${TYPE_SHORT[bestT].toLowerCase()}, маржа ${pct(mg)}, IRR ${irrTxt(bc.cash.irr)}.`,src:'Расчёт',crit:bc.cash.profit<=0})}
   // pace for selected type
   const v=state.variants[state.sel];
-  if(v&&v.st.units){const pace=v.st.units/Math.max(1,state.tl[t].sales),lim=PACE[t][isT?0:1];
-    F.push({n:'Темп продаж',st:pace>lim?'warn':'ok',v:`${nf1.format(pace)} в мес.`,note:pace>lim?`Для «${TYPE_SHORT[t].toLowerCase()}» в этом регионе реалистично около ${lim} в месяц. Увеличьте срок продаж в «Сроках» — прибыль и IRR снизятся.`:`В пределах реалистичного (до ${lim} в месяц по допущению).`,src:'Расчёт'})}
+  if(v&&v.st.units){const lim=PACE[t][isT?0:1],need=salesNeed(t,v.st.units),yrs=need/12;
+    F.push({n:'Темп продаж',st:need>120?'bad':need>state.tl[t].sales?'warn':'ok',v:`${nf.format(v.st.units)} за ${yrs>=2?nf1.format(yrs)+' г.':need+' мес.'}`,note:need>120?`Рынок поглощает около ${lim} в месяц — продажи займут ${nf1.format(yrs)} лет. Для одного проекта это слишком много: делите на очереди, берите часть участка или другой тип застройки.`:need>state.tl[t].sales?`При темпе около ${lim} в месяц продажи займут ${need} мес. — срок и IRR в расчёте уже скорректированы.`:`В пределах реалистичного темпа (до ${lim} в месяц).`,src:'Расчёт',crit:need>120})}
+  if(state.mp&&state.mp.streets)F.push({n:'Генплан',st:'ok',v:`${state.mp.streets} ул.`,note:'Большой участок поделён на кварталы главными улицами шириной 22 м; школы, детсады, парк и центр размещены по числу жителей.',src:'Расчёт'});
   if(t==='multi'&&v&&v.st.units&&state.lu){const res=v.st.sale/M2_PER_PERSON,need=GREEN_MIN*state.area+res*PLAY_PER_PERSON,have=state.lu.green;
     F.push({n:'Двор, озеленение, площадки',st:have>=need?'ok':'warn',v:`${nf.format(have/100)} из ${nf.format(need/100)} сот.`,note:have>=need?'По нормам двора и площадок вариант проходит.':'Свободной территории меньше нормы (озеленение не меньше 25% + площадки 3,1 м² на жителя). Уменьшите этажность или число домов.',src:'Нормы'})}
   // site
@@ -1071,7 +1213,8 @@ function factors(){
       if(d.rail<=100)z.push(`железная дорога в ${dm(d.rail)} — шум и санитарный разрыв`);
       if(d.industrial<=300)z.push(`промзона в ${dm(d.industrial)}`);
       if(d.cemetery<=300)z.push(`кладбище в ${dm(d.cemetery)} — санитарная зона`);
-      if(d.airport<=5000)z.push(`аэродром в ${dm(d.airport)} — ограничения по высоте`);
+      if(d.airport<=5000&&d.airport>1000)z.push(`аэродром в ${dm(d.airport)} — ограничения по высоте`);
+      if(d.airport<=1000)F.push({n:'Аэропорт',st:'bad',v:dm(d.airport),note:'Участок вплотную к аэродрому: шум, ограничения по высоте и санитарные зоны. Жилую застройку здесь, скорее всего, не согласуют.',src:'Карта',crit:true});
       state.site.airport=d.airport<=5000;
       F.push({n:'Охранные зоны и соседство',st:z.length?'warn':'ok',v:z.length?`${z.length}`:'нет',note:z.length?z.join('; ')+'.':'ЛЭП, рек, железной дороги, промзон, кладбищ и аэродромов вплотную нет.',src:'Карта'});
     }else F.push({n:'Окружение',st:'unk',v:'—',note:'Данные карты сейчас недоступны (в закрытом предпросмотре или нет связи). На вашем домене проверка работает.',src:'Карта'});
@@ -1135,15 +1278,18 @@ function buildControls(){
   $('#plan-params').innerHTML='<h2>Планировка</h2>'+PLAN[t].map(([k,l,mi,ma,st,u])=>field(`p-${t}-${k}`,l,mi,ma,st,u,p[k],t!=='multi'&&k==='lotD')).join('');
   $('#fin-params').innerHTML='<h2>Продажи и затраты</h2>'+FIN[t].map(([k,l,u])=>`<div class="field"><label for="f-${t}-${k}">${l}</label><div class="num"><input type="number" inputmode="decimal" id="f-${t}-${k}" value="${p[k]}" step="${k==='eff'?0.01:1}" min="0"><span>${u}</span></div></div>`).join('');
   $('#timeline').innerHTML=[['build','Стройка длится'],['start','Продажи начинаются с'],['sales','Продажи длятся']].map(([k,l])=>`<div><label for="tl-${t}-${k}">${l}</label><div class="num"><input type="number" inputmode="numeric" id="tl-${t}-${k}" min="${k==='start'?0:1}" max="120" value="${tl[k]}"><span>мес.</span></div></div>`).join('');
+  $('#plan-params').insertAdjacentHTML('beforeend',`<div class="field"><label>Школы и детсады</label><div class="seg two" role="group" aria-label="Школы и детсады"><button type="button" data-social="1" aria-pressed="${state.social}">На участке</button><button type="button" data-social="0" aria-pressed="${!state.social}">Не нужны</button></div><small>«Не нужны» — если рядом хватает школ и садов или их строит город.</small></div>`);
+  document.querySelectorAll('[data-social]').forEach(b=>b.addEventListener('click',()=>{state.social=b.dataset.social==='1';buildControls();update()}));
   if(t==='multi'){$('#plan-params').insertAdjacentHTML('beforeend',`<div class="seg two" role="group" aria-label="Сейсмичность площадки"><button type="button" data-seis="1" aria-pressed="${state.seis}">8+ баллов</button><button type="button" data-seis="0" aria-pressed="${!state.seis}">до 7 баллов</button></div><small class="note">Сейсмичность площадки. При 8+ баллах разрыв между длинными сторонами — не меньше 2 высот дома (ШНК 2.07.01-03*, п. 21.1). По умолчанию задана по региону — уточните по карте сейсмического районирования.</small>`);
     document.querySelectorAll('[data-seis]').forEach(b=>b.addEventListener('click',()=>{state.seis=b.dataset.seis==='1';buildControls();update()}))}
   PLAN[t].forEach(([k,,,,st,u])=>{const el=$(`#p-${t}-${k}`);el.addEventListener('input',()=>{p[k]=parseFloat(el.value);$(`#p-${t}-${k}-out`).textContent=fmtVal(p[k],st)+' '+u;update()})});
   FIN[t].forEach(([k])=>{const el=$(`#f-${t}-${k}`);el.addEventListener('input',()=>{const v=parseFloat(el.value);if(!isNaN(v)){p[k]=v;update()}})});
   ['build','start','sales'].forEach(k=>{const el=$(`#tl-${t}-${k}`);el.addEventListener('input',()=>{const v=parseFloat(el.value);if(!isNaN(v)&&v>=0){tl[k]=v;update()}})});
   const lg=t==='multi'
-    ?[['var(--bldg)','Жилые дома'],['var(--shadow)','Тень (инсоляция)'],['var(--road)','Проезды'],['var(--green)','Двор и озеленение']]
+    ?[['var(--bldg);border:1.5px solid var(--bldgtop)','Жилые дома'],['var(--shadow)','Тень (инсоляция)'],['var(--road)','Проезды'],['var(--green)','Двор и озеленение']]
     :[['var(--lot1)','Участки'],['var(--house)','Дома'],['var(--road)','Улицы'],['var(--green)','Озеленение']];
-  $('#legend').innerHTML=lg.map(([c,n])=>`<span><i style="background:${c}"></i>${n}</span>`).join('')+`<span><i style="background:transparent;border:2px solid var(--cad)"></i>Граница участка</span>`;
+  const lg2=t==='multi'?[[AM.parking.c,'Парковка'],[AM.play.c,'Площадки'],[AM.kinder.c,'Детсад'],[AM.school.c,'Школа']]:[[AM.park.c,'Парк и площадки'],[AM.center.c,'Магазины и парковка'],[AM.kinder.c,'Детсад'],[AM.school.c,'Школа']];
+  $('#legend').innerHTML=lg.concat(lg2).map(([c,n])=>`<span><i style="background:${c}"></i>${n}</span>`).join('')+`<span><i style="background:transparent;border:2px solid var(--cad)"></i>Граница участка</span>`;
   renderAssume();
 }
 function renderAssume(){
@@ -1151,7 +1297,7 @@ function renderAssume(){
   $('#assume').innerHTML=`<span><b>Допущения:</b> ${t==='multi'
     ?`глубина секции 16 м, высота этажа 3,3 м, разрыв между домами по торцам 20 м, отступ от границы 14 м, средняя квартира ${APT} м², парковка ${nf1.format(PARK)} места на квартиру, предельный КИТ ${nf1.format(FAR_MAX)}.`
     :`улицы в красных линиях без тротуаров, внешний проезд по периметру, дом стоит с отступом от улицы.`} Прочие затраты (проект, согласования, продажи) — ${SOFT*100}% от стройки и сетей. Сети и дороги оплачиваются в первые 40% срока стройки, стройка — равномерно, выручка — равномерно в период продаж. Нормы ШНК в бете упрощены: перед покупкой участка вариант проверяет архитектор.</span>
-  <span><b>Нормы в расчёте</b> (ШНК 2.07.01-03* с изменениями 2020 г.; с 24.06.2024 действует ШНК 2.07.01-23 — значения нужно сверить с новой редакцией): разрыв между длинными сторонами — 15 м для 2–3 этажей, до 30 м для 4–5, до 45 м для 9+; при сейсмичности 8+ баллов — не меньше 2 высот дома; торцы с окнами — 20 м; инсоляция жилых комнат — 2,5 ч в день; противопожарный проезд — 5–8 м от стены; озеленение двора — не меньше 25%; площадки — 3,1 м² на жителя при норме 20 м² жилья на человека; у частного дома — 3 м от стены до границы участка. Норматив парковок в открытых источниках не найден, 0,7 места на квартиру — допущение. <a href="https://lex.uz/ru/docs/4444165?ONDATE=28.12.2009" target="_blank" rel="noopener">ШНК 2.07.01-03 на Lex.uz</a>, <a href="https://mc.uz/uploads/mcuz_9972494552682.pdf" target="_blank" rel="noopener">изменение №4 (Минстрой, 2020)</a>.</span>
+  <span><b>Нормы в расчёте</b> (ШНК 2.07.01-03* с изменениями 2020 г.; с 24.06.2024 действует ШНК 2.07.01-23 — значения нужно сверить с новой редакцией): разрыв между длинными сторонами — 15 м для 2–3 этажей, до 30 м для 4–5, до 45 м для 9+; при сейсмичности 8+ баллов — не меньше 2 высот дома; торцы с окнами — 20 м; инсоляция жилых комнат — 2,5 ч в день; противопожарный проезд — 5–8 м от стены; озеленение двора — не меньше 25%; площадки — 3,1 м² на жителя при норме 20 м² жилья на человека; у частного дома — 3 м от стены до границы участка. Норматив парковок в открытых источниках не найден, 0,7 места на квартиру — допущение; недостающие места уходят в подземный паркинг (стройка около $8 тыс. за место, продажа по региону — ориентир Urbo.uz). Соцобъекты — допущения до сверки с ШНК 2.07.01-23: детсад на 0,5 га на каждые 2 000 жителей, школа на 2 га на каждые 7 000, в поселке 4,5 человека на дом, парк и площадки 3 м² на жителя плюс 4% территории, общественный центр 1 м² на жителя плюс гостевая парковка на каждый пятый дом. Затраты на строительство школ и детсадов в расчёт не включены. <a href="https://lex.uz/ru/docs/4444165?ONDATE=28.12.2009" target="_blank" rel="noopener">ШНК 2.07.01-03 на Lex.uz</a>, <a href="https://mc.uz/uploads/mcuz_9972494552682.pdf" target="_blank" rel="noopener">изменение №4 (Минстрой, 2020)</a>.</span>
   <span><b>Цены по умолчанию (${r[1]}):</b> ${r[4]?'опираются на опубликованные данные о ценах жилья':'оценка по соседним регионам, уточните у местных застройщиков'}. Стоимость стройки — ориентир, замените на свою. Источники: <a href="https://kun.uz/ru/news/2026/04/07/skolko-stoyat-kvartiry-v-tashkente-v-2026-godu" target="_blank" rel="noopener">Kun.uz, новостройки Ташкента 2026</a>, <a href="https://www.spot.uz/ru/2026/03/17/real-estate-feb26/" target="_blank" rel="noopener">Spot.uz, цены жилья по регионам, февраль 2026</a>.</span>
   <span>Темп продаж для проверки (допущение, в месяц): коттеджи 6 в Ташкенте и 3 в регионах, таунхаусы 10 и 5, квартиры 40 и 15. Загруженные файлы обрабатываются в браузере и никуда не отправляются. Спутниковые снимки © Esri; окружение участка © участники OpenStreetMap (данные могут быть неполными); высоты — Open-Meteo.</span>`;
 }
@@ -1197,16 +1343,18 @@ function renderResults(){
   if(t==='multi'){
     const farChip=st.far>FAR_MAX?`<span class="chip bad">выше ${nf1.format(FAR_MAX)}</span>`:st.far>FAR_MAX*0.85?`<span class="chip warn">близко к пределу</span>`:`<span class="chip ok">в норме</span>`;
     const res=Math.round(st.sale/M2_PER_PERSON);
-    rows=[['Жилых домов',nf.format(st.bldgs)],['Разрыв между рядами',`${nf.format(v.L.G)} м <span class="chip warn">${v.L.gWhy}</span>`],['Общая площадь',nf.format(st.gba)+' м²'],['Продаваемая площадь',nf.format(st.sale)+' м²'],['Квартир',nf.format(st.units)],['Жителей ≈',nf.format(res)],['Плотность (КИТ)',nf2.format(st.far)+farChip],['Процент застройки',nf.format(st.cover*100)+'%'],['Машино-мест (допущение)',nf.format(st.park)]];
+    rows=[['Жилых домов',nf.format(st.bldgs)],['Разрыв между рядами',`${nf.format(v.L.G)} м <span class="chip warn">${v.L.gWhy}</span>`],['Общая площадь',nf.format(st.gba)+' м²'],['Продаваемая площадь',nf.format(st.sale)+' м²'],['Квартир',nf.format(st.units)],['Жителей ≈',nf.format(res)],['Плотность (КИТ)',nf2.format(st.far)+farChip],['Процент застройки',nf.format(st.cover*100)+'%'],['Машино-мест (допущение)',nf.format(st.park)],['  наземных / подземных',`${nf.format(st.parkSurf)} / ${nf.format(st.parkUnder)}`]];
+    {const am=amenSummary(v.L);const tx=[am.school?`школа ${am.school.n}`:'',am.kinder?`детсад ${am.kinder.n}`:''].filter(Boolean).join(', ');rows.splice(2,0,['Соцобъекты',tx||'не требуются по числу жителей'])}
     if(state.lu){const need=GREEN_MIN*area+res*PLAY_PER_PERSON,have=state.lu.green;rows.push(['Двор: есть / нужно',`${nf.format(have/100)} / ${nf.format(need/100)} сот.<span class="chip ${have>=need?'ok':'bad'}">${have>=need?'хватает':'мало'}</span>`])}
   }else{
-    rows=[[t==='town'?'Домов':'Участков с домами',nf.format(st.units)],['Размер участка',nf1.format(v.L.lotArea/100)+' сот.'],['Продаваемая площадь',nf.format(st.sale)+' м²'],['Плотность',nf1.format(st.dens)+' на га']];
+    const am=amenSummary(v.L),amTxt=[am.school?`школа ${am.school.n}`:'',am.kinder?`детсад ${am.kinder.n}`:'',am.park?`парк ${nf1.format(am.park.area/1e4)} га`:'',am.center?`центр ${nf1.format(am.center.area/1e4)} га`:''].filter(Boolean).join(', ');
+    rows=[[t==='town'?'Домов':'Участков с домами',nf.format(st.units)],['Жителей ≈',nf.format(st.units*HH)],['Инфраструктура',amTxt||'участок маленький — не нужна'],['Размер участка',nf1.format(v.L.lotArea/100)+' сот.'],['Продаваемая площадь',nf.format(st.sale)+' м²'],['Плотность',nf1.format(st.dens)+' на га']];
   }
   $('#tep').innerHTML=rows.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('');
   if(!state.dragging){
     const lu=state.lu||landuse(v.L,state.poly,area);const pc=x=>area?x/area*100:0;
     const bn=t==='multi'?'Застройка':'Участки';const rn=t==='multi'?'Проезды':'Улицы';
-    const segs=[[lu.built,t==='multi'?'var(--bldg)':'var(--lot1)',bn],[lu.road,'var(--road)',rn],[lu.green,'var(--green)','Озеленение']];
+    const segs=[[lu.built,t==='multi'?'var(--bldgtop)':'var(--lot1)',bn],[lu.road,'var(--road)',rn],[lu.green,'var(--green)','Озеленение']];
     $('#usebar').innerHTML=segs.map(([a,c])=>`<i style="width:${pc(a).toFixed(1)}%;background:${c}"></i>`).join('');
     $('#uselegend').innerHTML=segs.map(([a,c,n])=>`<span><em style="background:${c}"></em>${n} ${nf.format(pc(a))}%</span>`).join('');
   }
@@ -1216,7 +1364,8 @@ function renderResults(){
   if(!state.land.own)finRows.push(['Покупка участка',money(c.landCost)]);
   finRows.push(['Пик вложений',money(c.peak)+` <span class="chip warn">мес. ${c.peakM}</span>`]);
   finRows.push(['Окупаемость',c.pay==null?'не окупается':`${c.pay} мес.`]);
-  finRows.push(['Срок проекта',`${c.months} мес.`]);
+  finRows.push(['Продажи',`${c.salesM} мес.${c.auto?' <span class="chip warn">по темпу рынка</span>':''}`]);
+  finRows.push(['Срок проекта',`${c.months} мес.${c.months>=60?' ('+nf1.format(c.months/12)+' г.)':''}`]);
   $('#fin').innerHTML=finRows.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('');
   $('#cashchart').innerHTML=cashChart(c);
   $('#cashcap').textContent=`Накопленные деньги проекта по месяцам. Больше всего вложений нужно к ${c.peakM}-му месяцу: ${money(c.peak)} собственных денег или кредита.${state.land.own?' Земля уже ваша, её стоимость не учтена.':''}`;
