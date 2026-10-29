@@ -871,6 +871,54 @@ const VARS={
   lots:[{id:'А',label:'Вдоль длинной стороны',da:0},{id:'Б',label:'Поперёк участка',da:90},{id:'В',label:'Длинные кварталы',da:0,blockMul:1.6},{id:'Г',label:'Под углом 45°',da:45}],
   multi:[{id:'А',label:'Вдоль длинной стороны',da:0},{id:'Б',label:'Поперёк участка',da:90},{id:'В',label:'Короткие дома',da:0,lenMul:0.6},{id:'Г',label:'Под углом 45°',da:45}]
 };
+VARS.tall=VARS.multi.concat([{id:'Д',label:'По солнцу: окна на восток и запад',abs:90},{id:'Е',label:'По солнцу: окна на юг и север',abs:0}]);
+/* insolation: direct sun hours on each facade and floor on the norm date, shading by the other buildings of the project.
+   date and hours are settings (assumption: verify with the current ШНК); surroundings outside the plot are not counted */
+const INS_DAYS=[[53,'22 февраля'],[81,'22 марта'],[112,'22 апреля']],INS_LOSS=0.6; // flats without sun sell at 60% (cheap layouts / non-residential use)
+function rayHit(o,s,poly){let t0=0,t1=Infinity,ar=0;const n=poly.length;
+  for(let i=0;i<n;i++){const a=poly[i],b=poly[(i+1)%n];ar+=a[0]*b[1]-b[0]*a[1]}const sg=ar>0?1:-1;
+  for(let i=0;i<n;i++){const a=poly[i],b=poly[(i+1)%n],ex=b[0]-a[0],ey=b[1]-a[1];
+    const num=(ex*(o[1]-a[1])-ey*(o[0]-a[0]))*sg,den=(ex*s[1]-ey*s[0])*sg;
+    if(Math.abs(den)<1e-12){if(num<0)return null;continue}
+    const t=-num/den;if(den>0)t0=Math.max(t0,t);else t1=Math.min(t1,t);if(t0>t1)return null}
+  return t1>0?t0:null}
+function insol(Lo){
+  if(!Lo||Lo.kind!=='multi'||!Lo.blds.length)return null;
+  const fh=Lo.H/Math.max(1,Lo.floors),need=state.ins.need*60,day=state.ins.day,step=10;
+  const obs=Lo.blds.map(b=>({pts:b.pts,h:(b.fl||Lo.floors)*fh,c:b.ct,b}));
+  for(const pd of Lo.podiums||[])obs.push({pts:pd,h:8,c:centroidOf(pd),b:null});
+  for(const o of obs)o.r=Math.max(...o.pts.map(q=>Math.hypot(q[0]-o.c[0],q[1]-o.c[1])));
+  const suns=[];for(let m=240;m<=1200;m+=step){const sd=sunDir(day,m/60);if(sd.el<5*Math.PI/180)continue;suns.push([Math.sin(sd.az),-Math.cos(sd.az),Math.tan(sd.el)])}
+  const maxH=Math.max(...obs.map(o=>o.h));let tot=0,fail=0,one=0;
+  const faceRun=(b,i,fl)=>{const P=b.pts,a=P[i],c=P[(i+1)%4],len=Math.hypot(c[0]-a[0],c[1]-a[1]);
+    let nx=(c[1]-a[1])/len,ny=-(c[0]-a[0])/len;if(((a[0]+c[0])/2-b.ct[0])*nx+((a[1]+c[1])/2-b.ct[1])*ny<0){nx=-nx;ny=-ny}
+    const n=Math.max(2,Math.round(len/7)),sm=[];
+    for(let j=0;j<n;j++){const f=(j+0.5)/n,q=[a[0]+(c[0]-a[0])*f+nx*0.3,a[1]+(c[1]-a[1])*f+ny*0.3],diff=new Array(fl+1).fill(0);
+      for(const [sx,sy,tn] of suns){if(sx*nx+sy*ny<0.17)continue;let Hb=-1;
+        for(const o of obs){if(o.b===b)continue;const dx=o.c[0]-q[0],dy=o.c[1]-q[1];const pr=dx*sx+dy*sy;if(pr<-o.r)continue;if(o.h-Math.max(0,pr-o.r)*tn<=Hb)continue;
+          const t=rayHit(q,[sx,sy],o.pts);if(t!=null){const hb=o.h-t*tn;if(hb>Hb)Hb=hb}}
+        const f0=Hb<1.2?0:Math.min(fl,Math.floor((Hb-1.2)/fh)+1);diff[f0]+=step}
+      let acc=0;const ok=[];for(let k=0;k<fl;k++){acc+=diff[k];ok.push(acc>=need)}sm.push({q,ok})}
+    return{a,c,nx,ny,len,sm}};
+  for(const b of Lo.blds){if(b.fn&&b.fn!=='res'){b.ins=null;continue}
+    const fl=b.fl||Lo.floors,tower=Lo.tower||Math.abs(Lo.L-Lo.D)<1;
+    const F=(tower?[0,1,2,3]:[0,2]).map(i=>faceRun(b,i,fl));
+    for(const f of F)for(const x of f.sm){x.red=0;x.amb=0}
+    if(!tower){const [A,B]=F,n=Math.min(A.sm.length,B.sm.length);
+      for(let j=0;j<n;j++){const x=A.sm[j],y=B.sm[n-1-j];for(let k=0;k<fl;k++){tot++;const a=x.ok[k],c=y.ok[k];
+        if(a&&c)continue;if(a||c){one++;(a?y:x).amb++}else{fail++;x.red++;y.red++}}}}
+    else{// the darkest side of a tower gets the stair and lift core, not flats
+      const score=f=>f.sm.reduce((a,x)=>a+x.ok.filter(Boolean).length,0)/f.sm.length;let wi=0;F.forEach((f,i)=>{if(score(f)<score(F[wi]))wi=i});
+      for(let i=0;i<4;i++){const f=F[i],pv=F[(i+3)%4],nx=F[(i+1)%4],n=f.sm.length;
+      for(let j=0;j<n;j++){const x=f.sm[j];if(i===wi&&j>0&&j<n-1){x.core=true;continue}for(let k=0;k<fl;k++){tot++;let ok=x.ok[k];
+        if(!ok&&j===0)ok=pv.sm[pv.sm.length-1].ok[k];if(!ok&&j===n-1)ok=nx.sm[0].ok[k];
+        if(!ok){fail++;x.red++}}}}}
+    b.ins=F}
+  return tot?{fail:fail/tot,one:one/tot,tot,need:state.ins.need,day}:null}
+function insSegs(Lo,off){const out=[];for(const b of Lo.blds||[])for(const f of b.ins||[]){const n=f.sm.length;
+  f.sm.forEach((x,j)=>{if(!x.red&&!x.amb)return;const t0=j/n,t1=(j+1)/n,P=t=>[f.a[0]+(f.c[0]-f.a[0])*t+f.nx*off,f.a[1]+(f.c[1]-f.a[1])*t+f.ny*off];
+    out.push({p0:P(t0+0.04),p1:P(t1-0.04),red:x.red,amb:x.amb,fl:b.fl||Lo.floors,nx:f.nx,ny:f.ny})})}return out}
+const insDay=()=>(INS_DAYS.find(d=>d[0]===state.ins.day)||INS_DAYS[1])[1];
 const RES=['cottage','town','multi','mixed'],NONRES=['retail','logistics'],TYPES=RES.concat(NONRES);
 const isTall=t=>t==='multi'||t==='mixed';
 const isRes=t=>RES.includes(t);
@@ -883,7 +931,7 @@ const UNIT_S={cottage:'д.',town:'д.',multi:'кв.',mixed:'кв.',retail:'м²'
 const state={fin:{rate:0.16,eq:0.30,tax:0.15},cls:'comfort',carfree:false,type:'cottage',region:'tash',poly:PRESETS.trap.map(p=>p.slice()),p:JSON.parse(JSON.stringify(DEF)),tl:JSON.parse(JSON.stringify(TL)),
   margin:20,land:{own:true,price:1500000},sel:null,manual:false,vb:null,variants:[],compare:{},
   mode:'edit',trace:[],gtrace:[],under:null,calib:false,calibSide:0,needScale:false,source:'Пример',
-  form:'auto',floorsAuto:true,tech:'mono',parkKind:'under',geo:null,view:'schema',dragging:false,src:null,
+  form:'auto',floorsAuto:true,tech:'mono',parkKind:'under',ins:{day:81,need:2.5},geo:null,view:'schema',dragging:false,src:null,
   social:'auto',checks:{zone:'?',title:'?',free:'?',red:'?',utils:'?',soil:'?',permit:'?'},docv:{},docn:{},site:{status:'nogeo',key:null,d:null,elev:null}};
 
 /* location drives price: the same flat costs more near the centre; a class premium is paid only where that class belongs */
@@ -1188,7 +1236,7 @@ function finance0(t,st,p,area,m){
     const offL=Math.min(st.offG*0.85*0.85,dm.office),offV=offL*p.offRent*12*0.9/cap;
     const retL=Math.min(st.podG*0.85*0.9,dm.retail),retV=retL*p.retRent*12*0.9/cap;
     const hotNoi=st.rooms*p.adr*p.occ*365*0.33,hotV=hotNoi/(cap+0.01);
-    const tk=techFor(t),disc=oversupplyDisc(t,st.units),resList=st.sale*p.price*tk.pk[state.cls]*(state.cls!=='econ'?1+CARFREE_PREMIUM:1),resRev=resList*(1-disc),parkRev=(st.resPark||0)*(p.parkPrice||0);
+    const tk=techFor(t),insK=st.ins?1-st.ins.fail*(1-INS_LOSS):1,disc=oversupplyDisc(t,st.units),resList=st.sale*p.price*insK*tk.pk[state.cls]*(state.cls!=='econ'?1+CARFREE_PREMIUM:1),resRev=resList*(1-disc),parkRev=(st.resPark||0)*(p.parkPrice||0);
     const revenue=resRev+offV+retV+hotV+parkRev;
     const build=st.resG*p.cost*tk.ck+st.offG*p.offCost+st.podG*p.retCost+st.rooms*p.roomCost+st.parkUnder*(p.parkCost||0);
     const infra=area*p.infra,mkt=(resRev+parkRev)*cls().mkt+(offV+retV+hotV)*0.02,soft=SOFT*(build+infra)+mkt,total=build+infra+soft,land=revenue*(1-m)-total;
@@ -1202,7 +1250,8 @@ function finance0(t,st,p,area,m){
   }
   const pu=t==='multi'?(st.parkUnder||0):0,disc=oversupplyDisc(t,st.units),tk=techFor(t),PK=PARKS[st.parkKind||'under'];
   const pkc=PK.ck*(st.parkKind==='under'&&state.tech==='panel'?UNDER_PANEL_K:1);
-  const list=st.sale*p.price*tk.pk[state.cls]*(t==='multi'&&state.carfree&&state.cls!=='econ'?1+CARFREE_PREMIUM*PK.prem:1);
+  const insK=st.ins?1-st.ins.fail*(1-INS_LOSS):1;
+  const list=st.sale*p.price*insK*tk.pk[state.cls]*(t==='multi'&&state.carfree&&state.cls!=='econ'?1+CARFREE_PREMIUM*PK.prem:1);
   const revenue=list*(1-disc)+pu*(p.parkPrice||0)*PK.pk;
   const build=(t==='multi'?st.gba*tk.ck:st.sale)*p.cost+pu*(p.parkCost||0)*pkc;
   const infra=area*p.infra,mkt=revenue*cls().mkt,soft=SOFT*(build+infra)+mkt,total=build+infra+soft;
@@ -1241,11 +1290,11 @@ function cashflow(t,f,units){
   return{cf,cum:cumA,profit,pre,interest,tax,eq,roe,perYear,roi,irr,npv20,peak:-minC,peakM:minM,pay,months:n-1,landCost,salesM:SN,salesStart:S0+D,delay:D,buildM:B,auto,need};
 }
 function evalType(t,P,area,a0){
-  const p=state.p[t],list=isTall(t)||!isRes(t)?VARS.multi:VARS.lots;
+  const p=state.p[t],list=isTall(t)?VARS.tall:!isRes(t)?VARS.multi:VARS.lots;
   const vs=list.map(v=>{
-    const th=a0+v.da*Math.PI/180;
+    const th=v.abs!=null?v.abs*Math.PI/180:a0+v.da*Math.PI/180;
     const L=!isRes(t)?layoutBoxes(P,th,{...p,len:Math.max(30,Math.round(p.len*(v.lenMul||1)/5)*5)},t):isTall(t)?layoutBlocks(P,th,{...p,mixed:t==='mixed',form:t==='mixed'?'tower':state.form,secLen:Math.max(30,Math.round(p.secLen*(v.lenMul||1)/5)*5)}):layoutLots(P,th,{...p,perBlock:Math.round(p.perBlock*(v.blockMul||1))},t==='town');
-    const st=stats(t,L,p,area);const f=finance(t,st,p,area,state.margin/100);
+    const st=stats(t,L,p,area);if(isTall(t)&&st.units)st.ins=insol(L);const f=finance(t,st,p,area,state.margin/100);
     return{...v,L,st,f};
   });
   let bi=-1;vs.forEach((v,i)=>{if(v.st.units>0&&(bi<0||v.f.land>vs[bi].f.land))bi=i});
@@ -1351,6 +1400,7 @@ function drawSchema(){
     for(const s of Lo.shadows)o.push(`<polygon points="${pts(s)}" fill="var(--shadow)"/>`);
     const deg=Lo.th*180/Math.PI;let dg=((deg%180)+180)%180;if(dg>90)dg-=180;
     for(const pd of Lo.podiums||[])o.push(`<polygon points="${pts(pd)}" fill="${BX.retail.f}" stroke="${BX.retail.s}" stroke-width="1" vector-effect="non-scaling-stroke"/>`);
+    for(const g of insSegs(Lo,1.8))o.push(`<line x1="${g.p0[0].toFixed(1)}" y1="${g.p0[1].toFixed(1)}" x2="${g.p1[0].toFixed(1)}" y2="${g.p1[1].toFixed(1)}" stroke="${g.red?'#E5484D':'#F5A524'}" stroke-width="${g.red?3.2:2.2}" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`);
     for(const b of Lo.blds){const Fc=FNC[b.fn||'res'];o.push(`<polygon points="${pts(b.pts)}" fill="${Fc.f}" stroke="${Fc.s}" stroke-width="1.4" vector-effect="non-scaling-stroke"/>`);
       for(const l of b.secs)o.push(`<line x1="${l[0][0].toFixed(1)}" y1="${l[0][1].toFixed(1)}" x2="${l[1][0].toFixed(1)}" y2="${l[1][1].toFixed(1)}" stroke="var(--bldgtop)" stroke-width=".8" opacity=".45" vector-effect="non-scaling-stroke"/>`);
       if(k<2.2)o.push(`<text x="${b.ct[0].toFixed(1)}" y="${b.ct[1].toFixed(1)}" transform="rotate(${dg.toFixed(1)} ${b.ct[0].toFixed(1)} ${b.ct[1].toFixed(1)})" font-size="${Math.min(7,10*k,Lo.L/(((Lo.mixed?FNC[b.fn].l+' ':'')+(b.fl||Lo.floors)+' эт.').length*0.62))}" font-weight="600" font-family="Golos Text, sans-serif" fill="${FNC[b.fn||'res'].s}" text-anchor="middle" dominant-baseline="central">${Lo.mixed?FNC[b.fn].l+' ':''}${b.fl||Lo.floors} эт.</text>`)}
@@ -1465,6 +1515,7 @@ function drawGeo(){
     for(const s of Lo.shadows)poly(s,{fillColor:'#101828',fillOpacity:.18});
     const deg=Lo.th*180/Math.PI;let dg=((deg%180)+180)%180;if(dg>90)dg-=180;
     for(const pd of Lo.podiums||[])poly(pd,{fillColor:BX.retail.f,stroke:true,color:BX.retail.s,weight:1});
+    for(const g of insSegs(Lo,1.8))L.polyline([g.p0,g.p1].map(toLL),{renderer:R,interactive:false,color:g.red?'#E5484D':'#F5A524',weight:g.red?4:3,lineCap:'round'}).addTo(planLayer);
     for(const b of Lo.blds){const Fc=FNC[b.fn||'res'];poly(b.pts,{fillColor:Fc.f,stroke:true,color:Fc.s,weight:1.6});
       for(const l of b.secs)L.polyline(l.map(toLL),{renderer:R,interactive:false,color:'#2B3A55',weight:1,opacity:.45}).addTo(planLayer);
       L.marker(toLL(b.ct),{interactive:false,icon:L.divIcon({className:'',html:`<span class="blbl" style="transform:translate(-50%,-50%) rotate(${dg.toFixed(1)}deg);color:${FNC[b.fn||'res'].s}">${Lo.mixed?FNC[b.fn].l+' ':''}${b.fl||Lo.floors} эт.</span>`,iconSize:[0,0]})}).addTo(planLayer)}
@@ -1649,6 +1700,8 @@ function factors(){
     F.push({n:'Темп продаж',st:need>120?'bad':need>state.tl[t].sales?'warn':'ok',v:`${nf.format(v.st.units)} за ${yrs>=2?nf1.format(yrs)+' г.':need+' мес.'}`,note:need>120?`Рынок поглощает около ${lim} в месяц — продажи займут ${nf1.format(yrs)} лет. Для одного проекта это слишком много: делите на очереди, берите часть участка или другой тип застройки.`:need>state.tl[t].sales?`При темпе около ${lim} в месяц продажи займут ${need} мес. — срок и IRR в расчёте уже скорректированы.`:`В пределах реалистичного темпа (до ${lim} в месяц).`,src:'Расчёт',crit:need>120})}
   if(v&&v.L&&v.L.kind==='lots'&&v.st.units){const gap=Math.round(v.L.w+2*(t==='town'?3:5));
     F.push({n:'Разрыв между рядами домов',st:gap>=15?'ok':'warn',v:`${gap} м`,note:gap>=15?'Фасады напротив — не ближе 15 м, как требует ШНК для 2–3 этажей.':`Фасады напротив через улицу — ${gap} м при норме 15 м для 2–3 этажей. Так часто строят на рынке, но при согласовании могут потребовать улицу шире или отступ больше.`,src:'Нормы'})}
+  if(isTall(t)&&v&&v.st.ins){const I=v.st.ins,fp=Math.round(I.fail*100),op=Math.round(I.one*100);
+    F.push({n:'Инсоляция квартир',st:I.fail<0.02?'ok':I.fail<0.15?'warn':'bad',v:fp?`${fp}% без солнца`:'норма',note:`Расчёт на ${insDay()}, норма ${nf1.format(I.need)} ч прямого солнца, тень от домов проекта. `+(fp?`${fp}% квартир (нижние этажи, затенённые фасады — красные на плане и в 3D) нормы не проходят: в расчёте они продаются на ${Math.round((1-INS_LOSS)*100)}% дешевле. Разверните дома (варианты «По солнцу»), увеличьте разрывы или снизьте этажность. `:'')+(op?`${op}% квартир получают солнце только с одной стороны — нужны сквозные планировки (жёлтые фасады). `:'')+'Соседние здания за границей участка не учтены — финальный расчёт делает архитектор.',src:'Расчёт',crit:I.fail>=0.15})}
   if(state.mp&&state.mp.streets)F.push({n:'Генплан',st:'ok',v:`${state.mp.streets} ул.`,note:'Большой участок поделён на кварталы главными улицами шириной 22 м; школы, детсады, парк и центр размещены по числу жителей.',src:'Расчёт'});
   if(isTall(t)&&v&&v.st.units&&state.lu){const res=v.st.sale/M2_PER_PERSON,need=greenNeed()*state.area+res*PLAY_PER_PERSON,have=state.lu.green;
     F.push({n:'Двор, озеленение, площадки',st:have>=need?'ok':'warn',v:`${nf.format(have/100)} из ${nf.format(need/100)} сот.`,note:have>=need?'По нормам двора и площадок вариант проходит.':'Свободной территории меньше нормы (озеленение по классу и закону + площадки 3,1 м² на жителя). Уменьшите этажность или число домов.',src:'Нормы'})}
@@ -1782,6 +1835,7 @@ function quality(v,t){
   const lu=v===state.variants[state.sel]&&state.lu?state.lu:landuse(v.L,state.poly,area);
   const add=(n,pts,max,hint)=>L.push({n,pts:Math.max(0,Math.min(max,Math.round(pts))),max,hint});
   const gN=greenNeed(),gS=lu.green/area;
+  if(isTall(t)&&v.st.ins){const fl=v.st.ins.fail;add('Инсоляция',10*Math.max(0,1-fl/0.15),10,fl<0.02?'':`${nf.format(fl*100)}% квартир без нормативного солнца: разверните дома по солнцу, увеличьте разрывы или снизьте этажность.`)}
   add('Озеленение',15*Math.min(1,gS/gN),15,gS>=gN?'':`Зелени ${nf.format(gS*100)}% при норме ${nf.format(gN*100)}%: уменьшите плотность или уберите часть домов под сквер.`);
   if(t==='multi'){
     if(state.cls==='econ'){if(state.carfree)add('Паркинг под эконом',parkKind(t)==='deck'?3:0,5,parkKind(t)==='deck'?'Двор без машин с паркингом-этажеркой в экономе возможен, но покупатели почти не доплачивают за него.':'Подземный паркинг в эконом-классе съедает маржу: покупатели за двор без машин не доплачивают. Оставьте парковку во дворе или по краю участка.')}
@@ -2057,6 +2111,9 @@ function draw3d(){
     const lines=Lo.blds.reduce((a,b)=>a+(b.fl||Lo.floors),0),every=lines>6000?3:lines>2500?2:1;
     for(const b of Lo.blds){const fl=b.fl||Lo.floors,H=fl*fh,col=FC[b.fn||'res'];
       prism3(g,b.pts,0,H,C(col[0]),C(col[1]));blockers.push(b.pts);maxH=Math.max(maxH,H);
+      if(b.ins)for(const sg of insSegs({blds:[b],floors:Lo.floors},0.15)){const d=[sg.nx,0,sg.ny],A=sg.p0,B=sg.p1;
+        const band=(h0,h1,col)=>{if(h1-h0<0.05)return;tri3(g,[A[0],h0,A[1]],[B[0],h0,B[1]],[B[0],h1,B[1]],col,d);tri3(g,[A[0],h0,A[1]],[B[0],h1,B[1]],[A[0],h1,A[1]],col,d)};
+        band(0,sg.red*fh,C('#EF6B6F'));band(sg.red*fh,(sg.red+sg.amb)*fh,C('#F7B955'))}
       for(let f=every;f<fl;f+=every)ring3(ln,b.pts,f*fh);ring3(ln,b.pts,H);
       for(const q of b.pts)ln.push(q[0],0,q[1],q[0],H,q[1])}
   }
@@ -2104,6 +2161,9 @@ function buildControls(){
     $(`#f-${t}-sotka`).addEventListener('input',e=>{const v=parseFloat(e.target.value);if(isNaN(v))return;p.price=Math.round(v*(p.lotW*p.lotD/100)/Math.max(1,p.house));const pe=$(`#f-${t}-price`);if(pe)pe.value=p.price;update()})}
   const rest=PLAN[t].filter(x=>!KEY.includes(x[0]));
   $('#plan-params').innerHTML=rest.length?rest.map(fld).join(''):'';
+  if(isTall(t)){$('#plan-params').insertAdjacentHTML('beforeend',`<div class="field"><label>Инсоляция: дата и норма</label><div class="seg" role="group" aria-label="Дата расчёта инсоляции">${INS_DAYS.map(([d,l])=>`<button type="button" data-insday="${d}" aria-pressed="${state.ins.day===d}">${l}</button>`).join('')}</div><div class="num" style="margin-top:6px"><input type="number" id="ins-need" min="0.5" max="4" step="0.5" value="${state.ins.need}" aria-label="Норма инсоляции, часов"><span>ч прямого солнца в день</span></div><small>Считаем часы солнца на каждом фасаде и этаже с тенью от домов проекта. Дата и норма — сверьте с действующим ШНК (допущение: 22 марта, 2,5 ч).</small></div>`);
+    document.querySelectorAll('[data-insday]').forEach(b=>b.addEventListener('click',()=>{state.ins.day=+b.dataset.insday;resetFlags();buildControls();update()}));
+    $('#ins-need').addEventListener('input',e=>{const v=parseFloat(e.target.value);if(!(v>0))return;state.ins.need=v;resetFlags();update()})}
   $('#type-note').textContent={cottage:'Отдельные дома на своих участках, внутренние улицы, парк и центр.',town:'Блокированные дома рядами, свой вход и небольшой участок у каждого.',multi:'Жилые дома 5–40 этажей: секции или башни, дворы, паркинг.',mixed:'Башни на стилобате: квартиры, офисы, гостиница и торговля в одном проекте.',retail:'Торговые и офисные здания с парковкой — под аренду или продажу инвестору.',logistics:'Складские корпуса с площадками для фур — под аренду.'}[t];
   $('#fin-params').innerHTML=''+FIN[t].map(([k,l,u])=>`<div class="field"><label for="f-${t}-${k}">${l}</label><div class="num"><input type="number" inputmode="decimal" id="f-${t}-${k}" value="${p[k]}" step="${k==='eff'||k==='occ'||k==='cap'?0.01:k==='rent'?0.5:1}" min="0"><span>${u}</span></div></div>`).join('');
   $('#timeline').innerHTML=[['build','Стройка длится'],['start','Продажи начинаются с'],['sales','Продажи длятся']].map(([k,l])=>`<div><label for="tl-${t}-${k}">${l}</label><div class="num"><input type="number" inputmode="numeric" id="tl-${t}-${k}" min="${k==='start'?0:1}" max="120" value="${tl[k]}"><span>мес.</span></div></div>`).join('');
@@ -2126,7 +2186,7 @@ function buildControls(){
     p[k]=v;update()})});
   ['build','start','sales'].forEach(k=>{const el=$(`#tl-${t}-${k}`);el.addEventListener('input',()=>{const v=parseFloat(el.value);if(!isNaN(v)&&v>=0){tl[k]=v;update()}})});
   const lg=t==='mixed'?[[FNC.res.f+';border:1.5px solid '+FNC.res.s,'Жильё'],[FNC.office.f+';border:1.5px solid '+FNC.office.s,'Офисы'],[FNC.hotel.f+';border:1.5px solid '+FNC.hotel.s,'Гостиница'],[BX.retail.f+';border:1.5px solid '+BX.retail.s,'Торговля (стилобат)'],['var(--green)','Двор и озеленение']]:!isRes(t)?[[BX[t].f+';border:1.5px solid '+BX[t].s,t==='retail'?'Здания':'Склады'],[BX[t].y,t==='retail'?'Парковка':'Площадки для фур'],['var(--road)','Проезды'],['var(--green)','Озеленение']]:t==='multi'
-    ?[['var(--bldg);border:1.5px solid var(--bldgtop)','Жилые дома'],['var(--shadow)','Тень (инсоляция)'],['var(--road)','Проезды'],['var(--green)','Двор и озеленение']]
+    ?[['var(--bldg);border:1.5px solid var(--bldgtop)','Жилые дома'],['#E5484D','Фасад без солнца'],['#F5A524','Солнце с одной стороны'],['var(--shadow)','Тень'],['var(--road)','Проезды'],['var(--green)','Двор и озеленение']]
     :[['var(--lot1)','Участки'],['var(--house)','Дома'],['var(--road)','Улицы'],['var(--green)','Озеленение']];
   const lg2=!isRes(t)?[]:t==='mixed'?[[AM.play.c,'Площадки'],[AM.kinder.c,'Детсад'],[AM.school.c,'Школа']]:t==='multi'?[[AM.parking.c,'Парковка'],[AM.play.c,'Площадки'],[AM.kinder.c,'Детсад'],[AM.school.c,'Школа']]:[[AM.park.c,'Парк и площадки'],[AM.center.c,'Магазины и парковка'],[AM.kinder.c,'Детсад'],[AM.school.c,'Школа']];
   $('#legend').innerHTML=lg.concat(lg2).map(([c,n])=>`<span><i style="background:${c}"></i>${n}</span>`).join('')+`<span><i style="background:transparent;border:2px solid var(--cad)"></i>Граница участка</span>`;
@@ -2189,7 +2249,7 @@ function renderResults(){
   }else if(t==='multi'){
     const farChip=st.far>FAR_MAX?`<span class="chip bad">выше ${nf1.format(FAR_MAX)}</span>`:st.far>FAR_MAX*0.85?`<span class="chip warn">близко к пределу</span>`:`<span class="chip ok">в норме</span>`;
     const res=Math.round(st.sale/M2_PER_PERSON);
-    rows=[['Жилых домов',nf.format(st.bldgs)],['Разрыв между рядами',`${nf.format(v.L.G)} м <span class="chip warn">${v.L.gWhy}</span>`],['Общая площадь',nf.format(st.gba)+' м²'],['Продаваемая площадь',nf.format(st.sale)+' м²'],['Квартир',nf.format(st.units)],['Жителей ≈',nf.format(res)],['Плотность (КИТ)',nf2.format(st.far)+farChip],['Процент застройки',nf.format(st.cover*100)+'%'],['Машино-мест (допущение)',nf.format(st.park)],[st.parkKind==='deck'?'  во дворе / в этажерке':'  наземных / подземных',`${nf.format(st.parkSurf)} / ${nf.format(st.parkUnder)}`+(st.deckFoot?` <span class="chip warn">этажерка ${nf.format(st.deckFoot/100)} сот. двора</span>`:'')]];
+    rows=[['Жилых домов',nf.format(st.bldgs)],...(st.ins?[[`Инсоляция (${insDay()}, ${nf1.format(st.ins.need)} ч)`,`${st.ins.fail>0.005?`<span class="chip bad">без солнца ${nf.format(st.ins.fail*100)}%</span>`:'<span class="chip ok">все квартиры с солнцем</span>'}${st.ins.one>0.005?` <span class="chip warn">только сквозные ${nf.format(st.ins.one*100)}%</span>`:''}`]]:[]),['Разрыв между рядами',`${nf.format(v.L.G)} м <span class="chip warn">${v.L.gWhy}</span>`],['Общая площадь',nf.format(st.gba)+' м²'],['Продаваемая площадь',nf.format(st.sale)+' м²'],['Квартир',nf.format(st.units)],['Жителей ≈',nf.format(res)],['Плотность (КИТ)',nf2.format(st.far)+farChip],['Процент застройки',nf.format(st.cover*100)+'%'],['Машино-мест (допущение)',nf.format(st.park)],[st.parkKind==='deck'?'  во дворе / в этажерке':'  наземных / подземных',`${nf.format(st.parkSurf)} / ${nf.format(st.parkUnder)}`+(st.deckFoot?` <span class="chip warn">этажерка ${nf.format(st.deckFoot/100)} сот. двора</span>`:'')]];
     {const am=amenSummary(v.L);const tx=[am.school?`школа ${am.school.n}`:'',am.kinder?`детсад ${am.kinder.n}`:''].filter(Boolean).join(', ');rows.splice(2,0,['Соцобъекты',tx||'не требуются по числу жителей'])}
     if(state.lu){const need=greenNeed()*area+res*PLAY_PER_PERSON,have=state.lu.green;rows.push(['Двор: есть / нужно',`${nf.format(have/100)} / ${nf.format(need/100)} сот.<span class="chip ${have>=need?'ok':'bad'}">${have>=need?'хватает':'мало'}</span>`])}
   }else{
@@ -2538,7 +2598,7 @@ $('#copy').addEventListener('click',()=>{const txt=summary(),s=$('#copy-status')
 {const mw=$('#mapwrap');for(const id of ['#p-map','#p-doc','#p-manual','#p-sample'])mw.appendChild($(id))}
 /* ---------- saved plots: autosave to this browser, reopen, export/import ---------- */
 const PKEY='yerplan.projects.v1',CKEY='yerplan.current.v1';
-const SAVE_F=['poly','geo','source','type','cls','carfree','region','p','tl','margin','land','fin','form','floorsAuto','tech','parkKind','social','checks','docv','docn','view'];
+const SAVE_F=['poly','geo','source','type','cls','carfree','region','p','tl','margin','land','fin','form','floorsAuto','tech','parkKind','ins','social','checks','docv','docn','view'];
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
 function projAll(){try{return JSON.parse(lsGet(PKEY)||'[]')||[]}catch(e){return[]}}
@@ -2575,7 +2635,7 @@ async function openProj(it){
   if(!it||!it.s)return;const o=it.s;
   for(const k of SAVE_F)if(k!=='view'&&o[k]!==undefined&&o[k]!==null)state[k]=JSON.parse(JSON.stringify(o[k]));
   if(o.geo==null)state.geo=null;
-  if(!o.tech)state.tech='mono';if(!o.parkKind)state.parkKind=state.tech==='panel'?'deck':'under';
+  if(!o.ins)state.ins={day:81,need:2.5};  if(!o.tech)state.tech='mono';if(!o.parkKind)state.parkKind=state.tech==='panel'?'deck':'under';
   state.checks=Object.assign({zone:'?',title:'?',free:'?',red:'?',utils:'?',soil:'?',permit:'?'},o.checks||{});state.docv=o.docv||{};state.docn=o.docn||{};
   state.pid=it.id;state.pname=it.auto===false?it.name:'';state.paddr='';
   state.under=null;state.mode='edit';state.trace=[];state.gtrace=[];state.calib=false;state.needScale=false;
