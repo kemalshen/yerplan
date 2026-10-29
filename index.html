@@ -833,6 +833,10 @@ const CLS={
 const CLS_ORDER=['econ','comfort','business','premium'];
 const cls=()=>CLS[state.cls||'comfort'];
 const CARFREE_PREMIUM=0.05;
+/* where the cars go (assumptions): underground under the yard, or a multi-storey parking deck at the plot edge (5 levels, ~27 m² per space incl. ramps) */
+const PARKS={under:{name:'Подземный',ck:1,pk:1,prem:1,lv:0},deck:{name:'Паркинг-этажерка',ck:0.45,pk:0.65,prem:0.6,lv:5}};
+const PARK_M2=27,UNDER_PANEL_K=1.15; // separate monolith box under a panel yard costs more than under a monolith complex
+const parkKind=t=>t==='multi'?(PARKS[state.parkKind]?state.parkKind:'under'):'under';
 /* sales take longer than the market absorbs in 3 years -> the price has to come down to move the stock (assumption: −6% per extra year, max −30%) */
 function oversupplyDisc(t,units){if(!isRes(t))return 0;const y=salesNeed(t,units)/12;return Math.min(0.3,0.06*Math.max(0,y-3))}
 function greenNeed(){const lawBig=state.region==='tash'&&state.type==='multi'&&state.area>=5e4?0.30:0.25;return Math.max(lawBig,cls().green)}
@@ -879,7 +883,7 @@ const UNIT_S={cottage:'д.',town:'д.',multi:'кв.',mixed:'кв.',retail:'м²'
 const state={fin:{rate:0.16,eq:0.30,tax:0.15},cls:'comfort',carfree:false,type:'cottage',region:'tash',poly:PRESETS.trap.map(p=>p.slice()),p:JSON.parse(JSON.stringify(DEF)),tl:JSON.parse(JSON.stringify(TL)),
   margin:20,land:{own:true,price:1500000},sel:null,manual:false,vb:null,variants:[],compare:{},
   mode:'edit',trace:[],gtrace:[],under:null,calib:false,calibSide:0,needScale:false,source:'Пример',
-  form:'auto',floorsAuto:true,tech:'mono',geo:null,view:'schema',dragging:false,src:null,
+  form:'auto',floorsAuto:true,tech:'mono',parkKind:'under',geo:null,view:'schema',dragging:false,src:null,
   social:'auto',checks:{zone:'?',title:'?',free:'?',red:'?',utils:'?',soil:'?',permit:'?'},docv:{},docn:{},site:{status:'nogeo',key:null,d:null,elev:null}};
 
 /* location drives price: the same flat costs more near the centre; a class premium is paid only where that class belongs */
@@ -1164,7 +1168,8 @@ function stats(t,Lo,p,area){
   if(Lo.kind==='lots'){const n=Lo.lots.length;return{units:n,sale:n*p.house,built:n*Lo.lotArea,dens:n/(area/1e4)}}
   const n=Lo.blds.length,foot=n*Lo.L*Lo.D,gba=foot*p.floors,sale=gba*p.eff,apts=Math.round(sale/cls().apt);
   const park=Math.round(apts*cls().park),surf=state.carfree?0:Math.min(park,Lo.surf||0);
-  return{units:apts,bldgs:n,foot,gba,sale,built:foot,far:gba/area,cover:foot/area,park,parkSurf:surf,parkUnder:park-surf};
+  const pk=parkKind(t),rest=park-surf,deckFoot=pk==='deck'?rest*PARK_M2/PARKS.deck.lv:0;
+  return{units:apts,bldgs:n,foot,gba,sale,built:foot,far:gba/area,cover:foot/area,park,parkSurf:surf,parkUnder:rest,parkKind:pk,deckFoot};
 }
 /* how much commercial / warehouse space this location can actually fill (assumption-based) */
 function nonresDemand(t){
@@ -1195,10 +1200,11 @@ function finance0(t,st,p,area,m){
     const build=st.gba*p.cost,infra=area*p.infra,soft=SOFT*(build+infra),total=build+infra+soft,land=value*(1-m)-total;
     return{revenue:value,mkt:value*0.02,noi,leased,demand:dm.cap,demandHow:dm.how,build,infra,soft:soft+value*0.02,total:total+value*0.02,land,perSotka:land/(area/100),perHa:land/(area/1e4)};
   }
-  const pu=t==='multi'?(st.parkUnder||0):0,disc=oversupplyDisc(t,st.units),tk=techFor(t);
-  const list=st.sale*p.price*tk.pk[state.cls]*(t==='multi'&&state.carfree&&state.cls!=='econ'?1+CARFREE_PREMIUM:1);
-  const revenue=list*(1-disc)+pu*(p.parkPrice||0);
-  const build=(t==='multi'?st.gba*tk.ck:st.sale)*p.cost+pu*(p.parkCost||0);
+  const pu=t==='multi'?(st.parkUnder||0):0,disc=oversupplyDisc(t,st.units),tk=techFor(t),PK=PARKS[st.parkKind||'under'];
+  const pkc=PK.ck*(st.parkKind==='under'&&state.tech==='panel'?UNDER_PANEL_K:1);
+  const list=st.sale*p.price*tk.pk[state.cls]*(t==='multi'&&state.carfree&&state.cls!=='econ'?1+CARFREE_PREMIUM*PK.prem:1);
+  const revenue=list*(1-disc)+pu*(p.parkPrice||0)*PK.pk;
+  const build=(t==='multi'?st.gba*tk.ck:st.sale)*p.cost+pu*(p.parkCost||0)*pkc;
   const infra=area*p.infra,mkt=revenue*cls().mkt,soft=SOFT*(build+infra)+mkt,total=build+infra+soft;
   const land=revenue*(1-m)-total;
   return{revenue,discA:list*disc,disc,mkt,build,infra,soft,total,land,perSotka:land/(area/100),perHa:land/(area/1e4)};
@@ -1256,7 +1262,7 @@ function compute(){
   if(!state.manual||state.sel==null||state.sel>=state.variants.length)state.sel=cur.bi<0?0:cur.bi;
   for(const v of state.variants)v.cash=cashflow(state.type,v.f,v.st.units);
   if(!state.dragging){
-    const sv=state.variants[state.sel];if(sv)state.lu=landuse(sv.L,P,area);
+    const sv=state.variants[state.sel];if(sv){state.lu=landuse(sv.L,P,area);if(sv.st.deckFoot){state.lu.green=Math.max(0,state.lu.green-sv.st.deckFoot);state.lu.deck=sv.st.deckFoot}}
     state.compare={};
     for(const t of TYPES){
       const r=t===state.type?cur:evalType(t,P,area,a0);
@@ -1778,7 +1784,7 @@ function quality(v,t){
   const gN=greenNeed(),gS=lu.green/area;
   add('Озеленение',15*Math.min(1,gS/gN),15,gS>=gN?'':`Зелени ${nf.format(gS*100)}% при норме ${nf.format(gN*100)}%: уменьшите плотность или уберите часть домов под сквер.`);
   if(t==='multi'){
-    if(state.cls==='econ'){if(state.carfree)add('Паркинг под эконом',0,5,'Подземный паркинг в эконом-классе съедает маржу: покупатели за двор без машин не доплачивают. Оставьте парковку во дворе или по краю участка.')}
+    if(state.cls==='econ'){if(state.carfree)add('Паркинг под эконом',parkKind(t)==='deck'?3:0,5,parkKind(t)==='deck'?'Двор без машин с паркингом-этажеркой в экономе возможен, но покупатели почти не доплачивают за него.':'Подземный паркинг в эконом-классе съедает маржу: покупатели за двор без машин не доплачивают. Оставьте парковку во дворе или по краю участка.')}
     else if(state.cls==='comfort')add('Двор без машин',state.carfree?5:3,5,state.carfree?'':'Для комфорта двор без машин — плюс, но не обязателен. Оправдан в городе, где земля дорогая и есть спрос.');
     else add('Двор без машин',state.carfree?10:0,10,state.carfree?'':'Покупатели бизнес- и премиум-класса ждут двор без машин и подземный паркинг — без этого квартиры продаются хуже.');
   }
@@ -1874,7 +1880,7 @@ let optRunning=false;
 async function runOptimizer(){
   if(optRunning||state.poly.length<3)return;optRunning=true;setTab('opt');
   const btn=$('#opt-run'),st=$('#opt-status');btn.disabled=true;
-  const save={tech:state.tech,form:state.form,floorsAuto:state.floorsAuto,cls:state.cls,carfree:state.carfree,type:state.type,p:JSON.parse(JSON.stringify(state.p)),sel:state.sel,manual:state.manual};
+  const save={parkKind:state.parkKind,tech:state.tech,form:state.form,floorsAuto:state.floorsAuto,cls:state.cls,carfree:state.carfree,type:state.type,p:JSON.parse(JSON.stringify(state.p)),sel:state.sel,manual:state.manual};
   const P=state.poly,area=Math.abs(polyArea(P)),a0=longestAngle(P),lp=locProfile();
   const jobs=[];
   for(const c of CLS_ORDER){
@@ -1888,7 +1894,7 @@ async function runOptimizer(){
   const out=[];let i=0;
   for(const j of jobs){
     i++;if(i%3===0){st.textContent=`Считаю варианты: ${i} из ${jobs.length}…`;await new Promise(r=>setTimeout(r,0))}
-    state.cls=j.c;state.carfree=j.t==='multi'?j.cf:false;applyRegion(state.region);if(j.fl)state.p[j.t==='multi'||j.t==='mixed'||j.t==='retail'?j.t:'multi'].floors=j.fl;state.tech=j.tc||'mono';state.form='auto';state.type=j.t;
+    state.cls=j.c;state.carfree=j.t==='multi'?j.cf:false;applyRegion(state.region);if(j.fl)state.p[j.t==='multi'||j.t==='mixed'||j.t==='retail'?j.t:'multi'].floors=j.fl;state.tech=j.tc||'mono';state.parkKind=state.tech==='panel'?'deck':'under';state.form='auto';state.type=j.t;
     const r=evalType(j.t,P,area,a0);if(r.bi<0)continue;
     const v=r.vs[r.bi];v.cash=cashflow(j.t,v.f,v.st.units);
     const q=quality(v,j.t),need=salesNeed(j.t,v.st.units);
@@ -1897,7 +1903,7 @@ async function runOptimizer(){
     {const dc=flCap();if(dc&&j.fl&&isTall(j.t)&&j.fl>dc.max)continue}
     out.push({...j,v,q:q.score,profit:v.cash.profit,npv:v.cash.npv20,irr:v.cash.irr,units:v.st.units,months:v.cash.months});
   }
-  Object.assign(state,{tech:save.tech,form:save.form,floorsAuto:save.floorsAuto,cls:save.cls,carfree:save.carfree,type:save.type,sel:save.sel,manual:save.manual});state.p=save.p;
+  Object.assign(state,{parkKind:save.parkKind,tech:save.tech,form:save.form,floorsAuto:save.floorsAuto,cls:save.cls,carfree:save.carfree,type:save.type,sel:save.sel,manual:save.manual});state.p=save.p;
   state.optAll=out;state.optN=jobs.length;
   btn.disabled=false;optRunning=false;
   renderOpt();
@@ -1908,12 +1914,12 @@ function renderOpt(){
   out.sort((a,b)=>key(b)-key(a));state.opt=out.slice(0,5);
   if(!out.length){st.textContent='Не нашёл варианта, который и прибылен, и продаётся за 10 лет, и проходит по качеству. Попробуйте другие цены или часть участка.';$('#opt').innerHTML='';return}
   st.textContent=`Проверил ${state.optN} вариантов. `+{npv:'Сверху — больше всего прибыли с учётом времени: деньги через 7 лет стоят меньше, чем через 3 (ставка 20% в год).',irr:'Сверху — самые быстрые деньги: максимальная доходность на вложенный доллар в год (IRR). Так работают массовые застройщики: быстро построить, быстро продать, вложить снова.',profit:'Сверху — максимум прибыли в деньгах, без учёта того, сколько лет её ждать.'}[state.crit||'npv']+' В списке только варианты, которые подходят месту, проходят по качеству и продаются не дольше 10 лет.';
-  $('#opt').innerHTML=state.opt.map((o,k)=>`<div class="optcard${k===0?' top':''}"><div class="oh"><b>${k===0?'Лучший: ':''}${TYPE_SHORT[o.t]}${isRes(o.t)?', '+CLS[o.c].name.toLowerCase():''}${o.fl?`, ${o.fl} эт.`:''}</b><button type="button" data-opt="${k}">Применить</button></div><span class="om">${o.t==='multi'?(o.tc==='panel'?'панель · ':'монолит · ')+(o.cf?'двор без машин · ':'парковка во дворе · '):''}${nf.format(o.units)} ${plural(o.units,UNIT_W[o.t])} · проект ${o.months} мес.</span><span class="ov">Прибыль <b>${money(o.profit)}</b> · IRR <b>${irrTxt(o.irr)}</b> · качество <b>${o.q}</b></span></div>`).join('');
+  $('#opt').innerHTML=state.opt.map((o,k)=>`<div class="optcard${k===0?' top':''}"><div class="oh"><b>${k===0?'Лучший: ':''}${TYPE_SHORT[o.t]}${isRes(o.t)?', '+CLS[o.c].name.toLowerCase():''}${o.fl?`, ${o.fl} эт.`:''}</b><button type="button" data-opt="${k}">Применить</button></div><span class="om">${o.t==='multi'?(o.tc==='panel'?'панель · ':'монолит · ')+(o.cf?'двор без машин, ':'машины во дворе, ')+(o.tc==='panel'?'паркинг-этажерка · ':'подземный паркинг · '):''}${nf.format(o.units)} ${plural(o.units,UNIT_W[o.t])} · проект ${o.months} мес.</span><span class="ov">Прибыль <b>${money(o.profit)}</b> · IRR <b>${irrTxt(o.irr)}</b> · качество <b>${o.q}</b></span></div>`).join('');
 }
 $('#crit-seg').addEventListener('click',e=>{const b=e.target.closest('[data-crit]');if(!b)return;state.crit=b.dataset.crit;document.querySelectorAll('[data-crit]').forEach(x=>x.setAttribute('aria-pressed',x===b));renderOpt()});
 $('#opt-run').addEventListener('click',runOptimizer);
 $('#opt').addEventListener('click',e=>{const b=e.target.closest('[data-opt]');if(!b)return;const o=state.opt[+b.dataset.opt];
-  state.cls=o.c;state.carfree=o.t==='multi'?o.cf:false;applyRegion(state.region);if(o.fl){state.p[o.t==='multi'||o.t==='mixed'||o.t==='retail'?o.t:'multi'].floors=o.fl;state.floorsAuto=false}state.tech=o.tc||'mono';state.form='auto';state.type=o.t;renderClass();resetFlags();buildControls();update();
+  state.cls=o.c;state.carfree=o.t==='multi'?o.cf:false;applyRegion(state.region);if(o.fl){state.p[o.t==='multi'||o.t==='mixed'||o.t==='retail'?o.t:'multi'].floors=o.fl;state.floorsAuto=false}state.tech=o.tc||'mono';state.parkKind=state.tech==='panel'?'deck':'under';state.form='auto';state.type=o.t;renderClass();resetFlags();buildControls();update();
   $('.stage').scrollIntoView({behavior:'smooth',block:'start'})});
 
 function renderChecklist(){
@@ -2107,9 +2113,12 @@ function buildControls(){
     document.querySelectorAll('[data-form]').forEach(b=>b.addEventListener('click',()=>{state.form=b.dataset.form;buildControls();update()}))}
   if(t==='multi'||t==='mixed'){const tk=techFor(t),c=state.cls,d=x=>(x>=1?'+':'−')+nf.format(Math.abs(Math.round((x-1)*100)))+'%';
     $('#key-params').insertAdjacentHTML('beforeend',`<div class="field"><label>Технология</label><div class="seg two" role="group" aria-label="Технология строительства">${Object.entries(TECH).map(([k,x])=>`<button type="button" data-tech="${k}" aria-pressed="${state.tech===k}">${x.name}</button>`).join('')}</div><small>${state.tech==='panel'?`Панель: стройка ${d(TECH.panel.ck)}, срок ${d(TECH.panel.bk)}, цена для класса «${CLS[c].name.toLowerCase()}» ${d(TECH.panel.pk[c])}, до ${TECH.panel.max} этажей. Нужен завод панелей рядом, планировки типовые (допущение).`:'Монолит: свободные планировки, любая этажность, дольше и дороже панели. Панель — быстрее и дешевле, но покупатели бизнеса и премиума платят за неё меньше.'}</small></div>`);
-    document.querySelectorAll('[data-tech]').forEach(b=>b.addEventListener('click',()=>{const nt=b.dataset.tech,pp=state.p[t],mx=TECH[nt].max;if(nt===state.tech)return;if(mx&&pp.floors>mx){state.flMono=pp.floors;pp.floors=mx}else if(!mx&&state.flMono){pp.floors=state.flMono;state.flMono=null}state.tech=nt;buildControls();update()}))}
-  if(t==='multi'){$('#key-params').insertAdjacentHTML('beforeend',`<div class="field"><label>Машины во дворе</label><div class="seg two" role="group" aria-label="Машины во дворе"><button type="button" data-carfree="1" aria-pressed="${state.carfree}">Двор без машин</button><button type="button" data-carfree="0" aria-pressed="${!state.carfree}">Парковка во дворе</button></div><small>Без машин: вся парковка под землёй, во дворе площадки и зелень, +5% к цене (допущение).</small></div>`);
-    document.querySelectorAll('[data-carfree]').forEach(b=>b.addEventListener('click',()=>{state.carfree=b.dataset.carfree==='1';buildControls();update()}))}
+    document.querySelectorAll('[data-tech]').forEach(b=>b.addEventListener('click',()=>{const nt=b.dataset.tech,pp=state.p[t],mx=TECH[nt].max;if(nt===state.tech)return;if(mx&&pp.floors>mx){state.flMono=pp.floors;pp.floors=mx}else if(!mx&&state.flMono){pp.floors=state.flMono;state.flMono=null}state.tech=nt;if(t==='multi')state.parkKind=nt==='panel'?'deck':'under';buildControls();update()}))}
+  if(t==='multi'){$('#key-params').insertAdjacentHTML('beforeend',`<div class="field"><label>Машины во дворе</label><div class="seg two" role="group" aria-label="Машины во дворе"><button type="button" data-carfree="1" aria-pressed="${state.carfree}">Двор без машин</button><button type="button" data-carfree="0" aria-pressed="${!state.carfree}">Парковка во дворе</button></div><small>${state.carfree?'Без машин: во дворе площадки и зелень, все машины — в паркинге.':'Часть машин во дворе, остальные — в паркинге.'}</small></div>`);
+    document.querySelectorAll('[data-carfree]').forEach(b=>b.addEventListener('click',()=>{state.carfree=b.dataset.carfree==='1';buildControls();update()}));
+    const pk=parkKind(t);
+    $('#key-params').insertAdjacentHTML('beforeend',`<div class="field"><label>Паркинг</label><div class="seg two" role="group" aria-label="Паркинг">${Object.entries(PARKS).map(([k,x])=>`<button type="button" data-park="${k}" aria-pressed="${pk===k}">${x.name}</button>`).join('')}</div><small>${pk==='deck'?`Отдельное здание на ${PARKS.deck.lv} уровней у края участка: место в ~2 раза дешевле подземного, но занимает часть двора и продаётся дешевле. Обычное решение для панельных домов${state.carfree?', надбавка за двор без машин меньше':''} (допущение).`:state.tech==='panel'?'Под панельными домами паркинга нет — это отдельная монолитная коробка под двором: дороже (+15%) и дольше, съедает часть выгоды панели (допущение).':`Под двором и домами: двор остаётся целиком, место дороже. ${state.carfree?'Двор без машин +5% к цене квартир':''} (допущение).`}</small></div>`);
+    document.querySelectorAll('[data-park]').forEach(b=>b.addEventListener('click',()=>{state.parkKind=b.dataset.park;buildControls();update()}))}
   if(isTall(t)){$('#plan-params').insertAdjacentHTML('beforeend',`<div class="seg two" role="group" aria-label="Сейсмичность площадки"><button type="button" data-seis="1" aria-pressed="${state.seis}">8+ баллов</button><button type="button" data-seis="0" aria-pressed="${!state.seis}">до 7 баллов</button></div><small class="note">Сейсмичность площадки. При 8+ баллах разрыв между длинными сторонами — не меньше 2 высот дома (ШНК 2.07.01-03*, п. 21.1). По умолчанию задана по региону — уточните по карте сейсмического районирования.</small>`);
     document.querySelectorAll('[data-seis]').forEach(b=>b.addEventListener('click',()=>{state.seis=b.dataset.seis==='1';buildControls();update()}))}
   PLAN[t].forEach(([k,,,,st,u])=>{const el=$(`#p-${t}-${k}`);el.addEventListener('input',()=>{p[k]=parseFloat(el.value);if(k==='floors')state.floorsAuto=false;$(`#p-${t}-${k}-out`).textContent=fmtVal(p[k],st)+' '+u;update()})});
@@ -2180,7 +2189,7 @@ function renderResults(){
   }else if(t==='multi'){
     const farChip=st.far>FAR_MAX?`<span class="chip bad">выше ${nf1.format(FAR_MAX)}</span>`:st.far>FAR_MAX*0.85?`<span class="chip warn">близко к пределу</span>`:`<span class="chip ok">в норме</span>`;
     const res=Math.round(st.sale/M2_PER_PERSON);
-    rows=[['Жилых домов',nf.format(st.bldgs)],['Разрыв между рядами',`${nf.format(v.L.G)} м <span class="chip warn">${v.L.gWhy}</span>`],['Общая площадь',nf.format(st.gba)+' м²'],['Продаваемая площадь',nf.format(st.sale)+' м²'],['Квартир',nf.format(st.units)],['Жителей ≈',nf.format(res)],['Плотность (КИТ)',nf2.format(st.far)+farChip],['Процент застройки',nf.format(st.cover*100)+'%'],['Машино-мест (допущение)',nf.format(st.park)],['  наземных / подземных',`${nf.format(st.parkSurf)} / ${nf.format(st.parkUnder)}`]];
+    rows=[['Жилых домов',nf.format(st.bldgs)],['Разрыв между рядами',`${nf.format(v.L.G)} м <span class="chip warn">${v.L.gWhy}</span>`],['Общая площадь',nf.format(st.gba)+' м²'],['Продаваемая площадь',nf.format(st.sale)+' м²'],['Квартир',nf.format(st.units)],['Жителей ≈',nf.format(res)],['Плотность (КИТ)',nf2.format(st.far)+farChip],['Процент застройки',nf.format(st.cover*100)+'%'],['Машино-мест (допущение)',nf.format(st.park)],[st.parkKind==='deck'?'  во дворе / в этажерке':'  наземных / подземных',`${nf.format(st.parkSurf)} / ${nf.format(st.parkUnder)}`+(st.deckFoot?` <span class="chip warn">этажерка ${nf.format(st.deckFoot/100)} сот. двора</span>`:'')]];
     {const am=amenSummary(v.L);const tx=[am.school?`школа ${am.school.n}`:'',am.kinder?`детсад ${am.kinder.n}`:''].filter(Boolean).join(', ');rows.splice(2,0,['Соцобъекты',tx||'не требуются по числу жителей'])}
     if(state.lu){const need=greenNeed()*area+res*PLAY_PER_PERSON,have=state.lu.green;rows.push(['Двор: есть / нужно',`${nf.format(have/100)} / ${nf.format(need/100)} сот.<span class="chip ${have>=need?'ok':'bad'}">${have>=need?'хватает':'мало'}</span>`])}
   }else{
@@ -2192,7 +2201,7 @@ function renderResults(){
   if(!state.dragging){
     const lu=state.lu||landuse(v.L,state.poly,area);const pc=x=>area?x/area*100:0;
     const bn=isTall(t)||!isRes(t)?'Застройка':'Участки';const rn=isTall(t)||!isRes(t)?'Проезды':'Улицы';
-    const segs=[[lu.built,!isRes(t)?BX[t].s:isTall(t)?'var(--bldgtop)':'var(--lot1)',bn],[lu.road,'var(--road)',rn],[lu.green,'var(--green)','Озеленение']];
+    const segs=[[lu.built,!isRes(t)?BX[t].s:isTall(t)?'var(--bldgtop)':'var(--lot1)',bn],[lu.road,'var(--road)',rn],[lu.green,'var(--green)','Озеленение']];if(lu.deck)segs.splice(2,0,[lu.deck,'#98A2B3','Паркинг-этажерка']);
     $('#usebar').innerHTML=segs.map(([a,c])=>`<i style="width:${pc(a).toFixed(1)}%;background:${c}"></i>`).join('');
     $('#uselegend').innerHTML=segs.map(([a,c,n])=>`<span><em style="background:${c}"></em>${n} ${nf.format(pc(a))}%</span>`).join('');
   }
@@ -2529,7 +2538,7 @@ $('#copy').addEventListener('click',()=>{const txt=summary(),s=$('#copy-status')
 {const mw=$('#mapwrap');for(const id of ['#p-map','#p-doc','#p-manual','#p-sample'])mw.appendChild($(id))}
 /* ---------- saved plots: autosave to this browser, reopen, export/import ---------- */
 const PKEY='yerplan.projects.v1',CKEY='yerplan.current.v1';
-const SAVE_F=['poly','geo','source','type','cls','carfree','region','p','tl','margin','land','fin','form','floorsAuto','tech','social','checks','docv','docn','view'];
+const SAVE_F=['poly','geo','source','type','cls','carfree','region','p','tl','margin','land','fin','form','floorsAuto','tech','parkKind','social','checks','docv','docn','view'];
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
 function projAll(){try{return JSON.parse(lsGet(PKEY)||'[]')||[]}catch(e){return[]}}
@@ -2566,7 +2575,7 @@ async function openProj(it){
   if(!it||!it.s)return;const o=it.s;
   for(const k of SAVE_F)if(k!=='view'&&o[k]!==undefined&&o[k]!==null)state[k]=JSON.parse(JSON.stringify(o[k]));
   if(o.geo==null)state.geo=null;
-  if(!o.tech)state.tech='mono';
+  if(!o.tech)state.tech='mono';if(!o.parkKind)state.parkKind=state.tech==='panel'?'deck':'under';
   state.checks=Object.assign({zone:'?',title:'?',free:'?',red:'?',utils:'?',soil:'?',permit:'?'},o.checks||{});state.docv=o.docv||{};state.docn=o.docn||{};
   state.pid=it.id;state.pname=it.auto===false?it.name:'';state.paddr='';
   state.under=null;state.mode='edit';state.trace=[];state.gtrace=[];state.calib=false;state.needScale=false;
