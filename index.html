@@ -207,6 +207,19 @@ select.sel{font:inherit;font-size:13px;border:1px solid var(--line);border-radiu
 .chk small{grid-column:1/-1;color:var(--muted);font-size:12px}
 .chk .seg{grid-template-columns:repeat(3,auto)}
 .chk .seg button{padding:5px 10px;font-size:12px}
+#proj-n{margin-left:6px;font-size:11px;background:var(--chip);border-radius:99px;padding:1px 7px}#proj-n:empty{display:none}
+.projbox{position:fixed;z-index:2000;top:76px;right:18px;width:min(420px,calc(100vw - 32px));max-height:calc(100vh - 100px);overflow:auto;background:var(--surface);border-radius:14px;box-shadow:0 18px 50px rgba(16,24,40,.22);padding:14px 16px}
+.projhead{display:flex;align-items:center;gap:10px}.projhead b{font-size:16px}.projhead small{color:var(--muted);flex:1}.projhead .btn{padding:4px 10px}
+.projlist{display:grid;gap:8px;margin:10px 0}
+.proj{border:1px solid var(--line);border-radius:10px;padding:9px 11px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;align-items:center}
+.proj.cur{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.proj input{border:0;font:inherit;font-weight:600;font-size:14px;background:transparent;color:inherit;padding:2px 0;min-width:0;width:100%}
+.proj input:focus{outline:none;border-bottom:1px solid var(--line)}
+.proj small{grid-column:1/-1;color:var(--muted);font-size:12px}
+.proj .pbtns{display:flex;gap:4px}.proj .pbtns button{border:0;background:var(--chip);border-radius:8px;padding:5px 9px;font:inherit;font-size:12px;cursor:pointer;color:inherit}
+.proj .pbtns button.go{background:var(--accent);color:#fff}
+.projact{display:flex;flex-wrap:wrap;gap:8px}
+.projempty{color:var(--muted);font-size:13px;padding:8px 0}
 .dochead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;font-size:12.5px;color:var(--muted);margin:2px 0 6px}
 .docbar{flex:1 1 100%;height:6px;border-radius:99px;background:var(--chip);overflow:hidden}.docbar i{display:block;height:100%;background:var(--good);transition:width .3s}
 .docg{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:14px 0 2px;font-weight:600}
@@ -459,10 +472,17 @@ body.present .present-exit{display:block;position:absolute;top:14px;right:14px;z
         <span class="ans-lbl">Земля:</span>
         <div class="seg two" role="group" aria-label="Земля в расчёте"><button type="button" data-land="own">не учитывать</button><button type="button" data-land="buy">учитывать</button></div>
         <div class="num ans-price" id="ans-price" hidden><input type="number" inputmode="decimal" id="ans-land-price" min="0" step="10000" aria-label="Рыночная стоимость земли"><span>$ за участок</span></div>
+        <button class="btn" type="button" id="proj-btn" aria-expanded="false" aria-controls="projbox">Мои участки<span id="proj-n"></span></button>
         <button class="btn" type="button" id="present-btn">Презентация</button>
         <button class="btn primary" type="button" id="ans-opt">Найти максимум прибыли</button>
       </div>
   </header>
+  <div class="projbox" id="projbox" hidden role="dialog" aria-label="Мои участки">
+    <div class="projhead"><b>Мои участки</b><small id="proj-saved"></small><button class="btn" type="button" id="proj-close" aria-label="Закрыть">✕</button></div>
+    <p class="note">Всё сохраняется само: участок, тип и класс, параметры, чек-лист и заметки. Хранится в этом браузере — чтобы передать участок, скачайте файл.</p>
+    <div class="projlist" id="proj-list"></div>
+    <div class="projact"><button class="btn primary" type="button" id="proj-new">+ Новый участок</button><button class="btn" type="button" id="proj-imp">Открыть файл участка</button><input type="file" id="proj-file" accept=".json,.yerplan,application/json" hidden></div>
+  </div>
   <section class="answer" aria-label="Главный ответ"><div class="ans-grid" id="ans"></div></section>
   <main class="app">
     <aside class="panel" aria-label="Параметры">
@@ -1397,7 +1417,7 @@ function setGeo(lls,label){
   let ox=Infinity,oy=Infinity;for(const [x,y] of raw){ox=Math.min(ox,x);oy=Math.min(oy,y)}
   state.geo={lat0,lng0,kx,ky,ox,oy};
   state.poly=raw.map(([x,y])=>[Math.round((x-ox)*10)/10,Math.round((y-oy)*10)/10]);
-  state.under=null;state.calib=false;state.needScale=false;state.mode='edit';state.gtrace=[];state.source=label;state.view='geo';
+  state.pid=null;state.pname='';state.under=null;state.calib=false;state.needScale=false;state.mode='edit';state.gtrace=[];state.source=label;state.view='geo';
   const rg=regionFor(lat0,lng0);
   if(rg){applyRegion(rg);$('#region').value=rg;buildControls();state.regionAuto=true}
   resetFlags();
@@ -1570,8 +1590,9 @@ nwr["office"]${a(1000)};out count;`;
     for(let i=0;i<elevPts.length;i++)for(let j=i+1;j<elevPts.length;j++){const dd=Math.hypot(elevPts[i][0]-elevPts[j][0],elevPts[i][1]-elevPts[j][1]);if(dd>40&&dd<Math.max(250,R))maxS=Math.max(maxS,Math.abs(h[i]-h[j])/dd)}
     elev={min:Math.min(...h),max:Math.max(...h),slope:maxS};
   }
-  const dc=rv.status==='fulfilled'?districtCap(rv.value.address):null;
+  const dc=rv.status==='fulfilled'?districtCap(rv.value.address):null,ad=rv.status==='fulfilled'&&rv.value.address||null;
   state.site={status:(d||elev)?'ok':'error',key,d,elev,dc};
+  if(ad){const nm=[ad.road,ad.suburb||ad.neighbourhood||ad.quarter,ad.city_district||ad.county,ad.city||ad.town||ad.village].filter(Boolean);state.paddr=[...new Set(nm)].slice(0,3).join(', ');saveSoon()}
   if(state.social==='auto'&&d)update();else{renderVerdict();renderQuality();renderAnswer()}
 }
 function summarizeOSM(els){
@@ -1904,7 +1925,7 @@ function renderChecklist(){
 }
 $('#checklist').addEventListener('click',e=>{const b=e.target.closest('[data-chk]');if(!b)return;state.checks[b.dataset.chk]=b.dataset.val;update();renderChecklist()});
 {let dt=null;$('#checklist').addEventListener('input',e=>{const el=e.target;
-  if(el.dataset.docn!=null){state.docn[el.dataset.docn]=el.value;return}
+  if(el.dataset.docn!=null){state.docn[el.dataset.docn]=el.value;saveSoon();return}
   if(el.dataset.docv==null)return;state.docv[el.dataset.docv]=el.value;clearTimeout(dt);dt=setTimeout(()=>{update();const r=$('#checklist .dochead');if(r){const tmp=document.createElement('div');renderChecklistHead(tmp);r.replaceWith(tmp.firstChild)}},350)})}
 function renderChecklistHead(tmp){const done=DOCS.filter(d=>state.checks[d.k]!=='?').length,v=state.variants[state.sel],dx=v&&v.f&&v.f.dx;
   tmp.innerHTML=`<div class="dochead"><div class="docbar"><i style="width:${done/DOCS.length*100}%"></i></div><span>Закрыто ${done} из ${DOCS.length}</span>${dx&&(dx.total||dx.delay)?`<span class="chip warn">в расчёте: ${dx.total?'+'+money(dx.total):''}${dx.total&&dx.delay?', ':''}${dx.delay?'+'+dx.delay+' мес.':''}</span>`:''}</div>`}
@@ -2291,7 +2312,7 @@ async function usePoints(r,label){
   let w=toWorld(r),a=Math.abs(polyArea(w)),note='';
   if(a>2e7){w=normalize(w.map(([x,y])=>[x/1000,y/1000]));a=Math.abs(polyArea(w));note=' Площадь была больше 2000 га — похоже, единицы в миллиметрах, пересчитал. Проверьте по документу.'}
   else if(a<50){w=normalize(w.map(([x,y])=>[x*1000,y*1000]));a=Math.abs(polyArea(w));note=' Площадь была меньше 50 м² — похоже, единицы в километрах, пересчитал. Проверьте по документу.'}
-  state.poly=w;state.under=null;state.geo=null;state.view='schema';state.mode='edit';state.trace=[];state.calib=true;state.calibSide=0;state.needScale=false;state.source=label;
+  state.pid=null;state.pname='';state.poly=w;state.under=null;state.geo=null;state.view='schema';state.mode='edit';state.trace=[];state.calib=true;state.calibSide=0;state.needScale=false;state.source=label;
   resetFlags();closeSrc();status(impStatus,'','');fit();update();
   status(calibMsg,`${label}: найдено ${w.length} ${plural(w.length,['точка','точки','точек'])}, площадь ${nf2.format(a/1e4)} га. Сверьте площадь и длины сторон с документом.${note}`,note?'err':'ok');
 }
@@ -2304,7 +2325,7 @@ function startTrace(href,nw,nh,msg){
 }
 function finishTrace(){
   const T=state.trace;if(T.length<3)return;
-  state.poly=T.map(p=>p.slice());state.trace=[];state.mode='edit';state.calib=true;state.calibSide=0;state.needScale=true;state.source='Обводка плана';
+  state.pid=null;state.pname='';state.poly=T.map(p=>p.slice());state.trace=[];state.mode='edit';state.calib=true;state.calibSide=0;state.needScale=true;state.source='Обводка плана';
   resetFlags();fit();update();
   status(calibMsg,'Контур готов. Выберите сторону, длину которой знаете, и введите её — без этого размеры условные.','busy');
   setTimeout(()=>$('#calib-len').focus(),0);
@@ -2374,7 +2395,7 @@ document.querySelectorAll('[data-type]').forEach(b=>b.addEventListener('click',(
 $('#cmp').addEventListener('click',e=>{const r=e.target.closest('[data-t]');if(!r)return;state.type=r.dataset.t;resetFlags();buildControls();update()});
 $('#cmp').addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;const r=e.target.closest('[data-t]');if(!r)return;e.preventDefault();state.type=r.dataset.t;resetFlags();buildControls();update()});
 document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{
-  state.poly=PRESETS[b.dataset.preset].map(p=>p.slice());state.under=null;state.geo=null;state.view='schema';state.mode='edit';state.trace=[];state.calib=false;state.needScale=false;state.source='Пример';
+  state.pid=null;state.pname='';state.poly=PRESETS[b.dataset.preset].map(p=>p.slice());state.under=null;state.geo=null;state.view='schema';state.mode='edit';state.trace=[];state.calib=false;state.needScale=false;state.source='Пример';
   resetFlags();closeSrc();fit();update()}));
 $('#vars').addEventListener('click',e=>{const b=e.target.closest('[data-var]');if(!b)return;state.sel=+b.dataset.var;state.manual=true;update()});
 $('#margin').addEventListener('input',e=>{state.margin=+e.target.value;$('#margin-out').textContent=state.margin+'%';update()});
@@ -2433,7 +2454,7 @@ $('#m-apply').addEventListener('click',()=>{
   if(!(Lm>0&&Wm>0)){if(A>0){Wm=Math.sqrt(A*1e4/1.5);Lm=Wm*1.5}else{status($('#m-status'),'Введите длину и ширину или площадь в гектарах.','err');return}}
   if(Lm*Wm>2e7){status($('#m-status'),'Участок больше 2000 га — проверьте единицы, нужны метры.','err');return}
   Lm=Math.round(Lm*10)/10;Wm=Math.round(Wm*10)/10;
-  state.poly=[[0,0],[Lm,0],[Lm,Wm],[0,Wm]];state.under=null;state.geo=null;state.view='schema';state.mode='edit';state.calib=false;state.needScale=false;state.source='Размеры';
+  state.pid=null;state.pname='';state.poly=[[0,0],[Lm,0],[Lm,Wm],[0,Wm]];state.under=null;state.geo=null;state.view='schema';state.mode='edit';state.calib=false;state.needScale=false;state.source='Размеры';
   resetFlags();closeSrc();fit();update();status($('#m-status'),'','');
 });
 
@@ -2495,7 +2516,81 @@ $('#copy').addEventListener('click',()=>{const txt=summary(),s=$('#copy-status')
 });
 
 {const mw=$('#mapwrap');for(const id of ['#p-map','#p-doc','#p-manual','#p-sample'])mw.appendChild($(id))}
-renderLand();renderFinSet();renderChecklist();renderClass();buildControls();fit();update();
+/* ---------- saved plots: autosave to this browser, reopen, export/import ---------- */
+const PKEY='yerplan.projects.v1',CKEY='yerplan.current.v1';
+const SAVE_F=['poly','geo','source','type','cls','carfree','region','p','tl','margin','land','fin','form','floorsAuto','social','checks','docv','docn','view'];
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
+function projAll(){try{return JSON.parse(lsGet(PKEY)||'[]')||[]}catch(e){return[]}}
+function projPut(list){return lsSet(PKEY,JSON.stringify(list))}
+function touched(){return state.source!=='Пример'||DOCS.some(d=>state.checks[d.k]!=='?')||!!state.pid}
+function autoName(){const ha=state.area?nf1.format(state.area/1e4)+' га':'';return (state.paddr||({'Карта':'Участок с карты','Размеры':'Участок по размерам','Пример':'Пример'}[state.source]||state.source||'Участок'))+(ha?' · '+ha:'')}
+function snapshot(){const o={};for(const k of SAVE_F)o[k]=JSON.parse(JSON.stringify(state[k]??null));if(o.view==='3d')o.view=state.geo?'geo':'schema';return o}
+let saveT=null;
+function saveSoon(){clearTimeout(saveT);saveT=setTimeout(saveNow,800)}
+function saveNow(){
+  if(!touched()||state.mode==='trace'||state.mode==='geotrace'||state.poly.length<3)return;
+  const list=projAll();if(!state.pid)state.pid='p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  let it=list.find(x=>x.id===state.pid);if(!it){it={id:state.pid,created:Date.now()};list.unshift(it)}
+  const v=state.variants[state.sel],c=v&&v.cash;
+  Object.assign(it,{name:state.pname||it.name||autoName(),auto:!state.pname&&(!it.name||it.auto!==false),ts:Date.now(),s:snapshot(),
+    sum:{area:state.area,type:state.type,cls:state.cls,units:v?v.st.units:0,profit:c?c.profit:null,irr:c?c.irr:null,done:DOCS.filter(d=>state.checks[d.k]!=='?').length}});
+  if(it.auto)it.name=autoName();
+  if(projPut(list.slice(0,60))){lsSet(CKEY,state.pid);$('#proj-saved').textContent='Сохранено '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}
+  renderProjN();if(!$('#projbox').hidden)renderProj();
+}
+function fileSlug(t){const M={а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'ts',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya',ў:'o',қ:'q',ғ:'g',ҳ:'h'};
+  return t.toLowerCase().split('').map(c=>M[c]??c).join('').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,50)||'uchastok'}
+function renderProjN(){const n=projAll().length;$('#proj-n').textContent=n?n:''}
+const TYPE_RU={cottage:'коттеджи',town:'таунхаусы',multi:'многоэтажки',mixed:'комплекс',retail:'коммерция',logistics:'склады'};
+function renderProj(){
+  const list=projAll(),box=$('#proj-list');
+  if(!list.length){box.innerHTML='<div class="projempty">Пока пусто. Выберите участок на карте, из документа или по размерам — он сохранится сам.</div>';return}
+  box.innerHTML=list.map(it=>{const m=it.sum||{},d=new Date(it.ts||it.created);
+    return `<div class="proj${it.id===state.pid?' cur':''}" data-pid="${it.id}"><input value="${(it.name||'Участок').replace(/"/g,'&quot;')}" aria-label="Название участка" data-pname="${it.id}">
+    <div class="pbtns">${it.id===state.pid?'<button type="button" disabled>Открыт</button>':`<button type="button" class="go" data-popen="${it.id}">Открыть</button>`}<button type="button" data-pexp="${it.id}" title="Скачать файл">⤓</button><button type="button" data-pdel="${it.id}" title="Удалить">✕</button></div>
+    <small>${m.area?nf1.format(m.area/1e4)+' га · ':''}${TYPE_RU[m.type]||''}${m.cls&&CLS[m.cls]&&isRes(m.type)?', '+CLS[m.cls].name.toLowerCase():''}${m.profit!=null?' · прибыль '+money(m.profit):''}${m.irr!=null?' · IRR '+irrTxt(m.irr):''} · документы ${m.done||0}/${DOCS.length} · ${d.toLocaleDateString('ru-RU')}</small></div>`}).join('');
+}
+async function openProj(it){
+  if(!it||!it.s)return;const o=it.s;
+  for(const k of SAVE_F)if(k!=='view'&&o[k]!==undefined&&o[k]!==null)state[k]=JSON.parse(JSON.stringify(o[k]));
+  if(o.geo==null)state.geo=null;
+  state.checks=Object.assign({zone:'?',title:'?',free:'?',red:'?',utils:'?',soil:'?',permit:'?'},o.checks||{});state.docv=o.docv||{};state.docn=o.docn||{};
+  state.pid=it.id;state.pname=it.auto===false?it.name:'';state.paddr='';
+  state.under=null;state.mode='edit';state.trace=[];state.gtrace=[];state.calib=false;state.needScale=false;
+  state.priceGeo=state.geo?state.geo.lat0+','+state.geo.lng0:null;state.site={status:'nogeo',key:null,d:null,elev:null};
+  $('#region').value=state.region;resetFlags();closeSrc();
+  renderLand();renderFinSet();renderChecklist();renderClass();buildControls();
+  state.view=state.geo?(o.view==='schema'?'schema':'geo'):'schema';
+  lsSet(CKEY,it.id);fit();
+  if(state.view==='geo'){try{await showGeoPlan(true)}catch(e){state.view='schema';showView();update()}}else{showView();update()}
+  renderChecklist();renderProj();
+}
+$('#proj-btn').addEventListener('click',()=>{const bx=$('#projbox'),open=bx.hidden;bx.hidden=!open;$('#proj-btn').setAttribute('aria-expanded',open);if(open)renderProj()});
+$('#proj-close').addEventListener('click',()=>{$('#projbox').hidden=true;$('#proj-btn').setAttribute('aria-expanded','false')});
+$('#proj-list').addEventListener('click',e=>{
+  const o=e.target.closest('[data-popen]'),x=e.target.closest('[data-pexp]'),dl=e.target.closest('[data-pdel]');const list=projAll();
+  if(o){saveNow();openProj(list.find(i=>i.id===o.dataset.popen));$('#projbox').hidden=true;$('#proj-btn').setAttribute('aria-expanded','false')}
+  if(x){const it=list.find(i=>i.id===x.dataset.pexp);if(!it)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({yerplan:1,...it},null,1)],{type:'application/json'}));a.download=fileSlug(it.name||'uchastok')+'.yerplan.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+  if(dl){const it=list.find(i=>i.id===dl.dataset.pdel);if(!it)return;const b=dl;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='Удалить?';setTimeout(()=>{if(b.isConnected){b.dataset.sure='';b.textContent='✕'}},2500);return}
+    projPut(list.filter(i=>i.id!==it.id));if(it.id===state.pid){state.pid=null;state.pname=''}renderProj();renderProjN()}
+});
+$('#proj-list').addEventListener('change',e=>{const el=e.target.closest('[data-pname]');if(!el)return;const list=projAll(),it=list.find(i=>i.id===el.dataset.pname);if(!it)return;
+  it.name=el.value.trim()||autoName();it.auto=!el.value.trim();projPut(list);if(it.id===state.pid)state.pname=it.auto?'':it.name});
+$('#proj-new').addEventListener('click',()=>{saveNow();state.pid=null;state.pname='';state.paddr='';
+  state.checks={zone:'?',title:'?',free:'?',red:'?',utils:'?',soil:'?',permit:'?'};state.docv={};state.docn={};
+  state.poly=PRESETS.trap.map(p=>p.slice());state.under=null;state.geo=null;state.view='schema';state.mode='edit';state.trace=[];state.source='Пример';
+  resetFlags();renderChecklist();showView();fit();update();$('#projbox').hidden=true;
+  document.querySelector('[data-src=map]')?.click()});
+$('#proj-imp').addEventListener('click',()=>$('#proj-file').click());
+$('#proj-file').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{const it=JSON.parse(await f.text());if(!it||!it.s||!Array.isArray(it.s.poly))throw 0;delete it.yerplan;
+    const list=projAll();it.id='p'+Date.now().toString(36);it.ts=Date.now();list.unshift(it);projPut(list);saveNow();await openProj(it);$('#projbox').hidden=true;toast('Участок открыт из файла')}
+  catch(err){toast('Это не файл участка YerPlan')}});
+{const _u=update;update=function(){_u();if(!state.dragging)saveSoon()}}
+renderLand();renderFinSet();renderChecklist();renderClass();buildControls();fit();
+{const cur=lsGet(CKEY),it=cur&&projAll().find(i=>i.id===cur);if(it){openProj(it).then(()=>toast('Открыт последний участок: '+(it.name||'')))}else update()}
+renderProjN();
 requestAnimationFrame(()=>{update();openSrc('map')});
 })();
 </script>
