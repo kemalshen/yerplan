@@ -207,6 +207,18 @@ select.sel{font:inherit;font-size:13px;border:1px solid var(--line);border-radiu
 .chk small{grid-column:1/-1;color:var(--muted);font-size:12px}
 .chk .seg{grid-template-columns:repeat(3,auto)}
 .chk .seg button{padding:5px 10px;font-size:12px}
+.dochead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;font-size:12.5px;color:var(--muted);margin:2px 0 6px}
+.docbar{flex:1 1 100%;height:6px;border-radius:99px;background:var(--chip);overflow:hidden}.docbar i{display:block;height:100%;background:var(--good);transition:width .3s}
+.docg{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:14px 0 2px;font-weight:600}
+.chk.doc{border-left:3px solid transparent;padding-left:9px;margin-left:-12px}
+.chk.doc.ok{border-left-color:var(--good)}.chk.doc.warn{border-left-color:var(--warn)}.chk.doc.bad{border-left-color:var(--bad)}
+.chk .docmsg{color:var(--ink,inherit)}
+.docfs{grid-column:1/-1;display:grid;gap:6px}
+.docf{display:grid;grid-template-columns:minmax(0,1fr) 110px 34px;align-items:center;gap:6px;font-size:12.5px}
+.docf input{width:100%;padding:5px 8px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--surface);color:inherit}
+.docf em{font-style:normal;color:var(--muted);font-size:12px}
+.docnote{grid-column:1/-1;font-size:12px}.docnote summary{cursor:pointer;color:var(--cad);list-style:none}.docnote summary::-webkit-details-marker{display:none}
+.docnote textarea{width:100%;margin-top:4px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12.5px;background:var(--surface);color:inherit;resize:vertical}
 /* ---- white UI layer ---- */
 header.top{background:var(--surface);border-radius:14px;box-shadow:var(--card-shadow);padding:14px 18px;align-items:center}
 .brand h1{font-weight:700;font-size:24px;letter-spacing:-.02em}
@@ -690,7 +702,7 @@ body.present .present-exit{display:block;position:absolute;top:14px;right:14px;z
         </div>
         <div class="group"><h2>Проверьте по документам</h2>
         <div id="checklist"></div>
-        <p class="note">Этих данных нет на карте. Ответ «Нет» по назначению земли, правам или градплану означает, что строить в таком виде нельзя.</p>
+        <p class="note">Этого нет на карте — закрывает владелец или застройщик. Суммы и сроки, которые вы вводите, сразу попадают в расчёт: затраты, срок, IRR, цену земли.</p>
         </div>
       </div>
       <div class="pane" data-pane="opt" hidden>
@@ -745,13 +757,34 @@ const REGIONS=[
 const CENTRES=[['tash',41.3111,69.2797],['tashobl',41.0450,69.3580],['sam',39.6542,66.9597],['buh',39.7747,64.4286],['nav',40.0844,65.3792],['and',40.7821,72.3442],['nam',40.9983,71.6726],['fer',40.3864,71.7864],['kash',38.8606,65.7891],['surx',37.2242,67.2783],['jiz',40.1158,67.8422],['sir',40.4897,68.7842],['xor',41.5500,60.6333],['kk',42.4531,59.6103]];
 /* realistic sales pace, units per month (assumption): [Tashkent city, elsewhere] */
 const PACE={cottage:[6,3],town:[10,5],multi:[40,15],mixed:[40,15]};
-const CHECKS=[
-  ['zone','Назначение земли допускает жилую застройку','Категория и вид разрешённого использования в кадастровом паспорте. Сельхозземлю нужно переводить, это долго и не всегда возможно.','bad'],
-  ['title','Права на землю чистые','Собственность или долгосрочная аренда оформлены, нет ареста, залога и споров.','bad'],
-  ['red','Градплан не запрещает застройку','Красные линии, охранные зоны и предельная этажность проверены в хокимияте или управлении строительства.','bad'],
-  ['utils','Есть технические условия на сети','Свет, газ, вода, канализация: есть ли мощности рядом и сколько стоит подключение.','warn'],
-  ['soil','Сделана геология участка','В Узбекистане часто встречаются просадочные лёссовые грунты: они удорожают фундаменты, особенно для многоэтажек.','warn']
+/* documents checklist: what only the owner/developer can close. fields feed the money model */
+const DOCS=[
+  {k:'zone',g:'Земля',n:'Назначение земли — под жилую застройку',doc:'Кадастровый паспорт: категория и вид разрешённого использования.',sev:'bad',
+    noTxt:'Сельхозземлю или землю другого назначения нужно переводить — это долго и не всегда возможно.',
+    f:[{id:'convM',l:'Перевод займёт',u:'мес.',on:'no'}]},
+  {k:'title',g:'Земля',n:'Права на землю чистые',doc:'Выписка из реестра прав: собственность или долгосрочная аренда, нет ареста, залога и споров.',sev:'bad',noTxt:'Пока права не чистые, ни банк, ни покупатели не придут.'},
+  {k:'free',g:'Земля',n:'Участок свободен от строений и жильцов',doc:'Кадастр и осмотр: что стоит на участке, кто прописан.',sev:'warn',
+    noTxt:'Снос и компенсации владельцам — расход в самом начале проекта, часто самый крупный после стройки.',
+    f:[{id:'demol',l:'Снос и компенсации',u:'$',on:'no'},{id:'demolM',l:'Расселение займёт',u:'мес.',on:'no'}]},
+  {k:'red',g:'Градостроительство',n:'Градплан участка получен',doc:'Градплан (АПЗ) в хокимияте: предельная этажность, красные линии, охранные зоны (газ, вода, ЛЭП, каналы, памятники).',sev:'bad',
+    noTxt:'Если градплан запрещает жильё или такую высоту — проект в этом виде не пройдёт.',
+    f:[{id:'maxFl',l:'Предельная этажность',u:'эт.',on:'yes'},{id:'oblig',l:'Обязательства: дороги, соцобъекты',u:'$',on:'any'}]},
+  {k:'utils',g:'Сети',n:'Есть технические условия на сети',doc:'ТУ на свет, воду, канализацию, газ: мощность, точка подключения, стоимость.',sev:'warn',
+    noTxt:'Нет мощностей — придётся строить подстанцию или коллектор за свой счёт.',
+    f:[{id:'utilC',l:'Подключение и сети за участком',u:'$',on:'any'}]},
+  {k:'soil',g:'Грунт',n:'Инженерная геология сделана',doc:'Отчёт инженерных изысканий: тип грунта, просадочность, грунтовые воды, сейсмика площадки.',sev:'warn',
+    noTxt:'Просадочный лёсс или высокие грунтовые воды удорожают фундамент — уточните у конструктора.',
+    f:[{id:'soilP',l:'Удорожание стройки из-за грунта',u:'%',on:'any'}]},
+  {k:'permit',g:'Сроки',n:'Проект и разрешение на строительство',doc:'Проект, экспертиза, разрешение на строительство. До этого нельзя начинать стройку и продажи.',sev:'warn',
+    yesTxt:'Разрешение уже есть — стройка может начаться сразу.',
+    f:[{id:'permM',l:'До начала стройки осталось',u:'мес.',on:'nonyes'}]}
 ];
+const docOn=(fd,a)=>fd.on==='any'||(fd.on==='no'&&a==='no')||(fd.on==='yes'&&a==='yes')||(fd.on==='nonyes'&&a!=='yes');
+function docVal(id){const it=DOCS.find(d=>d.f&&d.f.some(x=>x.id===id));if(!it)return 0;const fd=it.f.find(x=>x.id===id);if(!docOn(fd,state.checks[it.k]))return 0;const v=+state.docv[id];return isFinite(v)&&v>0?v:0}
+function docExtra(build){const demol=docVal('demol'),oblig=docVal('oblig'),util=docVal('utilC'),soil=build*docVal('soilP')/100;
+  const delay=Math.round(docVal('convM')+docVal('demolM')+docVal('permM'));return{demol,oblig,util,soil,total:demol+oblig+util+soil,delay}}
+function flCap(){const m=docVal('maxFl');if(m)return{name:'по градплану участка',max:Math.round(m),doc:true};return state.site&&state.site.dc}
+
 /* regions where sites are usually 8+ points seismic (assumption — verify on the seismic zoning map) */
 const SEIS8=['tash','tashobl','and','nam','fer','sam','jiz','sir','surx','kash'];
 /* ШНК 2.07.01-03* п.21.1: gap between long sides by storeys (upper bound of the range taken) */
@@ -822,7 +855,7 @@ const state={fin:{rate:0.16,eq:0.30,tax:0.15},cls:'comfort',carfree:false,type:'
   margin:20,land:{own:true,price:1500000},sel:null,manual:false,vb:null,variants:[],compare:{},
   mode:'edit',trace:[],gtrace:[],under:null,calib:false,calibSide:0,needScale:false,source:'Пример',
   form:'auto',floorsAuto:true,geo:null,view:'schema',dragging:false,src:null,
-  social:'auto',checks:{zone:'?',title:'?',red:'?',utils:'?',soil:'?'},site:{status:'nogeo',key:null,d:null,elev:null}};
+  social:'auto',checks:{zone:'?',title:'?',free:'?',red:'?',utils:'?',soil:'?',permit:'?'},docv:{},docn:{},site:{status:'nogeo',key:null,d:null,elev:null}};
 
 /* location drives price: the same flat costs more near the centre; a class premium is paid only where that class belongs */
 function locPriceK(reg){
@@ -1118,7 +1151,8 @@ function nonresDemand(t){
   let cap=[40000,30000,15000][tier];if(d&&d.major>300)cap*=0.5;
   return{cap:Math.round(cap),how:'оценка спроса на склады по региону (допущение)'};
 }
-function finance(t,st,p,area,m){
+function finance(t,st,p,area,m){const f=finance0(t,st,p,area,m),d=docExtra(f.build);f.dx=d;f.docs=d.total;if(d.total){f.total+=d.total;f.land-=d.total;f.perSotka=f.land/(area/100);f.perHa=f.land/(area/1e4)}return f}
+function finance0(t,st,p,area,m){
   if(t==='mixed'&&st.resG!=null){
     const dm=mixDemand(),cap=p.cap||0.12;
     const offL=Math.min(st.offG*0.85*0.85,dm.office),offV=offL*p.offRent*12*0.9/cap;
@@ -1151,13 +1185,14 @@ function cashflow(t,f,units){
   const B=Math.max(1,Math.round(tl.build),auto?Math.round(SN*0.8):0);
   const S0=Math.max(isRes(t)?2:0,Math.round(tl.start)+(c?c.start:0));
   const [iSh,iM]=c?c.inst:[0,0],down=0.3;
-  const n=Math.max(B,S0+SN+iM)+1,base=new Array(n).fill(0);
+  const dx=f.dx||{demol:0,oblig:0,util:0,soil:0,delay:0},D=dx.delay||0;
+  const n=Math.max(B+D,S0+D+SN+iM)+1,base=new Array(n).fill(0);
   const landCost=state.land.own?0:Math.max(0,state.land.price||0);
-  base[0]-=landCost;
-  const im=Math.max(1,Math.round(B*0.4));for(let m=0;m<im;m++)base[m]-=f.infra/im;
-  for(let m=1;m<=B;m++)base[m]-=(f.build+f.soft-(f.mkt||0))/B;
+  base[0]-=landCost+dx.demol;
+  const im=Math.max(1,Math.round(B*0.4));for(let m=0;m<im;m++)base[D+m]-=(f.infra+dx.util)/im;
+  for(let m=1;m<=B;m++)base[D+m]-=(f.build+f.soft-(f.mkt||0)+dx.oblig+dx.soil)/B;
   const r=f.revenue/SN,mk=(f.mkt||0)/SN;
-  for(let m=S0;m<S0+SN;m++){base[m]+=r*(1-iSh)+r*iSh*down-mk;if(iSh)for(let k=1;k<=iM;k++)base[m+k]+=r*iSh*(1-down)/iM}
+  for(let m=S0+D;m<S0+D+SN;m++){base[m]+=r*(1-iSh)+r*iSh*down-mk;if(iSh)for(let k=1;k<=iM;k++)base[m+k]+=r*iSh*(1-down)/iM}
   // pass 1: equity need without interest; pass 2: interest on the part of the gap above own equity
   let cum0=0,min0=0;for(const v of base){cum0+=v;min0=Math.min(min0,cum0)}
   const eq=-min0*FIN.eq,rm=Math.pow(1+FIN.rate,1/12)-1,cf=base.slice();let bal=0,interest=0;
@@ -1172,7 +1207,7 @@ function cashflow(t,f,units){
   if(cf.some(v=>v<0)&&cf.some(v=>v>0)){let lo=-0.3,hi=1,a=npv(lo),b=npv(hi);
     if(a*b<0){for(let k=0;k<80;k++){const mid=(lo+hi)/2,v=npv(mid);if(v*a>0){lo=mid;a=v}else hi=mid}irr=Math.pow(1+(lo+hi)/2,12)-1}}
   const npv20=npv(Math.pow(1.2,1/12)-1),own=Math.max(eq,1),roe=profit/own,perYear=profit/Math.max(1,(n-1)/12);
-  return{cf,cum:cumA,profit,pre,interest,tax,eq,roe,perYear,roi,irr,npv20,peak:-minC,peakM:minM,pay,months:n-1,landCost,salesM:SN,salesStart:S0,buildM:B,auto,need};
+  return{cf,cum:cumA,profit,pre,interest,tax,eq,roe,perYear,roi,irr,npv20,peak:-minC,peakM:minM,pay,months:n-1,landCost,salesM:SN,salesStart:S0+D,delay:D,buildM:B,auto,need};
 }
 function evalType(t,P,area,a0){
   const p=state.p[t],list=isTall(t)||!isRes(t)?VARS.multi:VARS.lots;
@@ -1616,8 +1651,9 @@ function factors(){
   if(state.geo){const n=nearestCentre(state.geo.lat0,state.geo.lng0);const r=REGIONS.find(x=>x[0]===n.id);
     F.push({n:'До центра города',st:n.d<=12000?'ok':n.d<=30000?'warn':'warn',v:dm(n.d),note:`До центра: ${r?r[1].replace(' область',''):''}. `+(n.d<=12000?'Городская локация.':'Загородная локация: лучше подходят дома, спрос на квартиры ниже.'),src:'Карта',far:n.d>15000})}
   // checklist
-  for(const [k,label,,sev] of CHECKS){const a=state.checks[k];
-    F.push({n:label,st:a==='yes'?'ok':a==='no'?sev:'unk',v:a==='yes'?'да':a==='no'?'нет':'не знаю',note:a==='no'?(sev==='bad'?'Без этого строить нельзя.':'Заложите время и деньги в бюджет.'):a==='yes'?'':'Уточните по документам.',src:'Документы',crit:a==='no'&&sev==='bad',chk:true})}
+  for(const d of DOCS){const a=state.checks[d.k];let st=a==='yes'?'ok':a==='no'?d.sev:'unk';
+    if(d.k==='zone'&&a==='no'&&docVal('convM'))st='warn';
+    F.push({n:d.n,st,v:a==='yes'?'да':a==='no'?'нет':'не знаю',note:a==='no'?d.noTxt:a==='yes'?'':'Уточните по документам.',src:'Документы',crit:st==='bad',chk:true})}
   return{F,bestT};
 }
 function recText(bestT,F){
@@ -1733,7 +1769,7 @@ function quality(v,t){
   add('Темп продаж',need<=tl?10:need<=60?6:need<=120?3:0,10,need<=tl?'':`Продажи займут ${need} мес.: делите проект на очереди или берите класс с более широким спросом.`);
   const f=lp.fit(state.cls);
   add('Класс под локацию',f==='ok'?15:f==='mid'?8:0,15,f==='ok'?'':`Для этого места лучше подходит класс «${CLS[lp.rec[0]].name}»${lp.known?'':' (точнее — после выбора участка на карте)'}.`);
-  {const dc=state.site&&state.site.dc,fl=t==='multi'||t==='mixed'?state.p[t].floors:0;if(dc&&fl)add('Этажность по генплану',fl<=dc.max?5:0,5,fl<=dc.max?'':`В районе ${dc.name} проекты — до ${dc.max} этажей, а у вас ${fl}. Снизьте этажность или проверьте градплан участка.`)}
+  {const dc=flCap(),fl=t==='multi'||t==='mixed'?state.p[t].floors:0;if(dc&&fl)add(dc.doc?'Этажность по градплану':'Этажность по генплану',fl<=dc.max?5:0,5,fl<=dc.max?'':dc.doc?`Градплан участка разрешает до ${dc.max} этажей, а у вас ${fl}. Снизьте этажность.`:`В районе ${dc.name} проекты — до ${dc.max} этажей, а у вас ${fl}. Снизьте этажность или проверьте градплан участка.`)}
   if(lp.known)add('Тип застройки под место',lp.types.includes(t)?10:0,10,lp.types.includes(t)?'':`Здесь лучше подходят ${lp.types.map(k=>TYPE_SHORT[k].toLowerCase()).join(' или ')}: ${t==='multi'?'за городом квартиры продаются медленно':'в городе земля слишком дорогая для малоэтажки'}.`);
   const z=d?['power','water','rail','industrial','cemetery'].filter(k=>d[k]<=(k==='power'?30:k==='water'?50:k==='rail'?100:300)).length:null;
   add('Соседство',z==null?3:z?2:5,5,z?'Рядом вредные или шумные объекты — заложите зелёный буфер со стороны источника.':'');
@@ -1829,7 +1865,7 @@ async function runOptimizer(){
     const q=quality(v,j.t),need=salesNeed(j.t,v.st.units);
     if(need>120||q.score<55||v.cash.profit<=0)continue;
     if(isRes(j.t)&&lp.known&&!lp.types.includes(j.t))continue;
-    {const dc=state.site&&state.site.dc;if(dc&&j.fl&&isTall(j.t)&&j.fl>dc.max)continue}
+    {const dc=flCap();if(dc&&j.fl&&isTall(j.t)&&j.fl>dc.max)continue}
     out.push({...j,v,q:q.score,profit:v.cash.profit,npv:v.cash.npv20,irr:v.cash.irr,units:v.st.units,months:v.cash.months});
   }
   Object.assign(state,{form:save.form,floorsAuto:save.floorsAuto,cls:save.cls,carfree:save.carfree,type:save.type,sel:save.sel,manual:save.manual});state.p=save.p;
@@ -1852,9 +1888,26 @@ $('#opt').addEventListener('click',e=>{const b=e.target.closest('[data-opt]');if
   $('.stage').scrollIntoView({behavior:'smooth',block:'start'})});
 
 function renderChecklist(){
-  $('#checklist').innerHTML=CHECKS.map(([k,label,help])=>`<div class="chk"><label id="lbl-${k}">${label}</label><div class="seg" role="group" aria-labelledby="lbl-${k}">${[['yes','Да'],['no','Нет'],['?','Не знаю']].map(([v,t])=>`<button type="button" data-chk="${k}" data-val="${v}" aria-pressed="${state.checks[k]===v}">${t}</button>`).join('')}</div><small>${help}</small></div>`).join('');
+  const box=$('#checklist');if(!box)return;
+  const done=DOCS.filter(d=>state.checks[d.k]!=='?').length,v=state.variants&&state.variants[state.sel],dx=v&&v.f&&v.f.dx;
+  let h=`<div class="dochead"><div class="docbar"><i style="width:${done/DOCS.length*100}%"></i></div><span>Закрыто ${done} из ${DOCS.length}</span>${dx&&(dx.total||dx.delay)?`<span class="chip warn">в расчёте: ${dx.total?'+'+money(dx.total):''}${dx.total&&dx.delay?', ':''}${dx.delay?'+'+dx.delay+' мес.':''}</span>`:''}</div>`;
+  let g='';
+  for(const d of DOCS){const a=state.checks[d.k];
+    if(d.g!==g){g=d.g;h+=`<h3 class="docg">${g}</h3>`}
+    const st=a==='yes'?'ok':a==='no'?d.sev:'unk';
+    const fl=(d.f||[]).filter(fd=>docOn(fd,a)).map(fd=>`<label class="docf"><span>${fd.l}</span><input type="number" min="0" step="any" inputmode="decimal" data-docv="${fd.id}" value="${state.docv[fd.id]??''}" placeholder="0"><em>${fd.u}</em></label>`).join('');
+    const msg=a==='no'?d.noTxt:a==='yes'&&d.yesTxt?d.yesTxt:'';
+    h+=`<div class="chk doc ${st}"><label id="lbl-${d.k}">${d.n}</label><div class="seg" role="group" aria-labelledby="lbl-${d.k}">${[['yes','Да'],['no','Нет'],['?','Не знаю']].map(([x,t])=>`<button type="button" data-chk="${d.k}" data-val="${x}" aria-pressed="${a===x}">${t}</button>`).join('')}</div>
+      <small>${d.doc}</small>${msg?`<small class="docmsg">${msg}</small>`:''}${fl?`<div class="docfs">${fl}</div>`:''}
+      <details class="docnote"${state.docn[d.k]?' open':''}><summary>${state.docn[d.k]?'Заметка':'Добавить заметку'}</summary><textarea rows="2" data-docn="${d.k}" placeholder="Кто выдал, номер, что выяснить, к какому сроку">${(state.docn[d.k]||'').replace(/</g,'&lt;')}</textarea></details></div>`}
+  box.innerHTML=h;
 }
-$('#checklist').addEventListener('click',e=>{const b=e.target.closest('[data-chk]');if(!b)return;state.checks[b.dataset.chk]=b.dataset.val;renderChecklist();renderVerdict()});
+$('#checklist').addEventListener('click',e=>{const b=e.target.closest('[data-chk]');if(!b)return;state.checks[b.dataset.chk]=b.dataset.val;update();renderChecklist()});
+{let dt=null;$('#checklist').addEventListener('input',e=>{const el=e.target;
+  if(el.dataset.docn!=null){state.docn[el.dataset.docn]=el.value;return}
+  if(el.dataset.docv==null)return;state.docv[el.dataset.docv]=el.value;clearTimeout(dt);dt=setTimeout(()=>{update();const r=$('#checklist .dochead');if(r){const tmp=document.createElement('div');renderChecklistHead(tmp);r.replaceWith(tmp.firstChild)}},350)})}
+function renderChecklistHead(tmp){const done=DOCS.filter(d=>state.checks[d.k]!=='?').length,v=state.variants[state.sel],dx=v&&v.f&&v.f.dx;
+  tmp.innerHTML=`<div class="dochead"><div class="docbar"><i style="width:${done/DOCS.length*100}%"></i></div><span>Закрыто ${done} из ${DOCS.length}</span>${dx&&(dx.total||dx.delay)?`<span class="chip warn">в расчёте: ${dx.total?'+'+money(dx.total):''}${dx.total&&dx.delay?', ':''}${dx.delay?'+'+dx.delay+' мес.':''}</span>`:''}</div>`}
 $('#vd-rec').addEventListener('click',e=>{const a=e.target.closest('[data-pick]');if(!a)return;e.preventDefault();state.type=a.dataset.pick;resetFlags();buildControls();update();$('.stage').scrollIntoView({behavior:'smooth'})});
 
 /* ---------- 3D view: the same plan, extruded to real heights ---------- */
@@ -2115,6 +2168,7 @@ function renderResults(){
   $('#kpis').innerHTML=`<div class="kpi${neg?' neg':''}"><span>Чистая прибыль</span><b>${money(c.profit)}</b></div><div class="kpi${c.irr!=null&&c.irr<0?' neg':''}"><span>IRR годовых</span><b>${irrTxt(c.irr)}</b></div><div class="kpi${neg?' neg':''}"><span>На свои деньги</span><b>${c.roe>9.99?'>×10':'×'+nf1.format(c.roe)}</b></div>`;
   const finRows=[isRes(t)?['Выручка от продаж',money(f.revenue)]:['Стоимость объекта (продажа инвестору)',money(f.revenue)],['Стройка',money(f.build)],['Сети и дороги',money(f.infra)],['Проект и согласования',money(f.soft-(f.mkt||0))],['Продажи и реклама',money(f.mkt||0)]];
   if(f.disc>0)finRows.splice(1,0,['Скидка, чтобы распродать',`−${money(f.discA)} <span class="chip warn">−${nf.format(f.disc*100)}% к цене</span>`]);
+  if(f.docs)finRows.push(['По документам: снос, сети, обязательства, грунт',money(f.docs)]);
   finRows.push(['Проценты по кредиту',money(c.interest)+` <span class="chip warn">${nf.format(state.fin.rate*100)}% год.</span>`]);
   finRows.push(['Налог на прибыль',money(c.tax)]);
   finRows.push(['Прибыль в год',money(c.perYear)]);
@@ -2125,7 +2179,7 @@ function renderResults(){
   finRows.push(['Срок проекта',`${c.months} мес.${c.months>=60?' ('+nf1.format(c.months/12)+' г.)':''}`]);
   $('#fin').innerHTML=finRows.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('');
   $('#cashchart').innerHTML=cashChart(c);
-  $('#cashcap').textContent=`Накопленные деньги проекта по месяцам, с процентами и налогом. Больше всего денег нужно к ${c.peakM}-му месяцу: ${money(c.peak)}, из них своих ${money(c.eq)} (${nf.format(state.fin.eq*100)}%), остальное — кредит. Продажи начинаются на ${c.salesStart}-м месяце${isRes(t)&&cls().inst[0]?`, ${nf.format(cls().inst[0]*100)}% покупателей берут рассрочку на ${cls().inst[1]} мес.`:''}.${state.land.own?' Земля уже ваша, её стоимость не учтена.':''}`;
+  $('#cashcap').textContent=`Накопленные деньги проекта по месяцам, с процентами и налогом. Больше всего денег нужно к ${c.peakM}-му месяцу: ${money(c.peak)}, из них своих ${money(c.eq)} (${nf.format(state.fin.eq*100)}%), остальное — кредит. ${c.delay?`Стройка начинается после ${c.delay} мес. на документы. `:''}Продажи начинаются на ${c.salesStart}-м месяце${isRes(t)&&cls().inst[0]?`, ${nf.format(cls().inst[0]*100)}% покупателей берут рассрочку на ${cls().inst[1]} мес.`:''}.${state.land.own?' Земля уже ваша, её стоимость не учтена.':''}`;
   const land=$('#land');land.classList.toggle('neg',f.land<=0||!st.units);
   land.innerHTML=!st.units?`<span class="lbl">Сколько можно заплатить за землю</span><span class="big">—</span><span class="sub"><span>Вариант не помещается на участок.</span></span>`
     :f.land>0?`<span class="lbl">Сколько можно заплатить за землю</span><span class="big">${money(f.land)}</span><span class="sub">${money(f.perSotka)} <span>за сотку при марже ${state.margin}%</span></span>`
