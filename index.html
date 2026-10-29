@@ -1077,10 +1077,11 @@ const amenLbl=a=>`${a.label}`;
 /* ---------- generators ---------- */
 function layoutLots(P,th,p,town){
   const F=frame(P,th),T=F.toXY;
-  const w=p.road,d=p.lotD,lw=p.lotW,N=Math.max(2,Math.round(p.perBlock)),per=w;
+  const small=state.area<1e4,w=p.noRoad?0:p.road,d=p.lotD,lw=p.lotW,N=Math.max(2,Math.round(p.perBlock)),per=small?0:w;
   const PP=w+2*d,Q=N*lw+w;
   let best=null;
-  for(const fo of [0,.125,.25,.375,.5,.625,.75,.875])for(const go of [0,.25,.5,.75]){
+  const GO=small?Array.from({length:Math.ceil(Q/1.5)},(_,i)=>i*1.5/Q):[0,.25,.5,.75],FO=small?Array.from({length:Math.ceil(PP/1.5)},(_,i)=>i*1.5/PP):[0,.125,.25,.375,.5,.625,.75,.875];
+  for(const fo of FO)for(const go of GO){
     const vs=F.vmin-PP+fo*PP,us=F.umin-Q+go*Q;
     const nk=Math.ceil((F.vmax-vs)/PP)+1,nj=Math.ceil((F.umax-us)/Q)+1;
     const lots=[],h=new Set(),vr=new Set();
@@ -1095,8 +1096,10 @@ function layoutLots(P,th,p,town){
             h.add((k+row)+','+j);vr.add(k+','+j);vr.add(k+','+(j+1));
           }}}}
     if(!best||lots.length>best.lots.length)best={lots,h,vr,vs,us};
+    if(p.noRoad){h.clear();vr.clear()}
   }
   const roads=[],lines=[];
+  if(p.noRoad){best.h.clear();best.vr.clear()}
   for(const key of best.h){const [k,j]=key.split(',').map(Number);const r=best.vs+k*PP,c0=best.us+j*Q;
     roads.push([T(c0,r),T(c0+Q+w,r),T(c0+Q+w,r+w),T(c0,r+w)]);lines.push([T(c0+w,r+w/2),T(c0+Q,r+w/2)])}
   for(const key of best.vr){const [k,j]=key.split(',').map(Number);const r=best.vs+k*PP,c0=best.us+j*Q;
@@ -1111,7 +1114,7 @@ function layoutLots(P,th,p,town){
 function layoutBlocks(P,th,p){
   const F=frame(P,th),T=F.toXY;
   const tower=p.mixed||p.form==='tower'||(p.form!=='slab'&&p.floors>=18);
-  const H=p.floors*cls().h,per=7,set=per+7;let D,L,G,Gu,gWhy;
+  const H=p.floors*cls().h,per=7;let set=per+7,point=false,D,L,G,Gu,gWhy;
   if(tower){D=28;L=28;G=Math.max(30,H*(state.seis?0.8:0.6),H*p.insol*0.6);Gu=G;gWhy=`башни: ${state.seis?'0,8':'0,6'} высоты (допущение)`}
   else{D=16;L=p.secLen;const Gn=normGap(p.floors),Gs=state.seis?2*H:0;G=Math.max(Gn,Gs,H*p.insol);Gu=20;gWhy=G===Gs&&Gs>0?'сейсмика: 2 высоты':G===Gn?'норма по этажности':'ваш минимум'}
   const PP=D+G;
@@ -1123,6 +1126,10 @@ function layoutBlocks(P,th,p){
   for(const v of [F.vmin+set,F.vmax-set-D,(F.vmin+F.vmax)/2-D/2])cands.add(Math.round((((v-F.vmin)%PP)+PP)%PP*10)/10);
   let best=[];
   for(const o of cands){const b=[];for(let v0=F.vmin+o;v0+D<=F.vmax;v0+=PP)b.push(...rowFill(v0));if(b.length>best.length)best=b}
+  // small plot: one point building, fire access and entrance from the street, 6 m to the boundary
+  if(!best.length&&state.area<1e4){set=6;point=true;const L0=L;
+    for(const l2 of tower?[24,20,18]:[L0,48,42,36,30,24,18]){if(!tower&&l2>L0)continue;L=l2;if(tower)D=l2;
+      for(const o of cands){const b=[];for(let v0=F.vmin+o;v0+D<=F.vmax;v0+=PP)b.push(...rowFill(v0));if(b.length>best.length)best=b}if(best.length)break}}
   // social objects replace the houses nearest to their anchors
   const amen=[],cellA=(L+Gu)*(D+G),cell=b=>[T(b.u0-Gu/2+4,b.v0-G/2+6),T(b.u0+L+Gu/2-4,b.v0-G/2+6),T(b.u0+L+Gu/2-4,b.v0+D+G/2-6),T(b.u0-Gu/2+4,b.v0+D+G/2-6)];
   const bc=b=>b.ct0||(b.ct0=T(b.u0+L/2,b.v0+D/2));
@@ -1152,7 +1159,7 @@ function layoutBlocks(P,th,p){
   const blds=best.map(b=>({u0:b.u0,v0:b.v0,pts:b.pts,ct:T(b.u0+L/2,b.v0+D/2),secs:Array.from({length:nSec-1},(_,i)=>[T(b.u0+L*(i+1)/nSec,b.v0),T(b.u0+L*(i+1)/nSec,b.v0+D)])}));
   const sh=Math.min(H*0.3,12);
   const shadows=blds.map(bd=>bd.pts.map(q=>[q[0]+sh*0.35,q[1]-sh]));
-  const out={kind:'multi',blds,shadows,per,L,D,H,G,gWhy,th,amen,parkStrips,plays,surf,playA,tower,floors:p.floors};
+  const out={kind:'multi',blds,shadows,per,L,D,H,G,gWhy,th,amen,parkStrips,plays,surf,playA,tower,floors:p.floors,point};
   if(p.mixed)mixFunctions(out,P,T,p);
   return out;
 }
@@ -1229,7 +1236,7 @@ function nonresDemand(t){
   let cap=[40000,30000,15000][tier];if(d&&d.major>300)cap*=0.5;
   return{cap:Math.round(cap),how:'оценка спроса на склады по региону (допущение)'};
 }
-function finance(t,st,p,area,m){const f=finance0(t,st,p,area,m),d=docExtra(f.build);f.dx=d;f.docs=d.total;if(d.total){f.total+=d.total;f.land-=d.total;f.perSotka=f.land/(area/100);f.perHa=f.land/(area/1e4)}return f}
+function finance(t,st,p,area,m){if(!st.units)return{revenue:0,build:0,infra:0,soft:0,mkt:0,total:0,land:0,perSotka:0,perHa:0,disc:0,discA:0,docs:0,dx:{demol:0,oblig:0,util:0,soil:0,total:0,delay:0}};const f=finance0(t,st,p,area,m),d=docExtra(f.build);f.dx=d;f.docs=d.total;if(d.total){f.total+=d.total;f.land-=d.total;f.perSotka=f.land/(area/100);f.perHa=f.land/(area/1e4)}return f}
 function finance0(t,st,p,area,m){
   if(t==='mixed'&&st.resG!=null){
     const dm=mixDemand(),cap=p.cap||0.12;
@@ -1291,13 +1298,14 @@ function cashflow(t,f,units){
 }
 function evalType(t,P,area,a0){
   const p=state.p[t],list=isTall(t)?VARS.tall:!isRes(t)?VARS.multi:VARS.lots;
-  const vs=list.map(v=>{
+  const vs=list.filter(v=>!v.small||area<1e4).map(v=>{
     const th=v.abs!=null?v.abs*Math.PI/180:a0+v.da*Math.PI/180;
-    const L=!isRes(t)?layoutBoxes(P,th,{...p,len:Math.max(30,Math.round(p.len*(v.lenMul||1)/5)*5)},t):isTall(t)?layoutBlocks(P,th,{...p,mixed:t==='mixed',form:t==='mixed'?'tower':state.form,secLen:Math.max(30,Math.round(p.secLen*(v.lenMul||1)/5)*5)}):layoutLots(P,th,{...p,perBlock:Math.round(p.perBlock*(v.blockMul||1))},t==='town');
+    const L=!isRes(t)?layoutBoxes(P,th,{...p,len:Math.max(30,Math.round(p.len*(v.lenMul||1)/5)*5)},t):isTall(t)?layoutBlocks(P,th,{...p,mixed:t==='mixed',form:t==='mixed'?'tower':state.form,secLen:Math.max(30,Math.round(p.secLen*(v.lenMul||1)/5)*5)}):layoutLots(P,th,{...p,perBlock:Math.round(p.perBlock*(v.blockMul||1)),noRoad:!!v.noRoad},t==='town');
     const st=stats(t,L,p,area);if(isTall(t)&&st.units)st.ins=insol(L);const f=finance(t,st,p,area,state.margin/100);
     return{...v,L,st,f};
   });
-  let bi=-1;vs.forEach((v,i)=>{if(v.st.units>0&&(bi<0||v.f.land>vs[bi].f.land))bi=i});
+  const key=v=>v.f.land>0?v.f.land:v.f.revenue-v.f.total-1e12; // if no variant pays for the land, pick the one that loses least in money, not the smallest
+  let bi=-1;vs.forEach((v,i)=>{if(v.st.units>0&&(bi<0||key(v)>key(vs[bi])))bi=i});
   return{vs,bi};
 }
 function compute(){
