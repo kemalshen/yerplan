@@ -778,6 +778,11 @@ const CENTRES=[['tash',41.3111,69.2797],['tashobl',41.0450,69.3580],['sam',39.65
 /* realistic sales pace, units per month (assumption): [Tashkent city, elsewhere] */
 const PACE={cottage:[6,3],town:[10,5],multi:[40,15],mixed:[40,15]};
 /* documents checklist: what only the owner/developer can close. fields feed the money model */
+/* construction technology for apartment blocks (assumptions — calibrate with local contractors and panel plants).
+   panel: factory precast slabs/walls — cheaper and faster, but standard layouts, lower price in higher classes, height up to ~16 floors */
+const TECH={mono:{name:'Монолит',ck:1,bk:1,pk:{econ:1,comfort:1,business:1,premium:1},max:null},
+  panel:{name:'Панель',ck:0.88,bk:0.6,pk:{econ:0.98,comfort:0.94,business:0.85,premium:0.75},max:16}};
+const techFor=t=>(t==='multi'||t==='mixed')?TECH[state.tech]||TECH.mono:TECH.mono;
 const DOCS=[
   {k:'zone',g:'Земля',n:'Назначение земли — под жилую застройку',doc:'Кадастровый паспорт: категория и вид разрешённого использования.',sev:'bad',
     noTxt:'Сельхозземлю или землю другого назначения нужно переводить — это долго и не всегда возможно.',
@@ -874,7 +879,7 @@ const UNIT_S={cottage:'д.',town:'д.',multi:'кв.',mixed:'кв.',retail:'м²'
 const state={fin:{rate:0.16,eq:0.30,tax:0.15},cls:'comfort',carfree:false,type:'cottage',region:'tash',poly:PRESETS.trap.map(p=>p.slice()),p:JSON.parse(JSON.stringify(DEF)),tl:JSON.parse(JSON.stringify(TL)),
   margin:20,land:{own:true,price:1500000},sel:null,manual:false,vb:null,variants:[],compare:{},
   mode:'edit',trace:[],gtrace:[],under:null,calib:false,calibSide:0,needScale:false,source:'Пример',
-  form:'auto',floorsAuto:true,geo:null,view:'schema',dragging:false,src:null,
+  form:'auto',floorsAuto:true,tech:'mono',geo:null,view:'schema',dragging:false,src:null,
   social:'auto',checks:{zone:'?',title:'?',free:'?',red:'?',utils:'?',soil:'?',permit:'?'},docv:{},docn:{},site:{status:'nogeo',key:null,d:null,elev:null}};
 
 /* location drives price: the same flat costs more near the centre; a class premium is paid only where that class belongs */
@@ -1178,9 +1183,9 @@ function finance0(t,st,p,area,m){
     const offL=Math.min(st.offG*0.85*0.85,dm.office),offV=offL*p.offRent*12*0.9/cap;
     const retL=Math.min(st.podG*0.85*0.9,dm.retail),retV=retL*p.retRent*12*0.9/cap;
     const hotNoi=st.rooms*p.adr*p.occ*365*0.33,hotV=hotNoi/(cap+0.01);
-    const disc=oversupplyDisc(t,st.units),resList=st.sale*p.price*(state.cls!=='econ'?1+CARFREE_PREMIUM:1),resRev=resList*(1-disc),parkRev=(st.resPark||0)*(p.parkPrice||0);
+    const tk=techFor(t),disc=oversupplyDisc(t,st.units),resList=st.sale*p.price*tk.pk[state.cls]*(state.cls!=='econ'?1+CARFREE_PREMIUM:1),resRev=resList*(1-disc),parkRev=(st.resPark||0)*(p.parkPrice||0);
     const revenue=resRev+offV+retV+hotV+parkRev;
-    const build=st.resG*p.cost+st.offG*p.offCost+st.podG*p.retCost+st.rooms*p.roomCost+st.parkUnder*(p.parkCost||0);
+    const build=st.resG*p.cost*tk.ck+st.offG*p.offCost+st.podG*p.retCost+st.rooms*p.roomCost+st.parkUnder*(p.parkCost||0);
     const infra=area*p.infra,mkt=(resRev+parkRev)*cls().mkt+(offV+retV+hotV)*0.02,soft=SOFT*(build+infra)+mkt,total=build+infra+soft,land=revenue*(1-m)-total;
     return{revenue,discA:resList*disc,disc,mkt,resRev,offV,retV,hotV,parkRev,offL,retL,hotNoi,build,infra,soft,total,land,perSotka:land/(area/100),perHa:land/(area/1e4)};
   }
@@ -1190,10 +1195,10 @@ function finance0(t,st,p,area,m){
     const build=st.gba*p.cost,infra=area*p.infra,soft=SOFT*(build+infra),total=build+infra+soft,land=value*(1-m)-total;
     return{revenue:value,mkt:value*0.02,noi,leased,demand:dm.cap,demandHow:dm.how,build,infra,soft:soft+value*0.02,total:total+value*0.02,land,perSotka:land/(area/100),perHa:land/(area/1e4)};
   }
-  const pu=t==='multi'?(st.parkUnder||0):0,disc=oversupplyDisc(t,st.units);
-  const list=st.sale*p.price*(t==='multi'&&state.carfree&&state.cls!=='econ'?1+CARFREE_PREMIUM:1);
+  const pu=t==='multi'?(st.parkUnder||0):0,disc=oversupplyDisc(t,st.units),tk=techFor(t);
+  const list=st.sale*p.price*tk.pk[state.cls]*(t==='multi'&&state.carfree&&state.cls!=='econ'?1+CARFREE_PREMIUM:1);
   const revenue=list*(1-disc)+pu*(p.parkPrice||0);
-  const build=(t==='multi'?st.gba:st.sale)*p.cost+pu*(p.parkCost||0);
+  const build=(t==='multi'?st.gba*tk.ck:st.sale)*p.cost+pu*(p.parkCost||0);
   const infra=area*p.infra,mkt=revenue*cls().mkt,soft=SOFT*(build+infra)+mkt,total=build+infra+soft;
   const land=revenue*(1-m)-total;
   return{revenue,discA:list*disc,disc,mkt,build,infra,soft,total,land,perSotka:land/(area/100),perHa:land/(area/1e4)};
@@ -1202,7 +1207,7 @@ function salesNeed(t,units){if(!isRes(t))return Math.round(state.tl[t].sales);co
 function cashflow(t,f,units){
   const tl=state.tl[t],c=isRes(t)?cls():null,FIN=state.fin;
   const need=salesNeed(t,units),SN=Math.min(180,Math.max(1,Math.round(tl.sales),need)),auto=need>Math.round(tl.sales);
-  const B=Math.max(1,Math.round(tl.build),auto?Math.round(SN*0.8):0);
+  const B=Math.max(1,Math.round(tl.build*techFor(t).bk),auto?Math.round(SN*0.8):0);
   const S0=Math.max(isRes(t)?2:0,Math.round(tl.start)+(c?c.start:0));
   const [iSh,iM]=c?c.inst:[0,0],down=0.3;
   const dx=f.dx||{demol:0,oblig:0,util:0,soil:0,delay:0},D=dx.delay||0;
@@ -1242,6 +1247,7 @@ function evalType(t,P,area,a0){
 }
 function compute(){
   {const g=state.geo?state.geo.lat0+','+state.geo.lng0:null;if(g!==state.priceGeo&&!optRunning){applyRegion(state.region);setTimeout(()=>{renderClass();buildControls()},0)}}
+  {const mx=techFor(state.type).max,pp=state.p[state.type];if(mx&&pp&&pp.floors>mx)pp.floors=mx}
   const P=state.poly;if(P.length<3)return;
   const area=Math.abs(polyArea(P)),a0=longestAngle(P);state.area=area;
   MP=masterplan(P,a0);state.mp=MP;
@@ -1668,6 +1674,8 @@ function factors(){
     if(e){const sl=e.slope*100;F.push({n:'Рельеф',st:sl<5?'ok':sl<12?'warn':'bad',v:`уклон до ${nf1.format(sl)}%`,note:`Перепад высот ${nf.format(e.max-e.min)} м. `+(sl<5?'Участок ровный.':sl<12?'Нужна вертикальная планировка — дороже земляные работы.':'Крутой склон: стройка сильно дороже, часть участка может быть непригодна.'),src:'Карта высот',crit:sl>=12})}
     else F.push({n:'Рельеф',st:'unk',v:'—',note:'Высоты сейчас недоступны.',src:'Карта высот'});
   }
+  if((t==='multi'||t==='mixed')&&state.tech==='panel'){const hi=state.cls==='business'||state.cls==='premium',far=!['tash','tashobl','sam'].includes(state.region);
+    F.push({n:'Панельная технология',st:hi||far?'warn':'ok',v:'панель',note:(hi?'Для бизнеса и премиума панель снижает цену: покупатели ждут свободных планировок и монолита. ':'')+(far?'Проверьте, есть ли завод панелей в регионе — доставка издалека съедает экономию. ':'')+`Быстрее стройка, дешевле м², но типовые планировки и не выше ${TECH.panel.max} этажей.`,src:'Расчёт'})}
   // distance to centre
   if(state.geo){const n=nearestCentre(state.geo.lat0,state.geo.lng0);const r=REGIONS.find(x=>x[0]===n.id);
     F.push({n:'До центра города',st:n.d<=12000?'ok':n.d<=30000?'warn':'warn',v:dm(n.d),note:`До центра: ${r?r[1].replace(' область',''):''}. `+(n.d<=12000?'Городская локация.':'Загородная локация: лучше подходят дома, спрос на квартиры ниже.'),src:'Карта',far:n.d>15000})}
@@ -1866,13 +1874,13 @@ let optRunning=false;
 async function runOptimizer(){
   if(optRunning||state.poly.length<3)return;optRunning=true;setTab('opt');
   const btn=$('#opt-run'),st=$('#opt-status');btn.disabled=true;
-  const save={form:state.form,floorsAuto:state.floorsAuto,cls:state.cls,carfree:state.carfree,type:state.type,p:JSON.parse(JSON.stringify(state.p)),sel:state.sel,manual:state.manual};
+  const save={tech:state.tech,form:state.form,floorsAuto:state.floorsAuto,cls:state.cls,carfree:state.carfree,type:state.type,p:JSON.parse(JSON.stringify(state.p)),sel:state.sel,manual:state.manual};
   const P=state.poly,area=Math.abs(polyArea(P)),a0=longestAngle(P),lp=locProfile();
   const jobs=[];
   for(const c of CLS_ORDER){
     if(lp.fit(c)==='bad')continue;
     for(const t of ['cottage','town'])jobs.push({c,t});
-    for(const fl of [9,12,16,20,25,30,35])for(const cf of (CLS[c].carfree?[true]:c==='econ'?[false]:[false,true]))jobs.push({c,t:'multi',fl,cf});
+    for(const fl of [9,12,16,20,25,30,35])for(const cf of (CLS[c].carfree?[true]:c==='econ'?[false]:[false,true]))for(const tc of fl<=TECH.panel.max?['mono','panel']:['mono'])jobs.push({c,t:'multi',fl,cf,tc});
     if(c!=='econ')for(const fl of [20,25,30,35])jobs.push({c,t:'mixed',fl,cf:true});
   }
   for(const fl of [1,2,3])jobs.push({c:save.cls,t:'retail',fl});
@@ -1880,7 +1888,7 @@ async function runOptimizer(){
   const out=[];let i=0;
   for(const j of jobs){
     i++;if(i%3===0){st.textContent=`Считаю варианты: ${i} из ${jobs.length}…`;await new Promise(r=>setTimeout(r,0))}
-    state.cls=j.c;state.carfree=j.t==='multi'?j.cf:false;applyRegion(state.region);if(j.fl)state.p[j.t==='multi'||j.t==='mixed'||j.t==='retail'?j.t:'multi'].floors=j.fl;state.form='auto';state.type=j.t;
+    state.cls=j.c;state.carfree=j.t==='multi'?j.cf:false;applyRegion(state.region);if(j.fl)state.p[j.t==='multi'||j.t==='mixed'||j.t==='retail'?j.t:'multi'].floors=j.fl;state.tech=j.tc||'mono';state.form='auto';state.type=j.t;
     const r=evalType(j.t,P,area,a0);if(r.bi<0)continue;
     const v=r.vs[r.bi];v.cash=cashflow(j.t,v.f,v.st.units);
     const q=quality(v,j.t),need=salesNeed(j.t,v.st.units);
@@ -1889,7 +1897,7 @@ async function runOptimizer(){
     {const dc=flCap();if(dc&&j.fl&&isTall(j.t)&&j.fl>dc.max)continue}
     out.push({...j,v,q:q.score,profit:v.cash.profit,npv:v.cash.npv20,irr:v.cash.irr,units:v.st.units,months:v.cash.months});
   }
-  Object.assign(state,{form:save.form,floorsAuto:save.floorsAuto,cls:save.cls,carfree:save.carfree,type:save.type,sel:save.sel,manual:save.manual});state.p=save.p;
+  Object.assign(state,{tech:save.tech,form:save.form,floorsAuto:save.floorsAuto,cls:save.cls,carfree:save.carfree,type:save.type,sel:save.sel,manual:save.manual});state.p=save.p;
   state.optAll=out;state.optN=jobs.length;
   btn.disabled=false;optRunning=false;
   renderOpt();
@@ -1900,12 +1908,12 @@ function renderOpt(){
   out.sort((a,b)=>key(b)-key(a));state.opt=out.slice(0,5);
   if(!out.length){st.textContent='Не нашёл варианта, который и прибылен, и продаётся за 10 лет, и проходит по качеству. Попробуйте другие цены или часть участка.';$('#opt').innerHTML='';return}
   st.textContent=`Проверил ${state.optN} вариантов. `+{npv:'Сверху — больше всего прибыли с учётом времени: деньги через 7 лет стоят меньше, чем через 3 (ставка 20% в год).',irr:'Сверху — самые быстрые деньги: максимальная доходность на вложенный доллар в год (IRR). Так работают массовые застройщики: быстро построить, быстро продать, вложить снова.',profit:'Сверху — максимум прибыли в деньгах, без учёта того, сколько лет её ждать.'}[state.crit||'npv']+' В списке только варианты, которые подходят месту, проходят по качеству и продаются не дольше 10 лет.';
-  $('#opt').innerHTML=state.opt.map((o,k)=>`<div class="optcard${k===0?' top':''}"><div class="oh"><b>${k===0?'Лучший: ':''}${TYPE_SHORT[o.t]}${isRes(o.t)?', '+CLS[o.c].name.toLowerCase():''}${o.fl?`, ${o.fl} эт.`:''}</b><button type="button" data-opt="${k}">Применить</button></div><span class="om">${o.t==='multi'?(o.cf?'двор без машин · ':'парковка во дворе · '):''}${nf.format(o.units)} ${plural(o.units,UNIT_W[o.t])} · проект ${o.months} мес.</span><span class="ov">Прибыль <b>${money(o.profit)}</b> · IRR <b>${irrTxt(o.irr)}</b> · качество <b>${o.q}</b></span></div>`).join('');
+  $('#opt').innerHTML=state.opt.map((o,k)=>`<div class="optcard${k===0?' top':''}"><div class="oh"><b>${k===0?'Лучший: ':''}${TYPE_SHORT[o.t]}${isRes(o.t)?', '+CLS[o.c].name.toLowerCase():''}${o.fl?`, ${o.fl} эт.`:''}</b><button type="button" data-opt="${k}">Применить</button></div><span class="om">${o.t==='multi'?(o.tc==='panel'?'панель · ':'монолит · ')+(o.cf?'двор без машин · ':'парковка во дворе · '):''}${nf.format(o.units)} ${plural(o.units,UNIT_W[o.t])} · проект ${o.months} мес.</span><span class="ov">Прибыль <b>${money(o.profit)}</b> · IRR <b>${irrTxt(o.irr)}</b> · качество <b>${o.q}</b></span></div>`).join('');
 }
 $('#crit-seg').addEventListener('click',e=>{const b=e.target.closest('[data-crit]');if(!b)return;state.crit=b.dataset.crit;document.querySelectorAll('[data-crit]').forEach(x=>x.setAttribute('aria-pressed',x===b));renderOpt()});
 $('#opt-run').addEventListener('click',runOptimizer);
 $('#opt').addEventListener('click',e=>{const b=e.target.closest('[data-opt]');if(!b)return;const o=state.opt[+b.dataset.opt];
-  state.cls=o.c;state.carfree=o.t==='multi'?o.cf:false;applyRegion(state.region);if(o.fl){state.p[o.t==='multi'||o.t==='mixed'||o.t==='retail'?o.t:'multi'].floors=o.fl;state.floorsAuto=false}state.form='auto';state.type=o.t;renderClass();resetFlags();buildControls();update();
+  state.cls=o.c;state.carfree=o.t==='multi'?o.cf:false;applyRegion(state.region);if(o.fl){state.p[o.t==='multi'||o.t==='mixed'||o.t==='retail'?o.t:'multi'].floors=o.fl;state.floorsAuto=false}state.tech=o.tc||'mono';state.form='auto';state.type=o.t;renderClass();resetFlags();buildControls();update();
   $('.stage').scrollIntoView({behavior:'smooth',block:'start'})});
 
 function renderChecklist(){
@@ -2084,7 +2092,7 @@ function buildControls(){
   $('#cls-group').hidden=!isRes(t);
   $('#fin-params').dataset.nonres=isRes(t)?'':'1';
   const KEY={cottage:['lotW','lotD'],town:['lotW','lotD'],multi:['floors'],mixed:['floors'],retail:['floors'],logistics:['len','depth']}[t];
-  const fld=([k,l,mi,ma,st,u])=>field(`p-${t}-${k}`,l,mi,ma,st,u,p[k],(t==='cottage'||t==='town')&&k==='lotD');
+  const fld=([k,l,mi,ma,st,u])=>field(`p-${t}-${k}`,l,mi,k==='floors'&&techFor(t).max?Math.min(ma,techFor(t).max):ma,st,u,p[k],(t==='cottage'||t==='town')&&k==='lotD');
   $('#key-params').innerHTML='<h2>3. Главные параметры</h2>'+PLAN[t].filter(x=>KEY.includes(x[0])).map(fld).join('');
   if(t==='cottage'||t==='town'){p.sotka=sotkaPrice(p);$('#key-params').insertAdjacentHTML('beforeend',`<div class="field"><label for="f-${t}-sotka">Цена за сотку с домом</label><div class="num"><input type="number" inputmode="decimal" id="f-${t}-sotka" min="0" step="1000" value="${p.sotka}"><span>$</span></div><small>Так продают на рынке. Пересчитывается в цену за м² дома.</small></div>`);
     $(`#f-${t}-sotka`).addEventListener('input',e=>{const v=parseFloat(e.target.value);if(isNaN(v))return;p.price=Math.round(v*(p.lotW*p.lotD/100)/Math.max(1,p.house));const pe=$(`#f-${t}-price`);if(pe)pe.value=p.price;update()})}
@@ -2097,6 +2105,9 @@ function buildControls(){
   document.querySelectorAll('[data-social]').forEach(b=>b.addEventListener('click',()=>{state.social=b.dataset.social;buildControls();update()}))}
   if(t==='multi'){$('#key-params').insertAdjacentHTML('beforeend',`<div class="field"><label>Форма домов</label><div class="seg" role="group" aria-label="Форма домов">${[['auto','Авто'],['slab','Секции'],['tower','Башни']].map(([k,l])=>`<button type="button" data-form="${k}" aria-pressed="${state.form===k}">${l}</button>`).join('')}</div><small>«Авто»: с 18 этажей — башни. Протяжённые секции на 20+ этажах при сейсмике 8+ требуют разрыва в 2 высоты дома.</small></div>`);
     document.querySelectorAll('[data-form]').forEach(b=>b.addEventListener('click',()=>{state.form=b.dataset.form;buildControls();update()}))}
+  if(t==='multi'||t==='mixed'){const tk=techFor(t),c=state.cls,d=x=>(x>=1?'+':'−')+nf.format(Math.abs(Math.round((x-1)*100)))+'%';
+    $('#key-params').insertAdjacentHTML('beforeend',`<div class="field"><label>Технология</label><div class="seg two" role="group" aria-label="Технология строительства">${Object.entries(TECH).map(([k,x])=>`<button type="button" data-tech="${k}" aria-pressed="${state.tech===k}">${x.name}</button>`).join('')}</div><small>${state.tech==='panel'?`Панель: стройка ${d(TECH.panel.ck)}, срок ${d(TECH.panel.bk)}, цена для класса «${CLS[c].name.toLowerCase()}» ${d(TECH.panel.pk[c])}, до ${TECH.panel.max} этажей. Нужен завод панелей рядом, планировки типовые (допущение).`:'Монолит: свободные планировки, любая этажность, дольше и дороже панели. Панель — быстрее и дешевле, но покупатели бизнеса и премиума платят за неё меньше.'}</small></div>`);
+    document.querySelectorAll('[data-tech]').forEach(b=>b.addEventListener('click',()=>{const nt=b.dataset.tech,pp=state.p[t],mx=TECH[nt].max;if(nt===state.tech)return;if(mx&&pp.floors>mx){state.flMono=pp.floors;pp.floors=mx}else if(!mx&&state.flMono){pp.floors=state.flMono;state.flMono=null}state.tech=nt;buildControls();update()}))}
   if(t==='multi'){$('#key-params').insertAdjacentHTML('beforeend',`<div class="field"><label>Машины во дворе</label><div class="seg two" role="group" aria-label="Машины во дворе"><button type="button" data-carfree="1" aria-pressed="${state.carfree}">Двор без машин</button><button type="button" data-carfree="0" aria-pressed="${!state.carfree}">Парковка во дворе</button></div><small>Без машин: вся парковка под землёй, во дворе площадки и зелень, +5% к цене (допущение).</small></div>`);
     document.querySelectorAll('[data-carfree]').forEach(b=>b.addEventListener('click',()=>{state.carfree=b.dataset.carfree==='1';buildControls();update()}))}
   if(isTall(t)){$('#plan-params').insertAdjacentHTML('beforeend',`<div class="seg two" role="group" aria-label="Сейсмичность площадки"><button type="button" data-seis="1" aria-pressed="${state.seis}">8+ баллов</button><button type="button" data-seis="0" aria-pressed="${!state.seis}">до 7 баллов</button></div><small class="note">Сейсмичность площадки. При 8+ баллах разрыв между длинными сторонами — не меньше 2 высот дома (ШНК 2.07.01-03*, п. 21.1). По умолчанию задана по региону — уточните по карте сейсмического районирования.</small>`);
@@ -2518,7 +2529,7 @@ $('#copy').addEventListener('click',()=>{const txt=summary(),s=$('#copy-status')
 {const mw=$('#mapwrap');for(const id of ['#p-map','#p-doc','#p-manual','#p-sample'])mw.appendChild($(id))}
 /* ---------- saved plots: autosave to this browser, reopen, export/import ---------- */
 const PKEY='yerplan.projects.v1',CKEY='yerplan.current.v1';
-const SAVE_F=['poly','geo','source','type','cls','carfree','region','p','tl','margin','land','fin','form','floorsAuto','social','checks','docv','docn','view'];
+const SAVE_F=['poly','geo','source','type','cls','carfree','region','p','tl','margin','land','fin','form','floorsAuto','tech','social','checks','docv','docn','view'];
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
 function projAll(){try{return JSON.parse(lsGet(PKEY)||'[]')||[]}catch(e){return[]}}
@@ -2555,6 +2566,7 @@ async function openProj(it){
   if(!it||!it.s)return;const o=it.s;
   for(const k of SAVE_F)if(k!=='view'&&o[k]!==undefined&&o[k]!==null)state[k]=JSON.parse(JSON.stringify(o[k]));
   if(o.geo==null)state.geo=null;
+  if(!o.tech)state.tech='mono';
   state.checks=Object.assign({zone:'?',title:'?',free:'?',red:'?',utils:'?',soil:'?',permit:'?'},o.checks||{});state.docv=o.docv||{};state.docn=o.docn||{};
   state.pid=it.id;state.pname=it.auto===false?it.name:'';state.paddr='';
   state.under=null;state.mode='edit';state.trace=[];state.gtrace=[];state.calib=false;state.needScale=false;
