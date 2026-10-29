@@ -763,13 +763,13 @@ const AM={school:{label:'Школа',c:'#F2C46D'},kinder:{label:'Детсад',c
 const PLAY_PER_PERSON=0.7+0.1+2.0+0.3, M2_PER_PERSON=20, GREEN_MIN=0.25;
 /* housing classes (assumptions — calibrate with local developers) */
 const CLS={
-  econ:{name:'Эконом',pk:0.80,ck:0.88,apt:52,park:0.5,eff:0.80,h:3.0,green:0.25,pace:1.5,mkt:0.03,start:-6,inst:[0.5,18],house:{cottage:140,town:110},lot:{cottage:[15,30],town:[7,24]},carfree:false,
+  econ:{name:'Эконом',pk:0.80,ck:0.88,apt:52,park:0.5,eff:0.80,h:3.0,green:0.25,pace:1.5,mkt:0.03,start:-6,inst:[0.5,18],house:{cottage:140,town:120},lot:{cottage:[15,30],town:[6,17]},carfree:false,
     who:'молодые семьи и первая квартира, часто в ипотеку или рассрочку',needs:'цена за м² и рассрочка, школа и сад рядом, транспорт'},
-  comfort:{name:'Комфорт',pk:1,ck:1,apt:65,park:0.8,eff:0.78,h:3.0,green:0.30,pace:1,mkt:0.04,start:0,inst:[0.4,12],house:{cottage:180,town:140},lot:{cottage:[18,33],town:[8,26]},carfree:false,
+  comfort:{name:'Комфорт',pk:1,ck:1,apt:65,park:0.8,eff:0.78,h:3.0,green:0.30,pace:1,mkt:0.04,start:0,inst:[0.4,12],house:{cottage:180,town:140},lot:{cottage:[18,33],town:[7,19]},carfree:false,
     who:'семьи с детьми, средний класс',needs:'безопасный двор и площадки, сад и школа в шаговой доступности, парковка, магазины'},
-  business:{name:'Бизнес',pk:1.40,ck:1.55,apt:85,park:1.2,eff:0.75,h:3.3,green:0.35,pace:0.35,mkt:0.05,start:6,inst:[0.2,12],house:{cottage:250,town:180},lot:{cottage:[22,38],town:[10,28]},carfree:true,
+  business:{name:'Бизнес',pk:1.40,ck:1.55,apt:85,park:1.2,eff:0.75,h:3.3,green:0.35,pace:0.35,mkt:0.05,start:6,inst:[0.2,12],house:{cottage:250,town:180},lot:{cottage:[22,38],town:[9,23]},carfree:true,
     who:'предприниматели и руководители',needs:'двор без машин, подземный паркинг, охрана, качественные фасады и лобби, близость к центру'},
-  premium:{name:'Премиум',pk:1.80,ck:2.20,apt:120,park:1.6,eff:0.72,h:3.5,green:0.40,pace:0.12,mkt:0.06,start:12,inst:[0,0],house:{cottage:350,town:240},lot:{cottage:[28,45],town:[12,30]},carfree:true,
+  premium:{name:'Премиум',pk:1.80,ck:2.20,apt:120,park:1.6,eff:0.72,h:3.5,green:0.40,pace:0.12,mkt:0.06,start:12,inst:[0,0],house:{cottage:350,town:240},lot:{cottage:[28,45],town:[12,28]},carfree:true,
     who:'состоятельные покупатели',needs:'престижная локация и вид, приватность, сервис и консьерж, большие планировки, 1,5+ места на квартиру'}
 };
 const CLS_ORDER=['econ','comfort','business','premium'];
@@ -781,7 +781,7 @@ function greenNeed(){const lawBig=state.region==='tash'&&state.type==='multi'&&s
 const PRICE_K={cottage:0.95,town:0.85,multi:1,mixed:1.05}, COST_BASE={cottage:450,town:430,multi:420,mixed:470}, INFRA_BASE={cottage:18,town:20,multi:30,mixed:40};
 const DEF={
   cottage:{lotW:18,lotD:33,road:9,perBlock:10,house:180,price:0,cost:0,infra:0},
-  town:{lotW:8,lotD:26,road:8,perBlock:12,house:140,price:0,cost:0,infra:0},
+  town:{lotW:7,lotD:19,road:7,perBlock:16,house:140,price:0,cost:0,infra:0},
   multi:{floors:12,secLen:60,insol:1.0,price:0,cost:0,infra:0,eff:0.78,parkCost:0,parkPrice:0},
   mixed:{floors:25,secLen:60,insol:1.0,price:0,cost:0,infra:0,eff:0.75,parkCost:0,parkPrice:0,offRent:0,offCost:0,retRent:0,retCost:0,adr:0,occ:0.62,roomCost:0,cap:0.12},
   retail:{floors:2,len:60,depth:40,rent:0,cost:0,infra:0,occ:0.85,cap:0.13,eff:0.85},
@@ -791,7 +791,7 @@ const TL={cottage:{build:18,start:9,sales:24},town:{build:18,start:9,sales:24},m
 const APT=65, PARK=0.7, SOFT=0.10, FAR_MAX=2.5;
 const PLAN={
   cottage:[['lotW','Ширина участка',12,30,1,'м'],['lotD','Глубина участка',20,50,1,'м'],['road','Ширина улицы',6,14,0.5,'м'],['perBlock','Участков в квартале',4,20,1,'']],
-  town:[['lotW','Ширина участка',6,12,0.5,'м'],['lotD','Глубина участка',18,35,1,'м'],['road','Ширина улицы',6,12,0.5,'м'],['perBlock','Домов в ряду',6,24,1,'']],
+  town:[['lotW','Ширина участка',5,12,0.5,'м'],['lotD','Глубина участка',14,35,1,'м'],['road','Ширина улицы',5,12,0.5,'м'],['perBlock','Домов в ряду',6,30,1,'']],
   multi:[['floors','Этажность',5,40,1,'эт.'],['secLen','Длина дома',30,120,5,'м'],['insol','Разрыв не меньше',0.5,2,0.1,'× высоты']],
   mixed:[['floors','Этажность башен',12,45,1,'эт.'],['insol','Разрыв не меньше',0.5,2,0.1,'× высоты']],
   retail:[['floors','Этажность',1,5,1,'эт.'],['len','Длина здания',30,150,5,'м'],['depth','Глубина здания',20,60,2,'м']],
@@ -952,10 +952,12 @@ function reserveLots(lots,A,P,T,town){
   const nS=socialOn('school')&&res>=SCH.min?Math.max(1,Math.round(res/SCH.per)):0,nK=socialOn('kinder')&&res>=KG.min?Math.max(1,Math.round(res/KG.per)):0;
   spreadAnchors(lots,nS,lc).forEach((a,i)=>add('school','Школа',grab(lots,a,SCH.area,A,lc,'school')));
   spreadAnchors(lots,nK,lc).forEach((a,i)=>add('kinder','Детсад',grab(lots,a,KG.area,A,lc,'kinder')));
-  const park=res*3+(houses>60?0.04*area:0);
-  add('park','Парк и площадки',grab(lots,C,park,A,lc,'park'));
-  const center=res*1.0+Math.ceil(houses/5)*25;
-  add('center','Магазины и парковка',grab(lots,E,center,A,lc,'center'));
+  if(area>=5e4){
+    const park=res*3+(houses>60?0.04*area:0);
+    add('park','Парк и площадки',grab(lots,C,park,A,lc,'park'));
+    const center=res*1.0+Math.ceil(houses/5)*25;
+    add('center','Магазины и парковка',grab(lots,E,center,A,lc,'center'));
+  }
   return out;
 }
 
@@ -1577,6 +1579,8 @@ function factors(){
   const v=state.variants[state.sel];
   if(v&&v.st.units&&isRes(t)){const lim=Math.round(PACE[t][isT?0:1]*cls().pace),need=salesNeed(t,v.st.units),yrs=need/12;
     F.push({n:'Темп продаж',st:need>120?'bad':need>state.tl[t].sales?'warn':'ok',v:`${nf.format(v.st.units)} за ${yrs>=2?nf1.format(yrs)+' г.':need+' мес.'}`,note:need>120?`Рынок поглощает около ${lim} в месяц — продажи займут ${nf1.format(yrs)} лет. Для одного проекта это слишком много: делите на очереди, берите часть участка или другой тип застройки.`:need>state.tl[t].sales?`При темпе около ${lim} в месяц продажи займут ${need} мес. — срок и IRR в расчёте уже скорректированы.`:`В пределах реалистичного темпа (до ${lim} в месяц).`,src:'Расчёт',crit:need>120})}
+  if(v&&v.L&&v.L.kind==='lots'&&v.st.units){const gap=Math.round(v.L.w+2*(t==='town'?3:5));
+    F.push({n:'Разрыв между рядами домов',st:gap>=15?'ok':'warn',v:`${gap} м`,note:gap>=15?'Фасады напротив — не ближе 15 м, как требует ШНК для 2–3 этажей.':`Фасады напротив через улицу — ${gap} м при норме 15 м для 2–3 этажей. Так часто строят на рынке, но при согласовании могут потребовать улицу шире или отступ больше.`,src:'Нормы'})}
   if(state.mp&&state.mp.streets)F.push({n:'Генплан',st:'ok',v:`${state.mp.streets} ул.`,note:'Большой участок поделён на кварталы главными улицами шириной 22 м; школы, детсады, парк и центр размещены по числу жителей.',src:'Расчёт'});
   if(isTall(t)&&v&&v.st.units&&state.lu){const res=v.st.sale/M2_PER_PERSON,need=greenNeed()*state.area+res*PLAY_PER_PERSON,have=state.lu.green;
     F.push({n:'Двор, озеленение, площадки',st:have>=need?'ok':'warn',v:`${nf.format(have/100)} из ${nf.format(need/100)} сот.`,note:have>=need?'По нормам двора и площадок вариант проходит.':'Свободной территории меньше нормы (озеленение по классу и закону + площадки 3,1 м² на жителя). Уменьшите этажность или число домов.',src:'Нормы'})}
@@ -1999,6 +2003,7 @@ function field(id,label,min,max,step,unit,val,extra){
   return `<div class="field"><div class="row"><label for="${id}">${label}</label><output id="${id}-out">${fmtVal(val,step)} ${unit}</output></div><input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}">${extra?`<small id="${id}-x"></small>`:''}</div>`;
 }
 const fmtVal=(v,step)=>step<1?String(v).replace('.',','):nf.format(v);
+const sotkaPrice=p=>Math.round(p.price*p.house/Math.max(0.01,p.lotW*p.lotD/100)/100)*100;
 function buildControls(){
   const t=state.type,p=state.p[t],tl=state.tl[t];
   document.querySelectorAll('[data-type]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.type===t));
@@ -2007,6 +2012,8 @@ function buildControls(){
   const KEY={cottage:['lotW','lotD'],town:['lotW','lotD'],multi:['floors'],mixed:['floors'],retail:['floors'],logistics:['len','depth']}[t];
   const fld=([k,l,mi,ma,st,u])=>field(`p-${t}-${k}`,l,mi,ma,st,u,p[k],(t==='cottage'||t==='town')&&k==='lotD');
   $('#key-params').innerHTML='<h2>3. Главные параметры</h2>'+PLAN[t].filter(x=>KEY.includes(x[0])).map(fld).join('');
+  if(t==='cottage'||t==='town'){p.sotka=sotkaPrice(p);$('#key-params').insertAdjacentHTML('beforeend',`<div class="field"><label for="f-${t}-sotka">Цена за сотку с домом</label><div class="num"><input type="number" inputmode="decimal" id="f-${t}-sotka" min="0" step="1000" value="${p.sotka}"><span>$</span></div><small>Так продают на рынке. Пересчитывается в цену за м² дома.</small></div>`);
+    $(`#f-${t}-sotka`).addEventListener('input',e=>{const v=parseFloat(e.target.value);if(isNaN(v))return;p.price=Math.round(v*(p.lotW*p.lotD/100)/Math.max(1,p.house));const pe=$(`#f-${t}-price`);if(pe)pe.value=p.price;update()})}
   const rest=PLAN[t].filter(x=>!KEY.includes(x[0]));
   $('#plan-params').innerHTML=rest.length?rest.map(fld).join(''):'';
   $('#type-note').textContent={cottage:'Отдельные дома на своих участках, внутренние улицы, парк и центр.',town:'Блокированные дома рядами, свой вход и небольшой участок у каждого.',multi:'Жилые дома 5–40 этажей: секции или башни, дворы, паркинг.',mixed:'Башни на стилобате: квартиры, офисы, гостиница и торговля в одном проекте.',retail:'Торговые и офисные здания с парковкой — под аренду или продажу инвестору.',logistics:'Складские корпуса с площадками для фур — под аренду.'}[t];
@@ -2021,7 +2028,8 @@ function buildControls(){
   if(isTall(t)){$('#plan-params').insertAdjacentHTML('beforeend',`<div class="seg two" role="group" aria-label="Сейсмичность площадки"><button type="button" data-seis="1" aria-pressed="${state.seis}">8+ баллов</button><button type="button" data-seis="0" aria-pressed="${!state.seis}">до 7 баллов</button></div><small class="note">Сейсмичность площадки. При 8+ баллах разрыв между длинными сторонами — не меньше 2 высот дома (ШНК 2.07.01-03*, п. 21.1). По умолчанию задана по региону — уточните по карте сейсмического районирования.</small>`);
     document.querySelectorAll('[data-seis]').forEach(b=>b.addEventListener('click',()=>{state.seis=b.dataset.seis==='1';buildControls();update()}))}
   PLAN[t].forEach(([k,,,,st,u])=>{const el=$(`#p-${t}-${k}`);el.addEventListener('input',()=>{p[k]=parseFloat(el.value);if(k==='floors')state.floorsAuto=false;$(`#p-${t}-${k}-out`).textContent=fmtVal(p[k],st)+' '+u;update()})});
-  FIN[t].forEach(([k])=>{const el=$(`#f-${t}-${k}`);el.addEventListener('input',()=>{const v=parseFloat(el.value);if(!isNaN(v)){p[k]=v;update()}})});
+  FIN[t].forEach(([k])=>{const el=$(`#f-${t}-${k}`);el.addEventListener('input',()=>{const v=parseFloat(el.value);if(isNaN(v))return;
+    p[k]=v;update()})});
   ['build','start','sales'].forEach(k=>{const el=$(`#tl-${t}-${k}`);el.addEventListener('input',()=>{const v=parseFloat(el.value);if(!isNaN(v)&&v>=0){tl[k]=v;update()}})});
   const lg=t==='mixed'?[[FNC.res.f+';border:1.5px solid '+FNC.res.s,'Жильё'],[FNC.office.f+';border:1.5px solid '+FNC.office.s,'Офисы'],[FNC.hotel.f+';border:1.5px solid '+FNC.hotel.s,'Гостиница'],[BX.retail.f+';border:1.5px solid '+BX.retail.s,'Торговля (стилобат)'],['var(--green)','Двор и озеленение']]:!isRes(t)?[[BX[t].f+';border:1.5px solid '+BX[t].s,t==='retail'?'Здания':'Склады'],[BX[t].y,t==='retail'?'Парковка':'Площадки для фур'],['var(--road)','Проезды'],['var(--green)','Озеленение']]:t==='multi'
     ?[['var(--bldg);border:1.5px solid var(--bldgtop)','Жилые дома'],['var(--shadow)','Тень (инсоляция)'],['var(--road)','Проезды'],['var(--green)','Двор и озеленение']]
@@ -2092,7 +2100,8 @@ function renderResults(){
     if(state.lu){const need=greenNeed()*area+res*PLAY_PER_PERSON,have=state.lu.green;rows.push(['Двор: есть / нужно',`${nf.format(have/100)} / ${nf.format(need/100)} сот.<span class="chip ${have>=need?'ok':'bad'}">${have>=need?'хватает':'мало'}</span>`])}
   }else{
     const am=amenSummary(v.L),amTxt=[am.school?`школа ${am.school.n}`:'',am.kinder?`детсад ${am.kinder.n}`:'',am.park?`парк ${nf1.format(am.park.area/1e4)} га`:'',am.center?`центр ${nf1.format(am.center.area/1e4)} га`:''].filter(Boolean).join(', ');
-    rows=[[t==='town'?'Домов':'Участков с домами',nf.format(st.units)],['Жителей ≈',nf.format(st.units*HH)],['Инфраструктура',amTxt||'участок маленький — не нужна'],['Размер участка',nf1.format(v.L.lotArea/100)+' сот.'],['Продаваемая площадь',nf.format(st.sale)+' м²'],['Плотность',nf1.format(st.dens)+' на га']];
+    rows=[[t==='town'?'Домов':'Участков с домами',nf.format(st.units)],['Жителей ≈',nf.format(st.units*HH)],['Инфраструктура',amTxt||'участок маленький — не нужна'],['Размер участка',nf1.format(v.L.lotArea/100)+' сот.'],['Цена дома',money(state.p[t].price*state.p[t].house)+` <span class="chip ok">${money(sotkaPrice(state.p[t]))} за сотку</span>`],['Продаваемая площадь',nf.format(st.sale)+' м²'],['Плотность',nf1.format(st.dens)+' на га']];
+    {const el=$(`#f-${t}-sotka`);if(el&&document.activeElement!==el)el.value=sotkaPrice(state.p[t])}
   }
   $('#tep').innerHTML=rows.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('');
   if(!state.dragging){
